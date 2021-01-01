@@ -1,9 +1,9 @@
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE UndecidableInstances #-}
-module Syntax.Declaration where
+module Compiler.Syntax.Declaration where
 
-import Syntax (Sig, Type, Expression)
+import Compiler.Syntax (Sig, Type, Expression)
 
 
 data Declaration

@@ -1,4 +1,4 @@
-module Syntax.Literal where
+module Compiler.Syntax.Literal where
 
 data Lit
   = LitInt Int

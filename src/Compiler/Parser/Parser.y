@@ -9,15 +9,14 @@ import Compiler.Parser.Lexer
 import Compiler.Parser.Utils
 
 
-import Syntax.Bind
-import Syntax.Declaration
-import Syntax.Expression
-import Syntax.Literal
-import Syntax.MatchGroup
-import Syntax.Pattern
-import Syntax.Signature
-import Syntax.Type
-
+import Compiler.Syntax.Bind
+import Compiler.Syntax.Declaration
+import Compiler.Syntax.Expression
+import Compiler.Syntax.Literal
+import Compiler.Syntax.MatchGroup
+import Compiler.Syntax.Pattern
+import Compiler.Syntax.Signature
+import Compiler.Syntax.Type
 }
 
 

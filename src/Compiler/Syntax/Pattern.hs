@@ -1,6 +1,6 @@
-module Syntax.Pattern where
+module Compiler.Syntax.Pattern where
 
-import Syntax (Lit)
+import Compiler.Syntax (Lit)
 
 data Pattern
   = PatVar String

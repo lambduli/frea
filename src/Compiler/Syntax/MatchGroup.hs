@@ -1,9 +1,9 @@
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE UndecidableInstances #-}
-module Syntax.MatchGroup where
+module Compiler.Syntax.MatchGroup where
 
-import Syntax (Pattern, Expression)
+import Compiler.Syntax (Pattern, Expression)
 
 
 data MatchGroup = MG [Match]

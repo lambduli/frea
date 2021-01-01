@@ -1,4 +1,4 @@
-module Syntax.Type where
+module Compiler.Syntax.Type where
 
 -- I am gonna need to implement AST FIX similar to the one in the Transform
 -- I should probably move the logic from the JS Syntax tree to Gliss AST
@@ -9,12 +9,9 @@ data Type
   = VarTy String
   | ConTy String
   | BuiltInTyCon BuiltInTyCon
-  -- | QualTy  [Pred]    Type
   | AppTy Type Type
   | FunTy Type Type
   -- | Forall String Type -- type level lambda
-  -- | ListTy  Type
-  -- | TupleTy [Type]
 
 data TypeScheme
   = ForAll [String] Type

@@ -1,9 +1,9 @@
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE UndecidableInstances #-}
-module Syntax.Expression where
+module Compiler.Syntax.Expression where
 
-import Syntax (Lit, Type, MatchGroup)
+import Compiler.Syntax (Lit, Type, MatchGroup)
 
 data Expression
   = Var String

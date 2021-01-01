@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: aebd0b9b40d17f84595292ad6a595edba266625beddf64a735a0dd77048ac2fc
+-- hash: 6723592d8f25fe578323a9c89a47bad547daa1f1b07c531aa3578dd87d8d6209
 
 name:           frea
 version:        0.1.0.0
@@ -33,15 +33,16 @@ library
       Compiler.Parser.Parser
       Compiler.Parser.Token
       Compiler.Parser.Utils
-      Syntax
-      Syntax.Bind
-      Syntax.Declaration
-      Syntax.Expression
-      Syntax.Literal
-      Syntax.MatchGroup
-      Syntax.Pattern
-      Syntax.Signature
-      Syntax.Type
+      Compiler.Syntax
+      Compiler.Syntax.Bind
+      Compiler.Syntax.Declaration
+      Compiler.Syntax.Expression
+      Compiler.Syntax.Literal
+      Compiler.Syntax.MatchGroup
+      Compiler.Syntax.Pattern
+      Compiler.Syntax.Signature
+      Compiler.Syntax.Type
+      Compiler.TypeChecker.Inference
   other-modules:
       Paths_frea
   hs-source-dirs:
