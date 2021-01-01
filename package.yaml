@@ -9,6 +9,8 @@ copyright:           "2021 Author name here"
 extra-source-files:
 - README.md
 - ChangeLog.md
+- src/Compiler/Parser/Lexer.x
+- src/Compiler/Parser/Parser.y
 
 # Metadata used when publishing your package
 # synopsis:            Short description of your package
@@ -21,6 +23,12 @@ description:         Please see the README on GitHub at <https://github.com/gith
 
 dependencies:
 - base >= 4.7 && < 5
+- mtl
+- utf8-string
+- array
+- directory
+- filepath
+- containers >= 0.6.2.1
 
 library:
   source-dirs: src
