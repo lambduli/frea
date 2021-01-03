@@ -14,6 +14,7 @@ import Compiler.Parser.Lexer (readToken)
 import Compiler.Parser.Token (Token (..))
 import Compiler.Parser.Utils
 import Compiler.TypeChecker.Inference
+import Interpreter.Evaluate
 
 
 noSourceFileError :: String
@@ -60,15 +61,25 @@ repl = do
     [] -> do
       putStrLn ""
       repl
-    "::exit" ->
+    ":exit" ->
       return ()
-    _ -> do
-      let expression = parse'expr line -- module'
+    ':' : 't' : line -> do
+      let expression = parse'expr line
       let error'or'type = inferExpression empty'env expression
       -- print
       case error'or'type of
         Left err -> putStrLn $ "Type Error: " ++ show err
-        Right type' -> putStrLn $ show type'
+        Right type' -> do
+          putStrLn $ "frea λ> :: " ++ show type'
+          repl
+        
+    _ -> do
+      let expression = parse'expr line
+      let error'or'expr = eval expression
+      -- print
+      case error'or'expr of
+        Left err -> putStrLn $ "Evaluation Error: " ++ show err
+        Right expr' -> putStrLn $ show expr'
 
       -- loop
       repl

@@ -65,7 +65,8 @@ subst'var'type name replacement (TyCon conname)
 subst'var'type name replacement (TyArr left right)
   = TyArr (subst'var'type name replacement left) (subst'var'type name replacement right)
 
-
+subst'var'type name replacement (TyTuple types)
+  = TyTuple $ map (\ t' -> subst'var'type name replacement t') types
 
 {-
 subst'var'type'scheme name replacement type'scheme
@@ -100,6 +101,7 @@ normalize (ForAll type'args body) = ForAll (fmap snd ord) (normtype body)
 
     normtype (TyArr a b) = TyArr (normtype a) (normtype b)
     normtype (TyCon a) = TyCon a
+    normtype (TyTuple ts) = TyTuple $ map normtype ts
     normtype (TyVar a) =
       case lookup a ord of
         Just x -> TyVar x
@@ -111,7 +113,10 @@ empty'subst :: Subst
 empty'subst = []
 
 empty'env :: TypeEnv
-empty'env = Map.empty
+empty'env = Map.fromList
+  [ ("#fst", ForAll [] (TyArr (TyTuple [TyVar "a", TyVar "b"]) (TyVar "a")))
+  , ("#snd", ForAll [] (TyArr (TyTuple [TyVar "a", TyVar "b"]) (TyVar "b")))]
+  -- not really empty
 
 
 -- apply'subst'loctype :: Subst -> LocType -> LocType
@@ -183,6 +188,7 @@ free'type'vars'type type'
   = case type' of
     TyVar name -> Set.singleton name
     TyCon name -> Set.empty
+    TyTuple ts -> foldl (\ set' t' -> Set.union set' (free'type'vars'type t')) Set.empty ts
     -- BuiltInTyCon _ -> Set.empty
     -- AppTy left right -> Set.union (free'type'vars'type left) (free'type'vars'type right)
     TyArr left right -> Set.union (free'type'vars'type left) (free'type'vars'type right)
@@ -209,6 +215,8 @@ occurs name (TyVar varname)
   = name == varname
 occurs name (TyCon conname)
   = False
+occurs name (TyTuple ts)
+  = any (occurs $ name) ts
 -- occurs name (BuiltInTyCon _)
   -- = False
 -- occurs name (AppTy left right)
@@ -242,6 +250,14 @@ unify type' (TyVar varname)
 unify (TyCon name'l) (TyCon name'r)
   | name'l == name'r = return empty'subst
   | otherwise = throwError $ UnifMismatch name'l name'r
+
+unify (TyTuple ts'left) (TyTuple ts'right)
+  = foldM
+      (\ subst' (t'left, t'right) -> do
+        subst'new <- unify t'left t'right
+        return (subst' `compose'subst` subst'new))
+      empty'subst
+      (zip ts'left ts'right)
 
 -- unify (BuiltInTyCon UnitTyCon) (BuiltInTyCon UnitTyCon)
 --   = return empty'subst
@@ -313,16 +329,19 @@ infer env expr = case expr of
 
   Op x ->
     case x of
-      "#+" -> return (empty'subst, (TyCon "Int") `TyArr` ((TyCon "Int") `TyArr` (TyCon "Int")))
-      "#*" -> return (empty'subst, (TyCon "Int") `TyArr` ((TyCon "Int") `TyArr` (TyCon "Int")))
-      "#-" -> return (empty'subst, (TyCon "Int") `TyArr` ((TyCon "Int") `TyArr` (TyCon "Int")))
-      "#/" -> return (empty'subst, (TyCon "Int") `TyArr` ((TyCon "Int") `TyArr` (TyCon "Int")))
+      "#=" -> return (empty'subst, ((TyTuple [(TyVar "a"), (TyVar "a")]) `TyArr` (TyCon "Bool")))
+      "#<" -> return (empty'subst, ((TyTuple [(TyCon "Int"), (TyCon "Int")]) `TyArr` (TyCon "Bool")))
+      "#>" -> return (empty'subst, ((TyTuple [(TyCon "Int"), (TyCon "Int")]) `TyArr` (TyCon "Bool")))
+      "#+" -> return (empty'subst, ((TyTuple [(TyCon "Int"), (TyCon "Int")]) `TyArr` (TyCon "Int")))
+      "#*" -> return (empty'subst, ((TyTuple [(TyCon "Int"), (TyCon "Int")]) `TyArr` (TyCon "Int")))
+      "#-" -> return (empty'subst, ((TyTuple [(TyCon "Int"), (TyCon "Int")]) `TyArr` (TyCon "Int")))
+      "#/" -> return (empty'subst, ((TyTuple [(TyCon "Int"), (TyCon "Int")]) `TyArr` (TyCon "Int")))
       -- concat two strings
-      "#++" -> return (empty'subst, (TyCon "String") `TyArr` ((TyCon "String") `TyArr` (TyCon "String")))
+      "#++" -> return (empty'subst, ((TyTuple [(TyCon "String"), (TyCon "String")]) `TyArr` (TyCon "String")))
       -- prepend a char to a string
-      "#:" -> return (empty'subst, (TyCon "Char") `TyArr` ((TyCon "String") `TyArr` (TyCon "String")))
+      "#:" -> return (empty'subst, ((TyTuple [(TyCon "char"), (TyCon "String")]) `TyArr` (TyCon "String")))
       -- append a char to a string
-      "#;" -> return (empty'subst, (TyCon "String") `TyArr` ((TyCon "Char") `TyArr` (TyCon "String")))
+      "#;" -> return (empty'subst, ((TyTuple [(TyCon "char"), (TyCon "String")]) `TyArr` (TyCon "String")))
 
   Lam x body -> do
     type'var <- fresh
@@ -345,7 +364,7 @@ infer env expr = case expr of
         return (empty'subst, type')
 
   If cond' then' else' -> do
-    type'var <- fresh
+    -- type'var <- fresh
     (subst'cond, type'cond) <- infer env cond'
     let env' = apply'subst'env subst'cond env
     (subst'then', type'then') <- infer env' then'
@@ -369,10 +388,22 @@ infer env expr = case expr of
   
   -- TODO: finish Let, Fix later
 
+  Tuple exprs -> do
+    (subst'fin, env'fin, types) <- foldM infer' (empty'subst, env, []) exprs
+    let types'fin = map (\ t -> apply'subst'type subst'fin t) types
+    return (subst'fin, TyTuple types'fin)
+      where
+        infer' (sub, env, ts) exp' = do
+          (subst', type') <- infer env exp'
+          let env' = apply'subst'env subst' env
+          return (sub `compose'subst` subst', env', ts ++ [type'])
+    -- hopefuly it's correct
+
   Lit (LitInt i) -> return (empty'subst, (TyCon "Int"))
   Lit (LitDouble d) -> return (empty'subst, (TyCon "Double"))
   Lit (LitChar ch) -> return (empty'subst, (TyCon "Char"))
   Lit (LitString s) -> return (empty'subst, (TyCon "String"))
+  Lit (LitBool b) -> return (empty'subst, (TyCon "Bool"))
 
 
 inferExpression :: TypeEnv -> Expression -> Either TypeError Scheme

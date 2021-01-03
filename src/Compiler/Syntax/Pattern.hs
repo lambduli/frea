@@ -7,3 +7,4 @@ data Pattern
   | PatCon String [Pattern]
   | PatLit Lit
   | PatWild
+  deriving (Show)

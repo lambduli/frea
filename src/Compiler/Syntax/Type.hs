@@ -10,6 +10,7 @@ import Data.List (intercalate)
 data Type
   = TyVar String
   | TyCon String
+  | TyTuple [Type]
   -- | BuiltInTyCon BuiltInTyCon
   -- | AppTy Type Type
   | TyArr Type Type
@@ -20,6 +21,8 @@ instance Show Type where
     = name
   show (TyCon name)
     = name
+  show (TyTuple types)
+    = "(" ++ intercalate ", " (map show types) ++ ")"
   show (TyArr left@(TyArr _ _) res'type)
     = "(" ++ show left ++ ") -> " ++ show res'type
   show (TyArr arg'type res'type)

@@ -32,9 +32,9 @@ import Compiler.Syntax.Type
   match         { TokMatch }
   with          { TokWith }
   data          { TokData }
-  else          { TokElse }
   if            { TokIf }
   then          { TokThen }
+  else          { TokElse }
   let           { TokLet }
   in            { TokIn }
   type          { TokType }
@@ -64,6 +64,7 @@ import Compiler.Syntax.Type
   char          { TokChar $$ }
   double        { TokDouble $$ }
   string        { TokString $$ }
+  bool          { TokBool $$ }
 
 %%
 Program         ::  { Expression }
@@ -106,6 +107,7 @@ Type            ::  { Type }
                 |   '(' '->' Type Type ')'                          { TyArr $3 $4 }
                 |   '(' Type ')'                                    { $2 }
                 -- TODO: what about built-in constructors?
+                |   '(' Type CommaSeparated(Type) ')'               { TyTuple $ $2 : $3 }
 
 Params          ::  { [String] }
                 :   NoneOrMany(Var)                                 { $1 }
@@ -133,10 +135,11 @@ Exp             ::  { Expression }
 
                 |   '-' Exp                                         { NegApp $2 }
                 |   '(' match Exp with MatchOptions ')'             { MatchWith $3 $5 }
-                |   '(' if Exp Exp Exp ')'                          { If $3 $4 $5 }
+                |   '(' if Exp then Exp else Exp ')'                { If $3 $5 $7 }
                 |   '(' let '(' Var Exp ')' in Exp ')'              { Let $4 $5 $8 }
                 --  (let (foo (+ 23 23)) in (+ foo foo))
                 |   '(' the Type Exp ')'                            { Typed $3 $4 }
+                |   '(' Exp CommaSeparated(Exp) ')'                 { Tuple $ $2 : $3 }
 
 MatchOptions    ::  { MatchGroup }
                 :   '(' NoneOrMany(Match) ')'                       { MG $2 }
@@ -161,6 +164,7 @@ Lit             ::  { Lit }
                 |   Double                                          { $1 }
                 |   char                                            { LitChar $1 }
                 |   string                                          { LitString $1 }
+                |   bool                                            { LitBool $1 }
 
 Integer         ::  { Lit }
                 :   integer                                         { LitInt $1 }
@@ -175,7 +179,9 @@ NoneOrMany(tok)
 OneOrMany(tok)
                 :   tok NoneOrMany(tok)                             { $1 : $2 }
 
-
+CommaSeparated(tok)
+                :   ',' tok                                         { [$2] }
+                |   ',' tok CommaSeparated(tok)                     { $2 : $3 }
 
 {
 
