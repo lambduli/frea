@@ -34,6 +34,7 @@ data Token
   -- variables
   | TokVarId String
   | TokConstrId String
+  | TokNativeSym String
   
 
   -- special symbols

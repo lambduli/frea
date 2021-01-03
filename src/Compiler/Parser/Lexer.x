@@ -19,7 +19,7 @@ $hexit      = [a-f A-F $digit]
 $lower  = [a-z]
 $upper  = [A-Z]
 
-$symbol  = [ \! \# \$ \% \& \* \+ \. \/ \< \= \> \? \@ \\ \^ \| \- \~ \: ]
+$symbol  = [ \! \$ \% \& \* \+ \. \/ \< \= \> \? \@ \\ \^ \| \- \~ \: ]
 
 $identchar    = [$lower $upper $digit $symbol]
 
@@ -67,6 +67,13 @@ token :-
 <0>         "("             { plainTok TokLeftParen }
 <0>         ")"             { plainTok TokRightParen }
 <0>         ","             { plainTok TokComma }
+<0>         "#+"            { plainTok $ TokNativeSym "#+" }
+<0>         "#-"            { plainTok $ TokNativeSym "#-" }
+<0>         "#*"            { plainTok $ TokNativeSym "#*" }
+<0>         "#/"            { plainTok $ TokNativeSym "#/" }
+<0>         "#++"           { plainTok $ TokNativeSym "#++" }
+<0>         "#:"            { plainTok $ TokNativeSym "#:" }
+<0>         "#;"            { plainTok $ TokNativeSym "#;" }
 
 
 <0>         \n              ;

@@ -1,5 +1,5 @@
 {
-module Compiler.Parser.Parser (parse) where
+module Compiler.Parser.Parser (parse'expr) where
 
 import Control.Monad (unless, fail)
 import Control.Monad.State
@@ -51,6 +51,7 @@ import Compiler.Syntax.Type
 
   varid         { TokVarId $$ }
   conid         { TokConstrId $$ }
+  symid         { TokNativeSym $$ }
 
 
 
@@ -65,10 +66,11 @@ import Compiler.Syntax.Type
   string        { TokString $$ }
 
 %%
+Program         ::  { Expression }
+                :   Exp                                             { $1 }
 
-
-Program         ::  { [Declaration] }
-                :   NoneOrMany(TopDecl)                             { $1 }
+--Program         ::  { [Declaration] }
+--                :   NoneOrMany(TopDecl)                             { $1 }
 
 TopDecl         ::  { Declaration }
                 :   TypeDecl                                        { $1 }
@@ -98,10 +100,10 @@ FunDecl         ::  { Declaration }
                 :   '(' define Var Exp ')'                          { Binding $3 $4 }
 
 Type            ::  { Type }
-                :   Var                                             { VarTy $1 }
-                |   Con                                             { ConTy $1 }
-                |   '(' Type OneOrMany(Type) ')'                    { foldl AppTy $2 $3 }
-                |   '(' '->' Type Type ')'                          { FunTy $3 $4 }
+                :   Var                                             { TyVar $1 }
+                |   Con                                             { TyCon $1 }
+                -- |   '(' Type OneOrMany(Type) ')'                    { foldl AppTy $2 $3 }
+                |   '(' '->' Type Type ')'                          { TyArr $3 $4 }
                 |   '(' Type ')'                                    { $2 }
                 -- TODO: what about built-in constructors?
 
@@ -111,14 +113,18 @@ Params          ::  { [String] }
 Var             ::  { String }
                 :   varid                                           { $1 }
 
-Con             :: { String }
+Con             ::  { String }
                 :   conid                                           { $1 }
+
+Op              ::  { String }
+                :   symid                                           { $1 }
 
 Exp             ::  { Expression }
                 :   Var                                             { Var $1 }
+                |   Op                                              { Op $1 }
                 |   Con                                             { Con $1 }
                 |   Lit                                             { Lit $1 }
-                |   '(' lambda '(' Params ')' Exp ')'               { Lam $4 $6 }
+                |   '(' lambda '(' Params ')' Exp ')'               { foldr (\ arg body -> Lam arg body) $6 $4 }
 
                 |   '(' Exp OneOrMany(Exp) ')'                      { foldl App $2 $3 }
                 -- TODO: what about (fn) ? you can't call a function without arguments!
@@ -196,8 +202,11 @@ parseError _ = do
 -- it is probably `return`
 
 
-parse :: String -> [Declaration] -- TODO: change later
-parse s =
-  evalP parserAct s
+--parse :: String -> [Declaration] -- TODO: change later
+--parse s =
+--  evalP parserAct s
 
+parse'expr :: String -> Expression -- TODO: change later
+parse'expr s =
+  evalP parserAct s
 }
