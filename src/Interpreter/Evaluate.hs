@@ -18,20 +18,44 @@ data EvaluationError
   | BadOperatorApplication String Expression
   deriving (Show)
 
-eval :: Expression -> Either EvaluationError Expression
-eval expr = evaluate expr Map.empty
 
-evaluate :: Expression -> Env -> Either EvaluationError Expression
-evaluate expr env = case expr of
-  Var name -> case Map.lookup name env of
-    Nothing -> Left $ UnboundVar name
-    Just exp -> Right exp
+substitute :: Expression -> String -> Expression -> Expression
+substitute (Var name) var replacement
+  | name == var = replacement
+  | otherwise = Var name
+substitute (Op o) _ _ = Op o
+substitute (Con c) _ _ = Con c
+substitute (Lit l) _ _ = Lit l
+substitute (Lam par body) var replacement
+  | par /= var = Lam par $ substitute body var replacement
+  | otherwise = Lam par body
+substitute (App left right) var replacement
+  = App (substitute left var replacement) (substitute right var replacement)
+substitute (Tuple exprs) var replacement
+  = Tuple $ map (\ e -> substitute e var replacement) exprs
+substitute (NegApp expr) var replacement
+  = NegApp $ substitute expr var replacement
+substitute (If cond' then' else') var replacement
+  = If (substitute cond' var replacement) (substitute then' var replacement) (substitute else' var replacement)
+substitute (Let name val expr) var replacement
+  | name /= var = Let name (substitute val var replacement) (substitute expr var replacement)
+  | otherwise = Let name val expr
+substitute (Typed type' expr) var replacement
+  = Typed type' (substitute expr var replacement)
+
+
+eval :: Expression -> Either EvaluationError Expression
+eval expr = evaluate expr
+
+evaluate :: Expression -> Either EvaluationError Expression
+evaluate expr = case expr of
+  Var name -> Right $ Var name
   Op name -> Right $ Op name
   -- Con name -> Right $ Con name
   Lit lit -> Right $ Lit lit
   Tuple exprs ->
     let
-      eiths = map (\ e -> evaluate e env) exprs
+      eiths = map evaluate exprs
       may'err = find isLeft eiths
     in case may'err of
       Nothing ->
@@ -42,14 +66,17 @@ evaluate expr env = case expr of
       Just err -> err
     -- Tuple $ map (\ e -> evaluate e env) exprs
   Lam arg body -> Right $ Lam arg body
-  App (Lam arg body) right -> case evaluate right env of
+  App (Lam arg body) right -> case evaluate right of
     Left err -> Left err
-    Right val -> evaluate body (Map.insert arg val env)
-  App (Op op) right -> case evaluate right env of
+    Right val -> evaluate $ substitute body arg val
+  App (Op op) right -> case evaluate right of
     Left err -> Left err
     Right val -> apply'operator op val
+  App left right -> case evaluate left of
+    Left err -> Left err
+    Right fn' -> evaluate $ App fn' right    
     -- App (Con arg) right -> 
-  NegApp expr -> case evaluate expr env of
+  NegApp expr -> case evaluate expr of
     Right (Lit (LitInt i)) -> Right $ Lit (LitInt (-i))
     Right (Lit (LitDouble d)) -> Right $ Lit (LitDouble (-d))
     Left err -> Left err
