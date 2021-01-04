@@ -2,6 +2,8 @@ module Interpreter.Evaluate where
 
 
 import qualified Data.Map as Map
+import Data.Either
+import Data.List
 
 import Compiler.Syntax.Expression
 import Compiler.Syntax.Literal
@@ -27,11 +29,25 @@ evaluate expr env = case expr of
   Op name -> Right $ Op name
   -- Con name -> Right $ Con name
   Lit lit -> Right $ Lit lit
+  Tuple exprs ->
+    let
+      eiths = map (\ e -> evaluate e env) exprs
+      may'err = find isLeft eiths
+    in case may'err of
+      Nothing ->
+        let
+          from'right (Right x) = x
+          vals = map from'right eiths
+        in Right $ Tuple vals
+      Just err -> err
+    -- Tuple $ map (\ e -> evaluate e env) exprs
   Lam arg body -> Right $ Lam arg body
   App (Lam arg body) right -> case evaluate right env of
     Left err -> Left err
     Right val -> evaluate body (Map.insert arg val env)
-  App (Op op) right -> apply'operator op right
+  App (Op op) right -> case evaluate right env of
+    Left err -> Left err
+    Right val -> apply'operator op val
     -- App (Con arg) right -> 
   NegApp expr -> case evaluate expr env of
     Right (Lit (LitInt i)) -> Right $ Lit (LitInt (-i))

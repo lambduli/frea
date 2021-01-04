@@ -112,11 +112,27 @@ normalize (ForAll type'args body) = ForAll (fmap snd ord) (normtype body)
 empty'subst :: Subst
 empty'subst = []
 
+
+
+-- not really empty
 empty'env :: TypeEnv
 empty'env = Map.fromList
-  [ ("#fst", ForAll [] (TyArr (TyTuple [TyVar "a", TyVar "b"]) (TyVar "a")))
-  , ("#snd", ForAll [] (TyArr (TyTuple [TyVar "a", TyVar "b"]) (TyVar "b")))]
-  -- not really empty
+  [ ("#fst",  ForAll ["a", "b"] (TyArr (TyTuple [TyVar "a", TyVar "b"]) (TyVar "a")))
+  , ("#snd",  ForAll ["a", "b"] (TyArr (TyTuple [TyVar "a", TyVar "b"]) (TyVar "b")))
+  , ("#=",    ForAll ["a"]      ((TyTuple [TyVar "a", TyVar "a"]) `TyArr` (TyCon "Bool")))
+  , ("#<",    ForAll []         ((TyTuple [TyCon "Int", TyCon "Int"]) `TyArr` (TyCon "Bool")))
+  , ("#>",    ForAll []         ((TyTuple [TyCon "Int", TyCon "Int"]) `TyArr` (TyCon "Bool")))
+  , ("#+",    ForAll []         ((TyTuple [TyCon "Int", TyCon "Int"]) `TyArr` (TyCon "Int")))
+  , ("#*",    ForAll []         ((TyTuple [TyCon "Int", TyCon "Int"]) `TyArr` (TyCon "Int")))
+  , ("#-",    ForAll []         ((TyTuple [TyCon "Int", TyCon "Int"]) `TyArr` (TyCon "Int")))
+  , ("#/",    ForAll []         ((TyTuple [TyCon "Int", TyCon "Int"]) `TyArr` (TyCon "Int")))
+  -- concat two strings
+  , ("#++",   ForAll []         ((TyTuple [TyCon "String", TyCon "String"]) `TyArr` (TyCon "String")))
+  -- prepend a char to a string
+  , ("#:",    ForAll []         ((TyTuple [TyCon "Char", TyCon "String"]) `TyArr` (TyCon "String")))
+  -- append a char to a string
+  , ("#;",    ForAll []         ((TyTuple [TyCon "Char", TyCon "String"]) `TyArr` (TyCon "String")))
+  ]
 
 
 -- apply'subst'loctype :: Subst -> LocType -> LocType
@@ -252,7 +268,9 @@ unify (TyCon name'l) (TyCon name'r)
   | otherwise = throwError $ UnifMismatch name'l name'r
 
 unify (TyTuple ts'left) (TyTuple ts'right)
-  = foldM
+  = if length ts'left /= length ts'right
+    then throwError $ UnifShapeMismatch (TyTuple ts'left) (TyTuple ts'right) 
+    else foldM
       (\ subst' (t'left, t'right) -> do
         subst'new <- unify t'left t'right
         return (subst' `compose'subst` subst'new))
@@ -328,20 +346,26 @@ infer env expr = case expr of
         return (empty'subst, type')
 
   Op x ->
-    case x of
-      "#=" -> return (empty'subst, ((TyTuple [(TyVar "a"), (TyVar "a")]) `TyArr` (TyCon "Bool")))
-      "#<" -> return (empty'subst, ((TyTuple [(TyCon "Int"), (TyCon "Int")]) `TyArr` (TyCon "Bool")))
-      "#>" -> return (empty'subst, ((TyTuple [(TyCon "Int"), (TyCon "Int")]) `TyArr` (TyCon "Bool")))
-      "#+" -> return (empty'subst, ((TyTuple [(TyCon "Int"), (TyCon "Int")]) `TyArr` (TyCon "Int")))
-      "#*" -> return (empty'subst, ((TyTuple [(TyCon "Int"), (TyCon "Int")]) `TyArr` (TyCon "Int")))
-      "#-" -> return (empty'subst, ((TyTuple [(TyCon "Int"), (TyCon "Int")]) `TyArr` (TyCon "Int")))
-      "#/" -> return (empty'subst, ((TyTuple [(TyCon "Int"), (TyCon "Int")]) `TyArr` (TyCon "Int")))
+    case Map.lookup x env of
+      Nothing -> throwError $ UnboundVariable x
+      Just scheme -> do
+        type' <- instantiate scheme
+        return (empty'subst, type')
+      -- "#=" -> return (empty'subst, ((TyTuple [TyVar "a", TyVar "a"]) `TyArr` (TyCon "Bool")))
+      -- "#<" -> return (empty'subst, ((TyTuple [TyCon "Int", TyCon "Int"]) `TyArr` (TyCon "Bool")))
+      -- "#>" -> return (empty'subst, ((TyTuple [TyCon "Int", TyCon "Int"]) `TyArr` (TyCon "Bool")))
+      -- "#+" -> return (empty'subst, ((TyTuple [TyCon "Int", TyCon "Int"]) `TyArr` (TyCon "Int")))
+      -- "#*" -> return (empty'subst, ((TyTuple [TyCon "Int", TyCon "Int"]) `TyArr` (TyCon "Int")))
+      -- "#-" -> return (empty'subst, ((TyTuple [TyCon "Int", TyCon "Int"]) `TyArr` (TyCon "Int")))
+      -- "#/" -> return (empty'subst, ((TyTuple [TyCon "Int", TyCon "Int"]) `TyArr` (TyCon "Int")))
       -- concat two strings
-      "#++" -> return (empty'subst, ((TyTuple [(TyCon "String"), (TyCon "String")]) `TyArr` (TyCon "String")))
+      -- "#++" -> return (empty'subst, ((TyTuple [TyCon "String", TyCon "String"]) `TyArr` (TyCon "String")))
       -- prepend a char to a string
-      "#:" -> return (empty'subst, ((TyTuple [(TyCon "char"), (TyCon "String")]) `TyArr` (TyCon "String")))
+      -- "#:" -> return (empty'subst, ((TyTuple [TyCon "Char", TyCon "String"]) `TyArr` (TyCon "String")))
       -- append a char to a string
-      "#;" -> return (empty'subst, ((TyTuple [(TyCon "char"), (TyCon "String")]) `TyArr` (TyCon "String")))
+      -- "#;" -> return (empty'subst, ((TyTuple [TyCon "Char", TyCon "String"]) `TyArr` (TyCon "String")))
+      -- "#fst" -> return (empty'subst, ((TyTuple [TyVar "x", TyVar "y"]) `TyArr` (TyVar "x")))
+      -- "#snd" -> return (empty'subst, ((TyTuple [TyVar "a", TyVar "b"]) `TyArr` (TyVar "b")))
 
   Lam x body -> do
     type'var <- fresh
