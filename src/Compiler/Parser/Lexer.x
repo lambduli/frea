@@ -23,7 +23,7 @@ $symbol  = [ \! \$ \% \& \* \+ \. \/ \< \= \> \? \@ \\ \^ \| \- \~ \: ]
 
 $identchar    = [$lower $upper $digit $symbol]
 
-@variableident      = $lower $identchar*
+@variableident      = [$lower $symbol] $identchar*
 @constrident        = $upper $identchar*
 
 @moduleident  = @constrident
@@ -40,7 +40,7 @@ $space  = [\ \t\f\v]
 
 token :-
 
--- reserved identifiers
+-- reserved keywords
 <0>         match           { plainTok TokMatch }
 <0>         with            { plainTok TokWith }
 <0>         data            { plainTok TokData }
@@ -55,6 +55,7 @@ token :-
 <0>         claim           { plainTok TokClaim }
 <0>         define          { plainTok TokDefine }
 <0>         lambda          { plainTok TokLambda }
+<0>         "\"             { plainTok TokLambda }
 
 
 -- variables and constructors - qualified and un-qualified
@@ -66,6 +67,8 @@ token :-
 -- [ \( \) \, \. \; \[ \] \` \' \{ \} ]
 <0>         "("             { plainTok TokLeftParen }
 <0>         ")"             { plainTok TokRightParen }
+<0>         "["             { plainTok TokLeftBracket }
+<0>         "]"             { plainTok TokRightBracket }
 <0>         ","             { plainTok TokComma }
 <0>         "#="            { plainTok $ TokNativeSym "#=" }
 <0>         "#<"            { plainTok $ TokNativeSym "#<" }
@@ -80,8 +83,8 @@ token :-
 <0>         "#fst"          { plainTok $ TokNativeSym "#fst" }
 <0>         "#snd"          { plainTok $ TokNativeSym "#snd" }
 
-<0>         "#t"          { plainTok $ TokBool True }
-<0>         "#f"          { plainTok $ TokBool False }
+<0>         "#t"            { plainTok $ TokBool True }
+<0>         "#f"            { plainTok $ TokBool False }
 
 
 

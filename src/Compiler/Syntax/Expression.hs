@@ -27,10 +27,11 @@ instance Show Expression where
   show (Op op) = op
   show (Con name) = name
   show (Lit lit) = show lit
-  show (Lam arg body) = "(lambda (" ++ arg ++ ") " ++ show body ++ ")"
+  show (Lam arg body) = "(lambda " ++ arg ++ " -> " ++ show body ++ ")"
   show (App left right) = "(" ++ show left ++ " " ++ show right ++ ")"
   show (Tuple exprs) = "(" ++ intercalate ", " (map show exprs) ++ ")"
   show (NegApp exp) = "-" ++ show exp
   show (If cond' then' else') = "(if " ++ show cond' ++ " then " ++ show then' ++ " else " ++ show else' ++ ")"
+  show (Let name value expr) = "(let " ++ show name ++ " = " ++ show value ++ " in " ++ show expr ++ ")"
   -- typed
   -- matchwith

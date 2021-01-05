@@ -43,8 +43,7 @@ tokenize s =
 
 main :: IO ()
 main = do
-  putStrLn "Glamorous Frea Compiler."
-  putStrLn ""
+  putStrLn "Glamorous Frea REPL."
   putStrLn ""
   repl
 
@@ -68,18 +67,26 @@ repl = do
       let error'or'type = inferExpression empty'env expression
       -- print
       case error'or'type of
-        Left err -> putStrLn $ "Type Error: " ++ show err
+        Left err -> do
+          putStrLn $ "Type Error: " ++ show err
+          repl
         Right type' -> do
           putStrLn $ "frea λ> :: " ++ show type'
           repl
         
     _ -> do
       let expression = parse'expr line
-      let error'or'expr = eval expression
-      -- print
-      case error'or'expr of
-        Left err -> putStrLn $ "Evaluation Error: " ++ show err
-        Right expr' -> putStrLn $ show expr'
+      let error'or'type = inferExpression empty'env expression
+      case error'or'type of
+        Left err -> do
+          putStrLn $ "Type Error: " ++ show err
+          repl
+        _ -> do
+          let error'or'expr = eval expression
+          -- print
+          case error'or'expr of
+            Left err -> putStrLn $ "Evaluation Error: " ++ show err
+            Right expr' -> putStrLn $ show expr'
 
-      -- loop
-      repl
+          -- loop
+          repl

@@ -1,0 +1,5 @@
+(let id = (lambda i -> i) in ((id 23), (id "hello")))
+-- this should illustrate let polymorphism
+
+(lambda x -> (let y = (#+ (x, 1)) in y))
+-- this should infer the type :: Int -> Int

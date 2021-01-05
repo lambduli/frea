@@ -47,6 +47,7 @@ import Compiler.Syntax.Type
 
   '-'           { TokVarId "-" }
   '->'          { TokVarId "->" }
+  '='           { TokVarId "=" }
 
 
   varid         { TokVarId $$ }
@@ -126,7 +127,7 @@ Exp             ::  { Expression }
                 |   Op                                              { Op $1 }
                 |   Con                                             { Con $1 }
                 |   Lit                                             { Lit $1 }
-                |   '(' lambda '(' Params ')' Exp ')'               { foldr (\ arg body -> Lam arg body) $6 $4 }
+                |   lambda Params '->' Exp                          { foldr (\ arg body -> Lam arg body) $4 $2 }
 
                 |   '(' Exp OneOrMany(Exp) ')'                      { foldl App $2 $3 }
                 -- TODO: what about (fn) ? you can't call a function without arguments!
@@ -135,8 +136,8 @@ Exp             ::  { Expression }
 
                 |   '-' Exp                                         { NegApp $2 }
                 |   '(' match Exp with MatchOptions ')'             { MatchWith $3 $5 }
-                |   '(' if Exp then Exp else Exp ')'                { If $3 $5 $7 }
-                |   '(' let '(' Var Exp ')' in Exp ')'              { Let $4 $5 $8 }
+                |   if Exp then Exp else Exp                        { If $2 $4 $6 }
+                |   let Var '=' Exp in Exp                          { Let $2 $4 $6 }
                 --  (let (foo (+ 23 23)) in (+ foo foo))
                 |   '(' the Type Exp ')'                            { Typed $3 $4 }
                 |   '(' Exp CommaSeparated(Exp) ')'                 { Tuple $ $2 : $3 }

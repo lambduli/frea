@@ -10,7 +10,8 @@ data Lit
 
 instance Show Lit where
   show (LitInt i) = show i
-  show (LitBool b) = show b
+  show (LitBool False) = "#f"
+  show (LitBool True) = "#t"
   show (LitDouble d) = show d
   show (LitChar ch) = show ch
   show (LitString s) = show s

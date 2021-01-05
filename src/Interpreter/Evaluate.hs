@@ -65,6 +65,8 @@ evaluate expr = case expr of
         in Right $ Tuple vals
       Just err -> err
     -- Tuple $ map (\ e -> evaluate e env) exprs
+  Let name val expr ->
+    evaluate $ App (Lam name expr) val
   Lam arg body -> Right $ Lam arg body
   App (Lam arg body) right -> case evaluate right of
     Left err -> Left err
@@ -81,6 +83,16 @@ evaluate expr = case expr of
     Right (Lit (LitDouble d)) -> Right $ Lit (LitDouble (-d))
     Left err -> Left err
     _ -> Left $ WrongNegation expr
+  If cond' then' else' ->
+    let
+      cond'evld = evaluate cond'
+      then'evld = evaluate then'
+      else'evld = evaluate else'
+    in case find isLeft [cond'evld, then'evld, else'evld] of
+      Just err -> err
+      Nothing ->
+        let (Right (Lit (LitBool b))) = cond'evld
+        in if b then then'evld else else'evld
 
 
 apply'operator :: String -> Expression -> Either EvaluationError Expression

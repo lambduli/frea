@@ -40,6 +40,8 @@ data Token
   -- special symbols
   | TokLeftParen -- (
   | TokRightParen -- )
+  | TokLeftBracket -- [
+  | TokRightBracket -- ]
   | TokComma  -- ,
 
 
