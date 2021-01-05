@@ -86,6 +86,11 @@ runInfer m
     Left err  -> Left err
     Right res -> Right $ closeOver res
 
+helpInfer :: Infer (Subst, Type) -> Either TypeError (Subst, Type, Scheme)
+helpInfer m
+  = case evalState (runExceptT m) 0 of
+    Left err -> Left err
+    Right (s, t) -> Right (s, t, closeOver (s, t))
 
 
 closeOver :: (Subst, Type) -> Scheme
@@ -267,12 +272,17 @@ unify (TyCon name'l) (TyCon name'r)
   | name'l == name'r = return empty'subst
   | otherwise = throwError $ UnifMismatch name'l name'r
 
+-- unify (TyTuple [left'a, left'b]) (TyTuple [right'a, right'b]) = do
+--   subst'a <- unify left'a right'a
+--   subst'b <- unify (apply'subst'type subst'a left'b) (apply'subst'type subst'a right'b)
+--   return (subst'a `compose'subst` subst'b)
+
 unify (TyTuple ts'left) (TyTuple ts'right)
   = if length ts'left /= length ts'right
     then throwError $ UnifShapeMismatch (TyTuple ts'left) (TyTuple ts'right) 
     else foldM
       (\ subst' (t'left, t'right) -> do
-        subst'new <- unify t'left t'right
+        subst'new <- unify (apply'subst'type subst' t'left) (apply'subst'type subst' t'right)
         return (subst' `compose'subst` subst'new))
       empty'subst
       (zip ts'left ts'right)
@@ -371,13 +381,13 @@ infer env expr = case expr of
     type'var <- fresh
     let env' = env `extend` (x, ForAll [] type'var)
     (subst', type') <- infer env' body
-    return (subst', apply'subst'type subst' $ TyArr type'var type')
+    return (subst', apply'subst'type subst' (type'var `TyArr` type'))
 
   App left right -> do
     type'var <- fresh
     (subst'left, type'left) <- infer env left
     (subst'right, type'right) <- infer (apply'subst'env subst'left env) right
-    subst' <- unify (apply'subst'type subst'right type'left) (TyArr type'right type'var)
+    subst' <- unify (apply'subst'type subst'right type'left) (type'right `TyArr` type'var)
     return (subst' `compose'subst` subst'right `compose'subst` subst'left, apply'subst'type subst' type'var)
 
   Con x ->
@@ -394,7 +404,7 @@ infer env expr = case expr of
     (subst'then', type'then') <- infer env' then'
     let env'' = apply'subst'env subst'then' env'
     (subst'else', type'else') <- infer env'' else'
-    let env''' = apply'subst'env subst'else' env''
+    -- let env''' = apply'subst'env subst'else' env''
 
     let subst' = subst'cond `compose'subst` subst'then' `compose'subst` subst'else'
 
@@ -411,6 +421,24 @@ infer env expr = case expr of
     return (final'subst, final'type)
   
   -- TODO: finish Let, Fix later
+
+  Let name value expression -> do
+    (subst'val, type'val) <- infer env value
+    let env' = apply'subst'env subst'val env
+    let type'val' = generalize env' type'val
+    (subst'expr, type'expr) <- infer (env' `extend` (name, type'val')) expression
+    return (subst'expr `compose'subst` subst'val, type'expr)
+
+  -- Tuple [left, right] -> do
+  --   (subst'left, type'left) <- infer env left
+  --   let env' = apply'subst'env subst'left env
+  --   (subst'right, type'right) <- infer env' right
+  --   let subst'comp = subst'left `compose'subst` subst'right
+
+  --   let type'left'fin = apply'subst'type subst'comp type'left
+  --   let type'right'fin = apply'subst'type subst'comp type'right
+
+  --   return (subst'comp, TyTuple [type'left'fin, type'right'fin])
 
   Tuple exprs -> do
     (subst'fin, env'fin, types) <- foldM infer' (empty'subst, env, []) exprs
