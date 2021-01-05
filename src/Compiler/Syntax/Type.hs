@@ -11,6 +11,7 @@ data Type
   = TyVar String
   | TyCon String
   | TyTuple [Type]
+  | TyList Type
   -- | BuiltInTyCon BuiltInTyCon
   -- | AppTy Type Type
   | TyArr Type Type

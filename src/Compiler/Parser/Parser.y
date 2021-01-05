@@ -58,6 +58,8 @@ import Compiler.Syntax.Type
 
   '('           { TokLeftParen }
   ')'           { TokRightParen }
+  '['           { TokLeftBracket }
+  ']'           { TokRightBracket }
   ','           { TokComma }
 
 
@@ -141,6 +143,7 @@ Exp             ::  { Expression }
                 --  (let (foo (+ 23 23)) in (+ foo foo))
                 |   '(' the Type Exp ')'                            { Typed $3 $4 }
                 |   '(' Exp CommaSeparated(Exp) ')'                 { Tuple $ $2 : $3 }
+                |   '[' Exp CommaSeparated(Exp) ']'                 { List $ $2 : $3 }
 
 MatchOptions    ::  { MatchGroup }
                 :   '(' NoneOrMany(Match) ')'                       { MG $2 }

@@ -16,6 +16,7 @@ data Expression
   | Lam String Expression
   | App Expression Expression
   | Tuple [Expression]
+  | List [Expression]
   | NegApp Expression -- syntactic negation -- think about it
   | MatchWith Expression MatchGroup -- OK
   | If Expression Expression Expression -- OK

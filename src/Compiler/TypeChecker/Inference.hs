@@ -68,6 +68,11 @@ subst'var'type name replacement (TyArr left right)
 subst'var'type name replacement (TyTuple types)
   = TyTuple $ map (\ t' -> subst'var'type name replacement t') types
 
+subst'var'type name replacement (TyList type') = case type' of
+  TyVar var | name == var -> TyList replacement
+  TyVar _ -> TyList type'
+  _ -> TyList $ subst'var'type name replacement type'
+
 {-
 subst'var'type'scheme name replacement type'scheme
 replaces all occurences of the type variable with given name in the type scheme
@@ -86,11 +91,11 @@ runInfer m
     Left err  -> Left err
     Right res -> Right $ closeOver res
 
-helpInfer :: Infer (Subst, Type) -> Either TypeError (Subst, Type, Scheme)
-helpInfer m
-  = case evalState (runExceptT m) 0 of
-    Left err -> Left err
-    Right (s, t) -> Right (s, t, closeOver (s, t))
+-- helpInfer :: Infer (Subst, Type) -> Either TypeError (Subst, Type, Scheme)
+-- helpInfer m
+--   = case evalState (runExceptT m) 0 of
+--     Left err -> Left err
+--     Right (s, t) -> Right (s, t, closeOver (s, t))
 
 
 closeOver :: (Subst, Type) -> Scheme
@@ -132,10 +137,12 @@ empty'env = Map.fromList
   , ("#-",    ForAll []         ((TyTuple [TyCon "Int", TyCon "Int"]) `TyArr` (TyCon "Int")))
   , ("#/",    ForAll []         ((TyTuple [TyCon "Int", TyCon "Int"]) `TyArr` (TyCon "Int")))
   -- concat two strings
-  , ("#++",   ForAll []         ((TyTuple [TyCon "String", TyCon "String"]) `TyArr` (TyCon "String")))
+  , ("#.",    ForAll []         ((TyTuple [TyCon "String", TyCon "String"]) `TyArr` (TyCon "String")))
+  , ("#++",   ForAll ["a"]      ((TyTuple [TyList (TyVar "a"), TyList (TyVar "a")]) `TyArr` (TyList (TyVar "a"))))
+  , ("#!!",   ForAll ["a"]      ((TyTuple [TyCon "Int", TyList (TyVar "a")]) `TyArr` (TyVar "a")))
+  -- prepend element to a list
+  , ("#:",    ForAll ["a"]      ((TyTuple [TyVar "a", TyList (TyVar "a")]) `TyArr` (TyList (TyVar "a"))))
   -- prepend a char to a string
-  , ("#:",    ForAll []         ((TyTuple [TyCon "Char", TyCon "String"]) `TyArr` (TyCon "String")))
-  -- append a char to a string
   , ("#;",    ForAll []         ((TyTuple [TyCon "Char", TyCon "String"]) `TyArr` (TyCon "String")))
   ]
 
@@ -210,6 +217,7 @@ free'type'vars'type type'
     TyVar name -> Set.singleton name
     TyCon name -> Set.empty
     TyTuple ts -> foldl (\ set' t' -> Set.union set' (free'type'vars'type t')) Set.empty ts
+    TyList t -> free'type'vars'type t
     -- BuiltInTyCon _ -> Set.empty
     -- AppTy left right -> Set.union (free'type'vars'type left) (free'type'vars'type right)
     TyArr left right -> Set.union (free'type'vars'type left) (free'type'vars'type right)
@@ -238,6 +246,8 @@ occurs name (TyCon conname)
   = False
 occurs name (TyTuple ts)
   = any (occurs $ name) ts
+occurs name (TyList t)
+  = occurs name t
 -- occurs name (BuiltInTyCon _)
   -- = False
 -- occurs name (AppTy left right)
@@ -286,6 +296,9 @@ unify (TyTuple ts'left) (TyTuple ts'right)
         return (subst' `compose'subst` subst'new))
       empty'subst
       (zip ts'left ts'right)
+
+unify (TyList t'left) (TyList t'right)
+  = unify t'left t'right
 
 -- unify (BuiltInTyCon UnitTyCon) (BuiltInTyCon UnitTyCon)
 --   = return empty'subst
@@ -450,6 +463,22 @@ infer env expr = case expr of
           let env' = apply'subst'env subst' env
           return (sub `compose'subst` subst', env', ts ++ [type'])
     -- hopefuly it's correct
+
+  List exprs -> do
+    (subst', env'fin, types) <- foldM infer' (empty'subst, env, []) exprs
+    let types' = map (\ t -> apply'subst'type subst' t) types
+    type'var <- fresh
+    (subst'fin, type'fin) <- foldM unify' (empty'subst, type'var) types'
+    return (subst'fin, TyList type'fin)
+      where
+        infer' (sub, env, ts) exp' = do
+          (subst', type') <- infer env exp'
+          let env' = apply'subst'env subst' env
+          return (sub `compose'subst` subst', env', ts ++ [type'])
+        unify' (sub, t) t' = do
+          sub' <- unify (apply'subst'type sub t) (apply'subst'type sub t') -- the first apply shouldn't be ncessary, but won't hurt
+          return (sub `compose'subst` sub', apply'subst'type sub' t)
+    
 
   Lit (LitInt i) -> return (empty'subst, (TyCon "Int"))
   Lit (LitDouble d) -> return (empty'subst, (TyCon "Double"))
