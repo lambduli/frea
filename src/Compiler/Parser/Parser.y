@@ -43,6 +43,7 @@ import Compiler.Syntax.Type
   claim         { TokClaim }
   define        { TokDefine }
   lambda        { TokLambda }
+  fix           { TokFix }
   
 
   '-'           { TokVarId "-" }
@@ -136,14 +137,15 @@ Exp             ::  { Expression }
                 |   '(' Exp ')'                                     { $2 }
                 -- therefore redundant parentheses are a OK
 
-                |   '-' Exp                                         { NegApp $2 }
-                |   '(' match Exp with MatchOptions ')'             { MatchWith $3 $5 }
+                -- |   '-' Exp                                         { NegApp $2 }
+                |   fix Exp                                         { Fix $2 }
+                -- |   '(' match Exp with MatchOptions ')'             { MatchWith $3 $5 }
                 |   if Exp then Exp else Exp                        { If $2 $4 $6 }
                 |   let Var '=' Exp in Exp                          { Let $2 $4 $6 }
                 --  (let (foo (+ 23 23)) in (+ foo foo))
-                |   '(' the Type Exp ')'                            { Typed $3 $4 }
+                -- |   '(' the Type Exp ')'                            { Typed $3 $4 }
                 |   '(' Exp CommaSeparated(Exp) ')'                 { Tuple $ $2 : $3 }
-                |   '[' Exp CommaSeparated(Exp) ']'                 { List $ $2 : $3 }
+                |   '[' NoneOrManySeparated(Exp) ']'                { List $2 }
 
 MatchOptions    ::  { MatchGroup }
                 :   '(' NoneOrMany(Match) ')'                       { MG $2 }
@@ -186,6 +188,11 @@ OneOrMany(tok)
 CommaSeparated(tok)
                 :   ',' tok                                         { [$2] }
                 |   ',' tok CommaSeparated(tok)                     { $2 : $3 }
+
+NoneOrManySeparated(tok)
+                :   {- empty -}                                     { [] }
+                |   tok                                             { [$1] }
+                |   tok ',' NoneOrManySeparated(tok)                { $1 : $3 }
 
 {
 

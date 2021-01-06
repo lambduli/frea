@@ -112,6 +112,7 @@ normalize (ForAll type'args body) = ForAll (fmap snd ord) (normtype body)
     normtype (TyArr a b) = TyArr (normtype a) (normtype b)
     normtype (TyCon a) = TyCon a
     normtype (TyTuple ts) = TyTuple $ map normtype ts
+    normtype (TyList t) = TyList $ normtype t
     normtype (TyVar a) =
       case lookup a ord of
         Just x -> TyVar x
@@ -144,6 +145,10 @@ empty'env = Map.fromList
   , ("#:",    ForAll ["a"]      ((TyTuple [TyVar "a", TyList (TyVar "a")]) `TyArr` (TyList (TyVar "a"))))
   -- prepend a char to a string
   , ("#;",    ForAll []         ((TyTuple [TyCon "Char", TyCon "String"]) `TyArr` (TyCon "String")))
+  -- head of the list
+  , ("#head", ForAll ["a"]      ((TyList (TyVar "a")) `TyArr` (TyVar "a")))
+  , ("#tail", ForAll ["a"]      ((TyList (TyVar "a")) `TyArr` (TyList (TyVar "a"))))
+  , ("#nil?", ForAll ["a"]      ((TyList (TyVar "a")) `TyArr` (TyCon "Bool")))
   ]
 
 
@@ -478,6 +483,15 @@ infer env expr = case expr of
         unify' (sub, t) t' = do
           sub' <- unify (apply'subst'type sub t) (apply'subst'type sub t') -- the first apply shouldn't be ncessary, but won't hurt
           return (sub `compose'subst` sub', apply'subst'type sub' t)
+
+  Fix expr -> do
+    type'var <- fresh
+    let t' = (type'var `TyArr` type'var) `TyArr` type'var
+    (sub, t) <- infer env expr
+    type'var' <- fresh
+    sub' <- unify (t `TyArr` type'var') t'
+    return (sub' `compose'subst` sub, apply'subst'type sub' type'var')
+    -- TODO: continue here
     
 
   Lit (LitInt i) -> return (empty'subst, (TyCon "Int"))

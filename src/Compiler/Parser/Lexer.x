@@ -56,6 +56,9 @@ token :-
 <0>         define          { plainTok TokDefine }
 <0>         lambda          { plainTok TokLambda }
 <0>         "\"             { plainTok TokLambda }
+<0>         "fix"           { plainTok $ TokFix }
+<0>         "letrec"        { plainTok $ TokLetrec }
+
 
 
 -- variables and constructors - qualified and un-qualified
@@ -84,6 +87,10 @@ token :-
 <0>         "#fst"          { plainTok $ TokNativeSym "#fst" }
 <0>         "#snd"          { plainTok $ TokNativeSym "#snd" }
 <0>         "#!!"           { plainTok $ TokNativeSym "#!!" }
+<0>         "#head"         { plainTok $ TokNativeSym "#head" }
+<0>         "#tail"         { plainTok $ TokNativeSym "#tail" }
+<0>         "#nil?"         { plainTok $ TokNativeSym "#nil?" }
+
 
 
 <0>         "#t"            { plainTok $ TokBool True }

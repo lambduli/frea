@@ -29,6 +29,8 @@ data Token
   | TokClaim -- type annotations
   | TokDefine
   | TokLambda -- lambda
+  | TokFix -- fix
+  | TokLetrec -- letrec
   
 
   -- variables

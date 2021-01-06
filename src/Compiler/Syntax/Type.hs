@@ -24,6 +24,8 @@ instance Show Type where
     = name
   show (TyTuple types)
     = "(" ++ intercalate ", " (map show types) ++ ")"
+  show (TyList type')
+    = "[" ++ show type' ++ "]"
   show (TyArr left@(TyArr _ _) res'type)
     = "(" ++ show left ++ ") -> " ++ show res'type
   show (TyArr arg'type res'type)
