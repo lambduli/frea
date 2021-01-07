@@ -57,6 +57,12 @@ frea λ> :t (1, "string", 'c')
 
 :: (Int, String, Char)
 ```
+#### Unit
+```
+frea λ> :t ()
+
+:: Unit
+```
 #### Functions of course
 ```
 frea λ> :t (\ int -> (#+ (int, 1)) )
