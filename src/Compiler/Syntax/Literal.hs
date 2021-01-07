@@ -7,6 +7,7 @@ data Lit
   | LitDouble Double
   | LitChar Char
   | LitString String
+  | LitUnit
 
 instance Show Lit where
   show (LitInt i) = show i
@@ -15,3 +16,4 @@ instance Show Lit where
   show (LitDouble d) = show d
   show (LitChar ch) = show ch
   show (LitString s) = show s
+  show LitUnit = "()"

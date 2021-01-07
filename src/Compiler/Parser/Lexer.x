@@ -68,6 +68,7 @@ token :-
 
 -- special symbols
 -- [ \( \) \, \. \; \[ \] \` \' \{ \} ]
+<0>         "()"            { plainTok TokUnit }
 <0>         "("             { plainTok TokLeftParen }
 <0>         ")"             { plainTok TokRightParen }
 <0>         "["             { plainTok TokLeftBracket }
@@ -80,7 +81,7 @@ token :-
 <0>         "#-"            { plainTok $ TokNativeSym "#-" }
 <0>         "#*"            { plainTok $ TokNativeSym "#*" }
 <0>         "#/"            { plainTok $ TokNativeSym "#/" }
-<0>         "#."            { plainTok $ TokNativeSym "#++" }
+<0>         "#."            { plainTok $ TokNativeSym "#." }
 <0>         "#++"           { plainTok $ TokNativeSym "#++" }
 <0>         "#:"            { plainTok $ TokNativeSym "#:" }
 <0>         "#;"            { plainTok $ TokNativeSym "#;" }

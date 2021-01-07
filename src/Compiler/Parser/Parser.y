@@ -63,7 +63,7 @@ import Compiler.Syntax.Type
   ']'           { TokRightBracket }
   ','           { TokComma }
 
-
+  unit          { TokUnit }
   integer       { TokInt $$ }
   char          { TokChar $$ }
   double        { TokDouble $$ }
@@ -171,6 +171,7 @@ Lit             ::  { Lit }
                 |   char                                            { LitChar $1 }
                 |   string                                          { LitString $1 }
                 |   bool                                            { LitBool $1 }
+                |   unit                                            { LitUnit }
 
 Integer         ::  { Lit }
                 :   integer                                         { LitInt $1 }

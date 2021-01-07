@@ -508,6 +508,7 @@ infer env expr = case expr of
   Lit (LitChar ch) -> return (empty'subst, (TyCon "Char"))
   Lit (LitString s) -> return (empty'subst, (TyCon "String"))
   Lit (LitBool b) -> return (empty'subst, (TyCon "Bool"))
+  Lit LitUnit -> return (empty'subst, (TyCon "Unit"))
 
 
 inferExpression :: TypeEnv -> Expression -> Either TypeError Scheme

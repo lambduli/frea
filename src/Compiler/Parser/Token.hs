@@ -53,6 +53,7 @@ data Token
   | TokDouble Double -- 0.23
   | TokString String -- "string"
   | TokBool Bool -- #t / #f
+  | TokUnit -- ()
 
 
   | TokEOF
