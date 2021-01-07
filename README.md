@@ -1,6 +1,6 @@
 # frea
 
-A simple Damas-Hindley-Milner programming language.
+A simple programming language with Damas-Hindley-Milner type inference.
 
 To compile and run: `$ stack run`
 
