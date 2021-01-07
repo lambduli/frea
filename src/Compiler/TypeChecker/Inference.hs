@@ -262,6 +262,13 @@ occurs name (TyArr left right)
 
 
 
+bind :: String -> Type -> Infer Subst
+bind varname type'
+  | type' == TyVar varname = return empty'subst
+  | occurs varname type' = throwError $ InfiniteType varname type'
+  | otherwise = return $ [(varname, type')]
+
+
 
 {-
 This function is weird, I think the implementation allows for mistakes.
@@ -274,14 +281,16 @@ and always first look there before making any substitution or type error.
 -}
 unify :: Type -> Type -> Infer Subst
 unify (TyVar varname) type'
-  = if occurs varname type'
-    then throwError $ InfiniteType varname type'
-    else return $ [(varname, type')]
+  = bind varname type'
+  -- = if occurs varname type'
+  --   then throwError $ InfiniteType varname type'
+  --   else return $ [(varname, type')]
 
 unify type' (TyVar varname)
-  = if occurs varname type'
-    then throwError $ InfiniteType varname type'
-    else return $ [(varname, type')]
+  = bind varname type'
+  -- = if occurs varname type'
+  --   then throwError $ InfiniteType varname type'
+  --   else return $ [(varname, type')]
 
 unify (TyCon name'l) (TyCon name'r)
   | name'l == name'r = return empty'subst

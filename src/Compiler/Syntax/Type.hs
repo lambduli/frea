@@ -16,6 +16,7 @@ data Type
   -- | AppTy Type Type
   | TyArr Type Type
   -- | Forall String Type -- type level lambda
+  deriving (Eq)
 
 instance Show Type where
   show (TyVar name)

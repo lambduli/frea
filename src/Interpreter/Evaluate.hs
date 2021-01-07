@@ -38,6 +38,8 @@ substitute (Tuple exprs) var replacement
   = Tuple $ map (\ e -> substitute e var replacement) exprs
 -- substitute (NegApp expr) var replacement
 --   = NegApp $ substitute expr var replacement
+substitute (List exprs) var replacement
+  = List $ map (\ e -> substitute e var replacement) exprs
 substitute (If cond' then' else') var replacement
   = If (substitute cond' var replacement) (substitute then' var replacement) (substitute else' var replacement)
 substitute (Let name val expr) var replacement
