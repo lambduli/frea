@@ -57,7 +57,7 @@ token :-
 <0>         lambda          { plainTok TokLambda }
 <0>         "\"             { plainTok TokLambda }
 <0>         "fix"           { plainTok $ TokFix }
-<0>         "letrec"        { plainTok $ TokLetrec }
+-- <0>         "letrec"        { plainTok $ TokLetrec }
 
 
 

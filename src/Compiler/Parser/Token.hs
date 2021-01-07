@@ -30,7 +30,7 @@ data Token
   | TokDefine
   | TokLambda -- lambda
   | TokFix -- fix
-  | TokLetrec -- letrec
+  -- | TokLetrec -- letrec
   
 
   -- variables

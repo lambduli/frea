@@ -7,7 +7,7 @@ import System.Directory (getCurrentDirectory)
 import System.FilePath.Posix ((</>))
 import Control.Monad (forM_)
 
-import Data.List (intercalate)
+import Data.List (intercalate, reverse)
 
 import Compiler.Parser.Parser (parse'expr)
 import Compiler.Parser.Lexer (readToken)
@@ -48,12 +48,35 @@ main = do
   repl
 
 
-repl :: IO ()
-repl = do
+
+readExpression :: IO (String)
+readExpression = do
   putStr "frea λ> "
   hFlush stdout
-  -- read
   line <- getLine
+  case line of
+    "" -> return line
+    ':' : 'e' : 'x' : 'i' : 't' : _ -> return line
+    _ -> do
+      next'line <- read'expr'
+      return $ line ++ ['\n'] ++ next'line
+    where
+      read'expr' = do
+        putStr "        "
+        hFlush stdout
+        line <- getLine
+        case line of
+          "" -> return line
+          ':' : 'e' : 'x' : 'i' : 't' : _ -> return line
+          _ -> do
+            next'line <- read'expr'
+            return $ line ++ ['\n'] ++ next'line
+
+
+repl :: IO ()
+repl = do
+  -- read
+  line <- readExpression
 
   -- eval
   case line of
