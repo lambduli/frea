@@ -1,0 +1,31 @@
+(let id = (lambda i -> i) in ((id 23), (id "hello")))
+-- this should illustrate let polymorphism
+
+(lambda x -> (let y = (#+ (x, 1)) in y))
+-- this should infer the type :: Int -> Int
+
+-- fixpoint combinator
+( (fix (\ fact n -> if (#= (n,0)) then 1 else (#* (n,(fact (#- (n,1))))))) 0 )
+( (fix (\ fact n -> if (#= (n,0)) then 1 else (#* (n,(fact (#- (n,1))))))) 5 )
+(fix (\ fact n -> if (#= (n,0)) then 1 else (#* (n,(fact (#- (n,1)))))) 5)
+
+
+-- this is OK
+let fn = (\ i -> i) in let map = (\ l f -> l) in (#: ((fn (#head [1])), (map (#tail [1,2]) fn)))
+
+-- map over some nice list of numbers
+let
+  list = [1, 2, 3, 4, 5, 6, 7]
+in let
+  double = (\ x -> (#* (2,x)))
+in let
+  map = fix (\ map lst fn ->
+              if (#nil? lst)
+              then []
+              else (#: ((fn (#head lst)), (map (#tail lst) fn))))
+in (map list double)
+
+
+-- works
+let fn = (\ i -> i) in let map = (\ l f -> l) in (#: ((fn (#head [1])), (map (#tail [1,2]) fn)))
+-- -> [1, 2]
