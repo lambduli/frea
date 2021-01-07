@@ -2,7 +2,9 @@
 
 A simple programming language with Damas-Hindley-Milner type inference.
 
-To compile and run: `$ stack run`
+To compiler: `$ stack build`
+
+To run: `$ stack run`
 
 > In the REPL, you have to hit enter two times, that is the consequence of the very naive but simple implementation of multine line expressions, which are very convenient and may actually pay for the annoyance of double enter.
 
