@@ -17,71 +17,139 @@ import Compiler.Syntax
   , Type(..), Scheme(..))
 
 import Compiler.Syntax.Expression
+import Compiler.TypeChecker.TypeError
+
 
 
 type Infer a = ExceptT TypeError (State Int) a
 
-type TypeEnv = Map.Map String Scheme
-
--- type SchemeEnv = Map.Map String Scheme
+newtype TypeEnv = Env (Map.Map String Scheme)
 
 -- type substitution -- ordered mapping between name and type
-type Subst = [(String, Type)]
+newtype Subst = Sub [(String, Type)]
 
-data TypeError
-  = InfiniteType String Type
-  | UnifMismatch String String
-  | UnboundVariable String
-  | UnboundConstructor String
-  | UnifShapeMismatch Type Type
-  deriving (Show)
 
 
 class Substitutable a where
   apply :: Subst -> a -> a
   ftv :: a -> Set.Set String
--- TODO: implement instances for Type, Scheme, Substitution
+
+instance Substitutable Type where
+  apply (Sub [(name, repl)]) var@(TyVar varname)
+    | name == varname = repl
+    | otherwise = var
+  apply (Sub [(name, repl)]) (TyCon conname)
+    = (TyCon conname)
+  apply (Sub [(name, repl)]) (TyArr left right)
+    = TyArr (apply (Sub [(name, repl)]) left) (apply (Sub [(name, repl)]) right)
+  apply (Sub [(name, repl)]) (TyTuple types)
+    = TyTuple $ map (\ t' -> apply (Sub [(name, repl)]) t') types
+  apply (Sub [(name, repl)]) (TyList type') = case type' of
+    TyVar var | name == var -> TyList repl
+    TyVar _ -> TyList type'
+    _ -> TyList $ apply (Sub [(name, repl)]) type'
+
+  apply (Sub subst) type'
+    = foldl
+        (\ type' (name, repl) -> apply (Sub [(name, repl)]) type')
+        type'
+        subst
+
+
+  ftv type' = case type' of
+    TyVar name -> Set.singleton name
+    TyCon name -> Set.empty
+    TyTuple ts -> foldl (\ set' t' -> Set.union set' (ftv t')) Set.empty ts
+    TyList t -> ftv t
+    TyArr left right -> Set.union (ftv left) (ftv right)
+
+
+
+instance Substitutable Scheme where
+  apply (Sub [(name, replacement)]) (ForAll varnames type')
+    | elem name varnames = ForAll varnames type'
+    | otherwise = ForAll varnames $ apply (Sub [(name, replacement)]) type'
+
+  apply (Sub subst) scheme
+    = foldl
+        (\ scheme (name, replacement)
+          -> apply (Sub [(name, replacement)]) scheme)
+        scheme
+        subst
+
+
+  ftv (ForAll vars type')
+    = Set.difference (ftv type') (Set.fromList vars)
+
+
+
+instance Substitutable Subst where
+  apply subst'left (Sub subst'right)
+    = Sub $ map
+        (\ (name, type') -> (name, apply subst'left type'))
+        subst'right
+
+  ftv (Sub subst)
+    = foldl
+        (\ free'set (name, type') -> free'set `Set.union` ftv type')
+        Set.empty
+        subst
+
+
+
+instance Substitutable TypeEnv where
+  apply subst (Env type'env)
+    = Env $ Map.map
+        (\ scheme -> apply subst scheme)
+        type'env
+
+  ftv (Env type'env)
+    = Map.foldr
+        (\ scheme free'set -> free'set `Set.union` ftv scheme)
+        Set.empty
+        type'env
+
 
 
 extend :: TypeEnv -> (String, Scheme) -> TypeEnv
-extend env (ty'var, scheme) = Map.insert ty'var scheme env
+extend (Env env) (ty'var, scheme) = Env $ Map.insert ty'var scheme env
 
 
 
-subst'var'type :: String -> Type -> Type -> Type
-subst'var'type name replacement var@(TyVar varname)
-  | name == varname = replacement
-  | otherwise = var
+-- subst'var'type :: String -> Type -> Type -> Type
+-- subst'var'type name replacement var@(TyVar varname)
+--   | name == varname = replacement
+--   | otherwise = var
 
--- subst'var'type name replacement tycon@(BuiltInTyCon _)
---   = tycon
+-- -- subst'var'type name replacement tycon@(BuiltInTyCon _)
+-- --   = tycon
 
--- subst'var'type name replacement (AppTy left right)
---   = AppTy (subst'var'type name replacement left) (subst'var'type name replacement right)
+-- -- subst'var'type name replacement (AppTy left right)
+-- --   = AppTy (subst'var'type name replacement left) (subst'var'type name replacement right)
 
-subst'var'type name replacement (TyCon conname)
-  = (TyCon conname)
+-- subst'var'type name replacement (TyCon conname)
+--   = (TyCon conname)
 
-subst'var'type name replacement (TyArr left right)
-  = TyArr (subst'var'type name replacement left) (subst'var'type name replacement right)
+-- subst'var'type name replacement (TyArr left right)
+--   = TyArr (subst'var'type name replacement left) (subst'var'type name replacement right)
 
-subst'var'type name replacement (TyTuple types)
-  = TyTuple $ map (\ t' -> subst'var'type name replacement t') types
+-- subst'var'type name replacement (TyTuple types)
+--   = TyTuple $ map (\ t' -> subst'var'type name replacement t') types
 
-subst'var'type name replacement (TyList type') = case type' of
-  TyVar var | name == var -> TyList replacement
-  TyVar _ -> TyList type'
-  _ -> TyList $ subst'var'type name replacement type'
+-- subst'var'type name replacement (TyList type') = case type' of
+--   TyVar var | name == var -> TyList replacement
+--   TyVar _ -> TyList type'
+--   _ -> TyList $ subst'var'type name replacement type'
 
 {-
 subst'var'type'scheme name replacement type'scheme
 replaces all occurences of the type variable with given name in the type scheme
 but only if the variable given is not one of the bound ones by the type scheme
 -}
-subst'var'type'scheme :: String -> Type -> Scheme -> Scheme
-subst'var'type'scheme name replacement (ForAll varnames type')
-  | elem name varnames = ForAll varnames type'
-  | otherwise = ForAll varnames $ subst'var'type name replacement type'
+-- subst'var'type'scheme :: String -> Type -> Scheme -> Scheme
+-- subst'var'type'scheme name replacement (ForAll varnames type')
+--   | elem name varnames = ForAll varnames type'
+--   | otherwise = ForAll varnames $ subst'var'type name replacement type'
 
 
 
@@ -91,23 +159,19 @@ runInfer m
     Left err  -> Left err
     Right res -> Right $ closeOver res
 
--- helpInfer :: Infer (Subst, Type) -> Either TypeError (Subst, Type, Scheme)
--- helpInfer m
---   = case evalState (runExceptT m) 0 of
---     Left err -> Left err
---     Right (s, t) -> Right (s, t, closeOver (s, t))
 
 
 closeOver :: (Subst, Type) -> Scheme
 closeOver (subst, type')
   = normalize sc
-  where sc = generalize Map.empty (apply'subst'type subst type')  
+  where sc = generalize (Env Map.empty) (apply subst type')  
+
 
 
 normalize :: Scheme -> Scheme
 normalize (ForAll type'args body) = ForAll (fmap snd ord) (normtype body)
   where
-    ord = zip (Set.toList . free'type'vars'type $ body) letters
+    ord = zip (Set.toList . ftv $ body) letters
 
     normtype (TyArr a b) = TyArr (normtype a) (normtype b)
     normtype (TyCon a) = TyCon a
@@ -121,13 +185,13 @@ normalize (ForAll type'args body) = ForAll (fmap snd ord) (normtype body)
 
 
 empty'subst :: Subst
-empty'subst = []
+empty'subst = Sub []
 
 
 
 -- not really empty
 empty'env :: TypeEnv
-empty'env = Map.fromList
+empty'env = Env $ Map.fromList
   [ ("#fst",  ForAll ["a", "b"] (TyArr (TyTuple [TyVar "a", TyVar "b"]) (TyVar "a")))
   , ("#snd",  ForAll ["a", "b"] (TyArr (TyTuple [TyVar "a", TyVar "b"]) (TyVar "b")))
   , ("#=",    ForAll ["a"]      ((TyTuple [TyVar "a", TyVar "a"]) `TyArr` (TyCon "Bool")))
@@ -152,25 +216,20 @@ empty'env = Map.fromList
   ]
 
 
--- apply'subst'loctype :: Subst -> LocType -> LocType
--- apply'subst'loctype subst loctype
---   = foldl (\ loctype (name, replacement) -> subst'var'type name replacement loctype) loctype subst
+
+-- apply'subst'type :: Subst -> Type -> Type
+-- apply'subst'type subst type'
+--   = foldl (\ type' (name, replacement) -> subst'var'type name replacement type') type' subst
 
 
 
-apply'subst'type :: Subst -> Type -> Type
-apply'subst'type subst type'
-  = foldl (\ type' (name, replacement) -> subst'var'type name replacement type') type' subst
-
-
-
-apply'subst'scheme :: Subst -> Scheme -> Scheme
-apply'subst'scheme subst scheme
-  = foldl
-      (\ scheme (name, replacement)
-        -> subst'var'type'scheme name replacement scheme)
-      scheme
-      subst
+-- apply'subst'scheme :: Subst -> Scheme -> Scheme
+-- apply'subst'scheme subst scheme
+--   = foldl
+--       (\ scheme (name, replacement)
+--         -> subst'var'type'scheme name replacement scheme)
+--       scheme
+--       subst
 
 
 
@@ -178,11 +237,11 @@ apply'subst'scheme subst scheme
 -- into environment values
 -- assuming that environment keys are names of the functions or other expressions with given types
 -- thus not actually caring about the keyes/names now
-apply'subst'env :: Subst -> TypeEnv -> TypeEnv
-apply'subst'env subst type'env
-  = Map.map
-      (\ scheme -> apply'subst'scheme subst scheme)
-      type'env
+-- apply'subst'env :: Subst -> TypeEnv -> TypeEnv
+-- apply'subst'env subst type'env
+--   = Map.map
+--       (\ scheme -> apply'subst'scheme subst scheme)
+--       type'env
 
 
 
@@ -194,53 +253,45 @@ apply'subst'env subst type'env
 
 
 
-apply'subst'subst :: Subst -> Subst -> Subst
-apply'subst'subst subst'left subst'right
-  = map
-      (\ (name, type') -> (name, apply'subst'type subst'left type'))
-      subst'right
+-- apply'subst'subst :: Subst -> Subst -> Subst
+-- apply'subst'subst subst'left subst'right
+--   = map
+--       (\ (name, type') -> (name, apply'subst'type subst'left type'))
+--       subst'right
 
 
 compose'subst :: Subst -> Subst -> Subst
-compose'subst subst'left subst'right
-  = subst'left ++ (apply'subst'subst subst'left subst'right)
+compose'subst (Sub subst'left) subst'right
+  = let (Sub subst'right') = apply (Sub subst'left) subst'right
+    in Sub $ subst'left ++ subst'right'
 
 
--- free'loc'type'vars'type :: LocType -> Set String
--- free'loc'type'vars'type (At _ type')
+
+-- free'type'vars'type :: Type -> Set.Set String
+-- free'type'vars'type type'
 --   = case type' of
---     TyVar (At _ name) -> singleton name
---     BuiltInTyCon _ -> empty
---     AppTy left right -> union (free'loc'type'vars'type left) (free'loc'type'vars'type right)
---     TyArr left righty -> union (free'loc'type'vars'type left) (free'loc'type'vars'type right)
+--     TyVar name -> Set.singleton name
+--     TyCon name -> Set.empty
+--     TyTuple ts -> foldl (\ set' t' -> Set.union set' (free'type'vars'type t')) Set.empty ts
+--     TyList t -> free'type'vars'type t
+--     -- BuiltInTyCon _ -> Set.empty
+--     -- AppTy left right -> Set.union (free'type'vars'type left) (free'type'vars'type right)
+--     TyArr left right -> Set.union (free'type'vars'type left) (free'type'vars'type right)
 
 
 
-free'type'vars'type :: Type -> Set.Set String
-free'type'vars'type type'
-  = case type' of
-    TyVar name -> Set.singleton name
-    TyCon name -> Set.empty
-    TyTuple ts -> foldl (\ set' t' -> Set.union set' (free'type'vars'type t')) Set.empty ts
-    TyList t -> free'type'vars'type t
-    -- BuiltInTyCon _ -> Set.empty
-    -- AppTy left right -> Set.union (free'type'vars'type left) (free'type'vars'type right)
-    TyArr left right -> Set.union (free'type'vars'type left) (free'type'vars'type right)
+-- free'type'vars'scheme :: Scheme -> Set.Set String
+-- free'type'vars'scheme (ForAll vars type')
+--   = Set.difference (free'type'vars'type type') (Set.fromList vars)
 
 
 
-free'type'vars'scheme :: Scheme -> Set.Set String
-free'type'vars'scheme (ForAll vars type')
-  = Set.difference (free'type'vars'type type') (Set.fromList vars)
-
-
-
-free'type'vars'type'env :: TypeEnv -> Set.Set String
-free'type'vars'type'env type'env
-  = Map.foldr
-      (\ scheme free'vars -> Set.union free'vars (free'type'vars'scheme scheme))
-      Set.empty
-      type'env
+-- free'type'vars'type'env :: TypeEnv -> Set.Set String
+-- free'type'vars'type'env type'env
+--   = Map.foldr
+--       (\ scheme free'vars -> Set.union free'vars (free'type'vars'scheme scheme))
+--       Set.empty
+--       type'env
 
 
 
@@ -266,7 +317,7 @@ bind :: String -> Type -> Infer Subst
 bind varname type'
   | type' == TyVar varname = return empty'subst
   | occurs varname type' = throwError $ InfiniteType varname type'
-  | otherwise = return $ [(varname, type')]
+  | otherwise = return $ Sub [(varname, type')]
 
 
 
@@ -296,17 +347,12 @@ unify (TyCon name'l) (TyCon name'r)
   | name'l == name'r = return empty'subst
   | otherwise = throwError $ UnifMismatch name'l name'r
 
--- unify (TyTuple [left'a, left'b]) (TyTuple [right'a, right'b]) = do
---   subst'a <- unify left'a right'a
---   subst'b <- unify (apply'subst'type subst'a left'b) (apply'subst'type subst'a right'b)
---   return (subst'a `compose'subst` subst'b)
-
 unify (TyTuple ts'left) (TyTuple ts'right)
   = if length ts'left /= length ts'right
     then throwError $ UnifShapeMismatch (TyTuple ts'left) (TyTuple ts'right) 
     else foldM
       (\ subst' (t'left, t'right) -> do
-        subst'new <- unify (apply'subst'type subst' t'left) (apply'subst'type subst' t'right)
+        subst'new <- unify (apply subst' t'left) (apply subst' t'right)
         return (subst' `compose'subst` subst'new))
       empty'subst
       (zip ts'left ts'right)
@@ -314,12 +360,9 @@ unify (TyTuple ts'left) (TyTuple ts'right)
 unify (TyList t'left) (TyList t'right)
   = unify t'left t'right
 
--- unify (BuiltInTyCon UnitTyCon) (BuiltInTyCon UnitTyCon)
---   = return empty'subst
-
 unify (TyArr left'a right'a) (TyArr left'b right'b) = do
   subst'left <- unify left'a left'b
-  subst'right <- unify (apply'subst'type subst'left right'a) (apply'subst'type subst'left right'b)
+  subst'right <- unify (apply subst'left right'a) (apply subst'left right'b)
   return (subst'right `compose'subst` subst'left)
 
   -- case unify left'a left'b of
@@ -335,18 +378,14 @@ unify (TyArr left'a right'a) (TyArr left'b right'b) = do
 unify t'left t'right = do
   throwError $ UnifShapeMismatch t'left t'right
 
-{-
-Napadlo me:
-Slo by zkombinovat parsovani a type checkovani?
--}
 
 
 generalize :: TypeEnv -> Type -> Scheme
 generalize env type'
   = ForAll type'args type'
     where
-      fvt = free'type'vars'type type'
-      fve = free'type'vars'type'env env
+      fvt = ftv type'
+      fve = ftv env
       type'args = Set.toList $ fvt `Set.difference` fve
 
 
@@ -368,13 +407,13 @@ instantiate :: Scheme -> Infer Type
 instantiate (ForAll args type') = do
   args' <- mapM (const fresh) args
   let subst = zip args args'
-  return $ apply'subst'type subst type'
+  return $ apply (Sub subst) type'
 
 
 
 infer :: TypeEnv -> Expression -> Infer (Subst, Type)
 -- infer = undefined
-infer env expr = case expr of
+infer (Env env) expr = case expr of
   Var x ->
     case Map.lookup x env of
       Nothing -> throwError $ UnboundVariable x
@@ -388,34 +427,19 @@ infer env expr = case expr of
       Just scheme -> do
         type' <- instantiate scheme
         return (empty'subst, type')
-      -- "#=" -> return (empty'subst, ((TyTuple [TyVar "a", TyVar "a"]) `TyArr` (TyCon "Bool")))
-      -- "#<" -> return (empty'subst, ((TyTuple [TyCon "Int", TyCon "Int"]) `TyArr` (TyCon "Bool")))
-      -- "#>" -> return (empty'subst, ((TyTuple [TyCon "Int", TyCon "Int"]) `TyArr` (TyCon "Bool")))
-      -- "#+" -> return (empty'subst, ((TyTuple [TyCon "Int", TyCon "Int"]) `TyArr` (TyCon "Int")))
-      -- "#*" -> return (empty'subst, ((TyTuple [TyCon "Int", TyCon "Int"]) `TyArr` (TyCon "Int")))
-      -- "#-" -> return (empty'subst, ((TyTuple [TyCon "Int", TyCon "Int"]) `TyArr` (TyCon "Int")))
-      -- "#/" -> return (empty'subst, ((TyTuple [TyCon "Int", TyCon "Int"]) `TyArr` (TyCon "Int")))
-      -- concat two strings
-      -- "#++" -> return (empty'subst, ((TyTuple [TyCon "String", TyCon "String"]) `TyArr` (TyCon "String")))
-      -- prepend a char to a string
-      -- "#:" -> return (empty'subst, ((TyTuple [TyCon "Char", TyCon "String"]) `TyArr` (TyCon "String")))
-      -- append a char to a string
-      -- "#;" -> return (empty'subst, ((TyTuple [TyCon "Char", TyCon "String"]) `TyArr` (TyCon "String")))
-      -- "#fst" -> return (empty'subst, ((TyTuple [TyVar "x", TyVar "y"]) `TyArr` (TyVar "x")))
-      -- "#snd" -> return (empty'subst, ((TyTuple [TyVar "a", TyVar "b"]) `TyArr` (TyVar "b")))
 
   Lam x body -> do
     type'var <- fresh
-    let env' = env `extend` (x, ForAll [] type'var)
+    let env' = (Env env) `extend` (x, ForAll [] type'var)
     (subst', type') <- infer env' body
-    return (subst', apply'subst'type subst' (type'var `TyArr` type'))
+    return (subst', apply subst' (type'var `TyArr` type'))
 
   App left right -> do
     type'var <- fresh
-    (subst'left, type'left) <- infer env left
-    (subst'right, type'right) <- infer (apply'subst'env subst'left env) right
-    subst' <- unify (apply'subst'type subst'right type'left) (type'right `TyArr` type'var)
-    return (subst' `compose'subst` subst'right `compose'subst` subst'left, apply'subst'type subst' type'var)
+    (subst'left, type'left) <- infer (Env env) left
+    (subst'right, type'right) <- infer (apply subst'left (Env env)) right
+    subst' <- unify (apply subst'right type'left) (type'right `TyArr` type'var)
+    return (subst' `compose'subst` subst'right `compose'subst` subst'left, apply subst' type'var)
 
   Con x ->
     case Map.lookup x env of
@@ -425,83 +449,68 @@ infer env expr = case expr of
         return (empty'subst, type')
 
   If cond' then' else' -> do
-    -- type'var <- fresh
-    (subst'cond, type'cond) <- infer env cond'
-    let env' = apply'subst'env subst'cond env
+    (subst'cond, type'cond) <- infer (Env env) cond'
+    let env' = apply subst'cond (Env env)
     (subst'then', type'then') <- infer env' then'
-    let env'' = apply'subst'env subst'then' env'
+    let env'' = apply subst'then' env'
     (subst'else', type'else') <- infer env'' else'
-    -- let env''' = apply'subst'env subst'else' env''
 
     let subst' = subst'cond `compose'subst` subst'then' `compose'subst` subst'else'
 
-    let cond'type' = apply'subst'type subst' type'cond
-    let then'type' = apply'subst'type subst' type'then'
-    let else'type' = apply'subst'type subst' type'else'
+    let cond'type' = apply subst' type'cond
+    let then'type' = apply subst' type'then'
+    let else'type' = apply subst' type'else'
 
     unif'subst'1 <- unify cond'type' (TyCon "Bool")
     unif'subst'2 <- unify then'type' else'type'
 
     let final'subst = subst' `compose'subst` unif'subst'1 `compose'subst` unif'subst'2
 
-    let final'type = apply'subst'type final'subst then'type' -- or else'type' both should work I think
+    let final'type = apply final'subst then'type' -- or else'type' both should work I think
     return (final'subst, final'type)
   
   -- TODO: finish Let, Fix later
 
   Let name value expression -> do
-    (subst'val, type'val) <- infer env value
-    let env' = apply'subst'env subst'val env
+    (subst'val, type'val) <- infer (Env env) value
+    let env' = apply subst'val (Env env)
     let type'val' = generalize env' type'val
     (subst'expr, type'expr) <- infer (env' `extend` (name, type'val')) expression
     return (subst'expr `compose'subst` subst'val, type'expr)
 
-  -- Tuple [left, right] -> do
-  --   (subst'left, type'left) <- infer env left
-  --   let env' = apply'subst'env subst'left env
-  --   (subst'right, type'right) <- infer env' right
-  --   let subst'comp = subst'left `compose'subst` subst'right
-
-  --   let type'left'fin = apply'subst'type subst'comp type'left
-  --   let type'right'fin = apply'subst'type subst'comp type'right
-
-  --   return (subst'comp, TyTuple [type'left'fin, type'right'fin])
-
   Tuple exprs -> do
-    (subst'fin, env'fin, types) <- foldM infer' (empty'subst, env, []) exprs
-    let types'fin = map (\ t -> apply'subst'type subst'fin t) types
+    (subst'fin, env'fin, types) <- foldM infer' (empty'subst, (Env env), []) exprs
+    let types'fin = map (\ t -> apply subst'fin t) types
     return (subst'fin, TyTuple types'fin)
       where
         infer' (sub, env, ts) exp' = do
           (subst', type') <- infer env exp'
-          let env' = apply'subst'env subst' env
+          let env' = apply subst' env
           return (sub `compose'subst` subst', env', ts ++ [type'])
     -- hopefuly it's correct
 
   List exprs -> do
-    (subst', env'fin, types) <- foldM infer' (empty'subst, env, []) exprs
-    let types' = map (\ t -> apply'subst'type subst' t) types
+    (subst', env'fin, types) <- foldM infer' (empty'subst, (Env env), []) exprs
+    let types' = map (\ t -> apply subst' t) types
     type'var <- fresh
     (subst'fin, type'fin) <- foldM unify' (empty'subst, type'var) types'
     return (subst'fin, TyList type'fin)
       where
         infer' (sub, env, ts) exp' = do
           (subst', type') <- infer env exp'
-          let env' = apply'subst'env subst' env
+          let env' = apply subst' env
           return (sub `compose'subst` subst', env', ts ++ [type'])
         unify' (sub, t) t' = do
-          sub' <- unify (apply'subst'type sub t) (apply'subst'type sub t') -- the first apply shouldn't be ncessary, but won't hurt
-          return (sub `compose'subst` sub', apply'subst'type sub' t)
+          sub' <- unify (apply sub t) (apply sub t') -- the first apply shouldn't be ncessary, but won't hurt
+          return (sub `compose'subst` sub', apply sub' t)
 
   Fix expr -> do
     type'var <- fresh
     let t' = (type'var `TyArr` type'var) `TyArr` type'var
-    (sub, t) <- infer env expr
+    (sub, t) <- infer (Env env) expr
     type'var' <- fresh
     sub' <- unify (t `TyArr` type'var') t'
-    return (sub' `compose'subst` sub, apply'subst'type sub' type'var')
-    -- TODO: continue here
-    
+    return (sub' `compose'subst` sub, apply sub' type'var')
 
   Lit (LitInt i) -> return (empty'subst, (TyCon "Int"))
   Lit (LitDouble d) -> return (empty'subst, (TyCon "Double"))
@@ -514,11 +523,15 @@ infer env expr = case expr of
 inferExpression :: TypeEnv -> Expression -> Either TypeError Scheme
 inferExpression env = runInfer . infer env
 
-inferTop :: TypeEnv -> [(String, Expression)] -> Either TypeError TypeEnv
-inferTop env [] = Right env
-inferTop env ((name, ex):xs) = case inferExpression env ex of
-  Left err -> Left err
-  Right ty -> inferTop (extend env (name, ty)) xs
 
-typeof :: TypeEnv -> String -> Maybe Scheme
-typeof env name = Map.lookup name env
+
+-- inferTop :: TypeEnv -> [(String, Expression)] -> Either TypeError TypeEnv
+-- inferTop env [] = Right env
+-- inferTop env ((name, ex):xs) = case inferExpression env ex of
+--   Left err -> Left err
+--   Right ty -> inferTop (extend env (name, ty)) xs
+
+
+
+-- typeof :: TypeEnv -> String -> Maybe Scheme
+-- typeof env name = Map.lookup name env

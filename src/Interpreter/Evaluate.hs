@@ -1,25 +1,13 @@
 module Interpreter.Evaluate where
 
-
 import qualified Data.Map as Map
 import Data.Either
 import Data.List
 
 import Compiler.Syntax.Expression
 import Compiler.Syntax.Literal
+import Interpreter.Error
 
-
-type Env = Map.Map String Expression
-
-data EvaluationError
-  = UnboundVar String
-  | WrongNegation Expression
-  | ApplicationError Expression Expression -- Function Argument
-  | BadOperatorApplication String Expression
-  | IndexOutOfBound Int
-  | NilHeadException
-  | NilTailException
-  deriving (Show)
 
 
 substitute :: Expression -> String -> Expression -> Expression
@@ -51,8 +39,6 @@ substitute (Fix expr) var replacement
 --   = Typed type' (substitute expr var replacement)
 
 
-eval :: Expression -> Either EvaluationError Expression
-eval expr = evaluate expr
 
 evaluate :: Expression -> Either EvaluationError Expression
 evaluate expr = case expr of
@@ -110,8 +96,8 @@ evaluate expr = case expr of
 
 
 apply'operator :: String -> Expression -> Either EvaluationError Expression
-apply'operator "#=" (Tuple [Lit (LitInt i'l), Lit (LitInt i'r)])
-  = Right $ Lit (LitBool (i'l == i'r))
+apply'operator "#=" (Tuple [Lit lit'l, Lit lit'r])
+  = Right $ Lit (LitBool (lit'l == lit'r))
 apply'operator "#<" (Tuple [Lit (LitInt i'l), Lit (LitInt i'r)])
   = Right $ Lit (LitBool (i'l < i'r))
 apply'operator "#>" (Tuple [Lit (LitInt i'l), Lit (LitInt i'r)])
@@ -122,6 +108,8 @@ apply'operator "#*" (Tuple [Lit (LitInt i'l), Lit (LitInt i'r)])
   = Right $ Lit (LitInt (i'l * i'r))
 apply'operator "#-" (Tuple [Lit (LitInt i'l), Lit (LitInt i'r)])
   = Right $ Lit (LitInt (i'l - i'r))
+apply'operator "#/" (Tuple [Lit (LitInt i'l), Lit (LitInt 0)])
+  = Left $ DivisionByZero i'l
 apply'operator "#/" (Tuple [Lit (LitInt i'l), Lit (LitInt i'r)])
   = Right $ Lit (LitInt (i'l `div` i'r))
 apply'operator "#." (Tuple [Lit (LitString s'l), Lit (LitString s'r)])

@@ -204,8 +204,10 @@ NoneOrManySeparated(tok)
 
 parseError _ = do
   lno <- getLineNo
-  s <- get
-  error $ "Parse error on line " ++ show lno ++ "\n\n" ++ show s
+  colno <- getColNo
+  -- s <- get
+  -- error $ "Parse error on line " ++ show lno ++ "\n\n" ++ show s
+  error $ "Parse error on line " ++ show lno ++ ", column " ++ show colno ++ "."
 
 
 

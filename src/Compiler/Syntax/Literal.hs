@@ -8,6 +8,7 @@ data Lit
   | LitChar Char
   | LitString String
   | LitUnit
+  deriving (Eq)
 
 instance Show Lit where
   show (LitInt i) = show i

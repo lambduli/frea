@@ -17,30 +17,6 @@ import Compiler.TypeChecker.Inference
 import Interpreter.Evaluate
 
 
-noSourceFileError :: String
-noSourceFileError =
-  "I need to be given sourcefile to work with.\
-  \\n\
-  \\n\
-  \Try something like: ggc main.gs"
-
-
-readtoks :: P [Token]
-readtoks = do
-            t <- readToken
-            case t of
-              TokEOF -> return [t]
-              _ -> do 
-                rest <- readtoks
-                return (t : rest)
-
-tokenize::String-> [Token]
-tokenize s = 
-        evalP readtoks s 
-
-
-
-
 main :: IO ()
 main = do
   putStrLn "Glamorous Frea REPL."
@@ -57,6 +33,7 @@ readExpression = do
   case line of
     "" -> return line
     ':' : 'e' : 'x' : 'i' : 't' : _ -> return line
+    ':' : 'q' : _ -> return line
     _ -> do
       next'line <- read'expr'
       return $ line ++ ['\n'] ++ next'line
@@ -68,6 +45,7 @@ readExpression = do
         case line of
           "" -> return line
           ':' : 'e' : 'x' : 'i' : 't' : _ -> return line
+          ':' : 'q' : _ -> return line
           _ -> do
             next'line <- read'expr'
             return $ line ++ ['\n'] ++ next'line
@@ -78,13 +56,14 @@ repl = do
   -- read
   line <- readExpression
 
-  -- eval
+  -- evaluate
   case line of
     [] -> do
       putStrLn ""
       repl
     ":exit" ->
       return ()
+    ":q" -> return ()
     ':' : 't' : line -> do
       let expression = parse'expr line
       let error'or'type = inferExpression empty'env expression
@@ -105,7 +84,7 @@ repl = do
           putStrLn $ "Type Error: " ++ show err
           repl
         _ -> do
-          let error'or'expr = eval expression
+          let error'or'expr = evaluate expression
           -- print
           case error'or'expr of
             Left err -> putStrLn $ "Evaluation Error: " ++ show err

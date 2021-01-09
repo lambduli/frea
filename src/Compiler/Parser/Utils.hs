@@ -85,6 +85,12 @@ getLineNo = do
   return . ai'line'number . input $ s
 
 
+getColNo :: P Int
+getColNo = do
+  s <- get
+  return . ai'column'number . input $ s
+
+
 -- TODO: fix pls
 -- what if current token begins on different line, like () or []
 -- I know parsing () and [] like single token is probably not gonna last
