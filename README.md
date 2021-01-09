@@ -2,7 +2,7 @@
 
 A simple programming language with Damas-Hindley-Milner type inference.
 
-To compiler: `$ stack build`
+To compile: `$ stack build`
 
 To run: `$ stack run`
 
