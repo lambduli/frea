@@ -19,17 +19,11 @@ $hexit      = [a-f A-F $digit]
 $lower  = [a-z]
 $upper  = [A-Z]
 
-$symbol  = [ \! \$ \% \& \* \+ \. \/ \< \= \> \? \@ \\ \^ \| \- \~ \: ]
+$symbol  = [ \! \$ \# \% \& \* \+ \. \/ \< \= \> \? \@ \\ \^ \| \- \~ \: ]
 
 $identchar    = [$lower $upper $digit $symbol]
 
-@variableident      = [$lower $symbol] $identchar*
-@constrident        = $upper $identchar*
-
-@moduleident  = @constrident
-@typeconstr   = @constrident
-@typeclass    = @constrident
-
+@variableident      = [$lower $upper $symbol] $identchar*
 
 $space  = [\ \t\f\v]
 
@@ -57,13 +51,6 @@ token :-
 <0>         lambda          { plainTok TokLambda }
 <0>         "\"             { plainTok TokLambda }
 <0>         "fix"           { plainTok $ TokFix }
--- <0>         "letrec"        { plainTok $ TokLetrec }
-
-
-
--- variables and constructors - qualified and un-qualified
-<0>         @variableident        { parametrizedTok TokVarId id }
-<0>         @constrident          { parametrizedTok TokConstrId id }
 
 
 -- special symbols
@@ -91,13 +78,11 @@ token :-
 <0>         "#head"         { plainTok $ TokNativeSym "#head" }
 <0>         "#tail"         { plainTok $ TokNativeSym "#tail" }
 <0>         "#nil?"         { plainTok $ TokNativeSym "#nil?" }
-
-
-
 <0>         "#t"            { plainTok $ TokBool True }
 <0>         "#f"            { plainTok $ TokBool False }
 
-
+-- variables and constructors - qualified and un-qualified
+<0>         @variableident        { parametrizedTok TokVarId id }
 
 <0>         \n              ;
 <0>         $space+         ;

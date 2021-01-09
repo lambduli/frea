@@ -24,7 +24,6 @@ main = do
   repl
 
 
-
 readExpression :: IO (String)
 readExpression = do
   putStr "frea λ> "

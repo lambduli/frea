@@ -7,16 +7,11 @@ data TokPosition
   deriving (Eq, Show)
 
 
--- TODO: walk through each Token Constructor and remove all which are not needed
-
 data Token
   -- reserved identifiers/words
   = TokMatch
   | TokWith
   | TokData -- data
-  -- | TokDefault
-  -- | TokDeriving
-  -- | TokDo
   | TokIf
   | TokThen
   | TokElse
@@ -35,7 +30,7 @@ data Token
 
   -- variables
   | TokVarId String
-  | TokConstrId String
+  -- | TokConstrId String
   | TokNativeSym String
   
 

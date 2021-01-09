@@ -8,11 +8,11 @@ To run: `$ stack run`
 
 ## Examples:
 ### Maping over a list
-```
+```haskell
 let
-  list = [1, 2, 3, 4, 5, 6, 7]
+  list = [1, 2, 3, 4, 5]
 in let
-  double = (\ x -> (#* (2,x)))
+  double = (\ x -> (#* (2, x)))
 in let
   map = fix (\ map lst fn ->
               if (#nil? lst)
@@ -21,9 +21,9 @@ in let
 in (map list double)
 ```
 ### Factorial of 5
-```
+```haskell
 let
-  zero = (\ n -> (#= (n,0)))
+  zero = (\ n -> (#= (n, 0)))
 in let
   fact = fix (\ fact n ->
                   if (zero n)
@@ -44,17 +44,17 @@ Language supports:
 
 ## Various Simple Literals
 
-```
+```haskell
 frea λ> :t 23
 
 :: Int
 ```
-```
+```haskell
 frea λ> :t 23.23
 
 :: Double
 ```
-```
+```haskell
 frea λ> :t #t
 
 :: Bool
@@ -63,12 +63,12 @@ frea λ> :t #f
 
 :: Bool
 ```
-```
+```haskell
 frea λ> :t 'c'
 
 :: Char
 ```
-```
+```haskell
 frea λ> :t "hello world"
 
 :: String
@@ -76,25 +76,25 @@ frea λ> :t "hello world"
 
 ## Some More Interesting Ones
 ### Lists
-```
+```haskell
 frea λ> :t [1, 2, 3]
 
 :: [Int]
 ```
 ### Tuples of arbitrary length
-```
+```haskell
 frea λ> :t (1, "string", 'c')
 
 :: (Int, String, Char)
 ```
 ### Unit
-```
+```haskell
 frea λ> :t ()
 
 :: Unit
 ```
 ### Functions of course
-```
+```haskell
 frea λ> :t (\ int -> (#+ (int, 1)) )
 
 :: Int -> Int
@@ -104,32 +104,32 @@ _____
 ## Expressions:
 
 ### Conditionals
-```
+```haskell
 frea λ> if #t then 23 else 42
 
 23
 ```
 
 ### Let in expression
-```
+```haskell
 frea λ> let name = "Frea" in (#. (name, " is awesome!"))
 
 "Frea is awesome!"
 ```
 
 ### Function Application
-```
+```haskell
 frea λ> (fn arg1 arg2 arg3 ... argN)
 ```
 
 ### Lambdas with many arguments sugar
-```
+```haskell
 frea λ> (\ a b c -> c)
 ```
 
 ### Recursion using Fix keyword
-```
-frea λ> (fix (\ fact n -> if (#= (n,0)) then 1 else (#* (n,(fact (#- (n,1)))))) 5)
+```haskell
+frea λ> (fix (\ fact n -> if (#= (n, 0)) then 1 else (#* (n, (fact (#- (n, 1)))))) 5)
 
 120
 ```

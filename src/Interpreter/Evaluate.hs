@@ -9,13 +9,11 @@ import Compiler.Syntax.Literal
 import Interpreter.Error
 
 
-
 substitute :: Expression -> String -> Expression -> Expression
 substitute (Var name) var replacement
   | name == var = replacement
   | otherwise = Var name
 substitute (Op o) _ _ = Op o
-substitute (Con c) _ _ = Con c
 substitute (Lit l) _ _ = Lit l
 substitute (Lam par body) var replacement
   | par /= var = Lam par $ substitute body var replacement
@@ -24,8 +22,6 @@ substitute (App left right) var replacement
   = App (substitute left var replacement) (substitute right var replacement)
 substitute (Tuple exprs) var replacement
   = Tuple $ map (\ e -> substitute e var replacement) exprs
--- substitute (NegApp expr) var replacement
---   = NegApp $ substitute expr var replacement
 substitute (List exprs) var replacement
   = List $ map (\ e -> substitute e var replacement) exprs
 substitute (If cond' then' else') var replacement
@@ -35,16 +31,13 @@ substitute (Let name val expr) var replacement
   | otherwise = Let name val expr
 substitute (Fix expr) var replacement
   = Fix $ substitute expr var replacement
--- substitute (Typed type' expr) var replacement
 --   = Typed type' (substitute expr var replacement)
-
 
 
 evaluate :: Expression -> Either EvaluationError Expression
 evaluate expr = case expr of
   Var name -> Right $ Var name
   Op name -> Right $ Op name
-  -- Con name -> Right $ Con name
   Lit lit -> Right $ Lit lit
   Tuple exprs ->
     let
@@ -57,7 +50,6 @@ evaluate expr = case expr of
           vals = map from'right eiths
         in Right $ Tuple vals
       Just err -> err
-    -- Tuple $ map (\ e -> evaluate e env) exprs
   List exprs ->
     let
       eiths = map evaluate exprs
@@ -73,21 +65,12 @@ evaluate expr = case expr of
     evaluate $ App (Lam name expr) val
   Lam arg body -> Right $ Lam arg body
   App (Lam arg body) right -> evaluate $ substitute body arg right
-    -- case evaluate right of
-      -- Left err -> Left err
-      -- Right val -> evaluate $ substitute body arg val
   App (Op op) right -> case evaluate right of
     Left err -> Left err
     Right val -> apply'operator op val
   App left right -> case evaluate left of
     Left err -> Left err
     Right fn' -> evaluate $ App fn' right    
-    -- App (Con arg) right -> 
-  -- NegApp expr -> case evaluate expr of
-  --   Right (Lit (LitInt i)) -> Right $ Lit (LitInt (-i))
-  --   Right (Lit (LitDouble d)) -> Right $ Lit (LitDouble (-d))
-  --   Left err -> Left err
-  --   _ -> Left $ WrongNegation expr
   If cond' then' else' -> case evaluate cond' of
     Left err -> Left err
     Right (Lit (LitBool b)) -> if b then evaluate then' else evaluate else'
