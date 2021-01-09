@@ -117,7 +117,7 @@ Double          ::  { Lit }
 
 NoneOrMany(tok)
                 :   {- empty -}                                     { [] }
-                |   NoneOrMany(tok) tok                             { $1 ++ [$2] }
+                |   tok NoneOrMany(tok)                             { $1 : $2 }
 
 OneOrMany(tok)
                 :   tok NoneOrMany(tok)                             { $1 : $2 }
