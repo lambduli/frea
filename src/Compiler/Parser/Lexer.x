@@ -41,6 +41,7 @@ token :-
 <0>         if              { plainTok TokIf }
 <0>         then            { plainTok TokThen }
 <0>         else            { plainTok TokElse }
+<0>         "let rec"       { plainTok $ TokLetrec }
 <0>         let             { plainTok TokLet }
 <0>         in              { plainTok TokIn }
 <0>         type            { plainTok TokType }

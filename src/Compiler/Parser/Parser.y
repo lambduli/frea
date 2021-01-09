@@ -44,6 +44,7 @@ import Compiler.Syntax.Type
   define        { TokDefine }
   lambda        { TokLambda }
   fix           { TokFix }
+  letrec        { TokLetrec }
   
 
   '-'           { TokVarId "-" }
@@ -96,6 +97,7 @@ Exp             ::  { Expression }
                 |   fix Exp                                         { Fix $2 }
                 |   if Exp then Exp else Exp                        { If $2 $4 $6 }
                 |   let Var '=' Exp in Exp                          { Let $2 $4 $6 }
+                |   letrec Var Params '=' Exp in Exp                { Let $2 (Fix $ foldr (\ arg body -> Lam arg body) $5 ($2 : $3)) $7 }
                 |   '(' Exp CommaSeparated(Exp) ')'                 { Tuple $ $2 : $3 }
                 |   '[' NoneOrManySeparated(Exp) ']'                { List $2 }
 

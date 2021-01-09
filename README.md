@@ -13,22 +13,20 @@ let
   list = [1, 2, 3, 4, 5]
 in let
   double = (\ x -> (#* (2, x)))
-in let
-  map = fix (\ map lst fn ->
-              if (#nil? lst)
-              then []
-              else (#: ((fn (#head lst)), (map (#tail lst) fn))))
+in let rec
+  map lst fn = if (#nil? lst)
+                then []
+                else (#: ((fn (#head lst)), (map (#tail lst) fn)))
 in (map list double)
 ```
 ### Factorial of 5
 ```haskell
 let
   zero = (\ n -> (#= (n, 0)))
-in let
-  fact = fix (\ fact n ->
-                  if (zero n)
-                  then 1
-                  else (#* (n, (fact (#- (n, 1))))))
+in let rec
+  fact n = if (zero n)
+            then 1
+            else (#* (n, (fact (#- (n, 1)))))
 in (fact 5)
 ```
 
@@ -138,6 +136,17 @@ frea λ> (\ a b c -> c)
 frea λ> (fix (\ fact n -> if (#= (n, 0)) then 1 else (#* (n, (fact (#- (n, 1)))))) 5)
 
 120
+```
+
+### Recursion using Let rec
+```haskell
+let
+  zero = (\ n -> (#= (n, 0)))
+in let rec
+  fact n = if (zero n)
+            then 1
+            else (#* (n, (fact (#- (n, 1)))))
+in (fact 5)
 ```
 ___
 

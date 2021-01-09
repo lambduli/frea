@@ -9,6 +9,7 @@
 ( (fix (\ fact n -> if (#= (n,0)) then 1 else (#* (n,(fact (#- (n,1))))))) 5 )
 (fix (\ fact n -> if (#= (n,0)) then 1 else (#* (n,(fact (#- (n,1)))))) 5)
 
+let rec fact n = if (#= (n,0)) then 1 else (#* (n, (fact (#- (n,1)) ))) in (fact 5)
 
 -- this is OK
 let fn = (\ i -> i) in let map = (\ l f -> l) in (#: ((fn (#head [1])), (map (#tail [1,2]) fn)))
