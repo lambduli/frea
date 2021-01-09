@@ -38,8 +38,10 @@ ___
 
 ## REPL commands:
 - `:t` *followed by an expression* does not evaluate the expression but rather tells you it's type
+- `:exit` or `:q` exits the REPL
 - *expression* standing on it's own will be typechecked and possibly evaluated (it can span across multiple lines)
 
+____
 Language supports:
 
 ## Various Simple Literals
