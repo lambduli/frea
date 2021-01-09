@@ -103,6 +103,10 @@ _____
 
 ## Expressions:
 
+> Variable names can start with and contain these symbols `!` `$` `#` `%` `&` `*` `+` `.` `/` `<` `=` `>` `?` `@` `\` `^` `|` `-` `~` `:`.
+
+> Variable names can start with lower and upper case letters (as well as previously mentioned symbols) and can contain numbers.
+
 ### Conditionals
 ```haskell
 frea λ> if #t then 23 else 42
