@@ -133,6 +133,8 @@ frea λ> (fn arg1 arg2 arg3 ... argN)
 frea λ> (\ a b c -> c)
 ```
 
+> You can use two different keywords for lambdas: `lambda` and `\`. When you use `\` you need to always put a space behind it, separating the first argument and the `\` symbol. That's because you can use any symbol to name variables, even `\`. Therefore `\i` is a valid variable name in Frea.
+
 ### Recursion using Fix keyword
 ```haskell
 frea λ> (fix (\ fact n -> if (#= (n, 0)) then 1 else (#* (n, (fact (#- (n, 1)))))) 5)
