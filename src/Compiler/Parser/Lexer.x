@@ -51,7 +51,7 @@ token :-
 <0>         define          { plainTok TokDefine }
 <0>         lambda          { plainTok TokLambda }
 <0>         "\"             { plainTok TokLambda }
-<0>         "fix"           { plainTok $ TokFix }
+<0>         fix             { plainTok $ TokFix }
 
 
 -- special symbols

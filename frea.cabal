@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 642f5dfac06b7acebb8322a0fe1cbd3e4681eae21002e9884be8727a2e50c608
+-- hash: c533435e60b4c1c84f8c10343477b9d9deb8aba8ebec7ca08c3b65961651e821
 
 name:           frea
 version:        0.1.0.0
@@ -56,6 +56,7 @@ library
     , containers >=0.6.2.1
     , directory
     , filepath
+    , hspec
     , mtl
     , utf8-string
   default-language: Haskell2010
@@ -74,6 +75,7 @@ executable frea-exe
     , directory
     , filepath
     , frea
+    , hspec
     , mtl
     , utf8-string
   default-language: Haskell2010
@@ -95,6 +97,7 @@ test-suite frea-test
     , directory
     , filepath
     , frea
+    , hspec
     , mtl
     , utf8-string
   default-language: Haskell2010
