@@ -20,6 +20,7 @@ data Expression
   | Fix Expression -- OK
   -- | Typed Type Expression -- OK
   -- | MatchWith Expression MatchGroup -- OK
+  deriving (Eq)
   
 instance Show Expression where
   show (Var name) = name

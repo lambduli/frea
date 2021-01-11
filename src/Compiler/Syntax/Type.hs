@@ -28,6 +28,7 @@ instance Show Type where
 
 data Scheme
   = ForAll [String] Type
+  deriving (Eq)
 
 instance Show Scheme where
   show (ForAll [] type')
