@@ -65,7 +65,7 @@ repl = do
     ":q" -> return ()
     ':' : 't' : line -> do
       let expression = parse'expr line
-      let error'or'type = inferExpression empty'env expression
+      let error'or'type = infer'expression empty'env expression
       -- print
       case error'or'type of
         Left err -> do
@@ -77,7 +77,7 @@ repl = do
         
     _ -> do
       let expression = parse'expr line
-      let error'or'type = inferExpression empty'env expression
+      let error'or'type = infer'expression empty'env expression
       case error'or'type of
         Left err -> do
           putStrLn $ "Type Error: " ++ show err

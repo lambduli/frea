@@ -348,13 +348,17 @@ infer (Env env) expr = case expr of
   Lit LitUnit -> return (empty'subst, (TyCon "Unit"))
 
 
-inferExpression :: TypeEnv -> Expression -> Either TypeError Scheme
-inferExpression env = runInfer . infer env
+infer'expression :: TypeEnv -> Expression -> Either TypeError Scheme
+infer'expression env = runInfer . infer env
+
+
+typeof :: Expression -> Either TypeError Scheme
+typeof expr = infer'expression empty'env expr
 
 
 -- inferTop :: TypeEnv -> [(String, Expression)] -> Either TypeError TypeEnv
 -- inferTop env [] = Right env
--- inferTop env ((name, ex):xs) = case inferExpression env ex of
+-- inferTop env ((name, ex):xs) = case infer'expression env ex of
 --   Left err -> Left err
 --   Right ty -> inferTop (extend env (name, ty)) xs
 

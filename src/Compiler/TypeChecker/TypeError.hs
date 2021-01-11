@@ -8,6 +8,7 @@ data TypeError
   | UnifMismatch String String
   | UnboundVariable String
   | UnifShapeMismatch Type Type
+  deriving (Eq)
 
 instance Show TypeError where
   show (InfiniteType name type')
