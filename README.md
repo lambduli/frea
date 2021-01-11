@@ -6,6 +6,8 @@ To compile: `$ stack build`
 
 To run: `$ stack run`
 
+To test: `$ stack test`
+
 ## Examples:
 ### Maping over a list
 ```haskell
