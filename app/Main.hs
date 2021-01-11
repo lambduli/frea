@@ -60,9 +60,12 @@ repl = do
     [] -> do
       putStrLn ""
       repl
-    ":exit" ->
+    ":exit" -> do
+      putStrLn "Bye!"
       return ()
-    ":q" -> return ()
+    ":q" -> do
+      putStrLn "Bye!"
+      return ()
     ':' : 't' : line -> do
       let expression = parse'expr line
       let error'or'type = infer'expression empty'env expression
