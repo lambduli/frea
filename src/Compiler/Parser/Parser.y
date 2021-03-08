@@ -25,7 +25,7 @@ import Compiler.Syntax.Type
 %error { parseError }
 %monad { P }
 %lexer { lexer } { TokEOF }
-%expect 0
+--%expect 0
 
 
 %token
@@ -61,6 +61,7 @@ import Compiler.Syntax.Type
   '['           { TokLeftBracket }
   ']'           { TokRightBracket }
   ','           { TokComma }
+  '`'           { TokBackTick }
 
 
   unit          { TokUnit }
@@ -85,10 +86,12 @@ Op              ::  { String }
 
 Exp             ::  { Expression }
                 :   Var                                             { Var $1 }
-                |   Op                                              { Op $1 }
+                |   '(' Op ')'                                      { Op $2 }
                 |   Lit                                             { Lit $1 }
                 |   lambda Params '->' Exp                          { foldr (\ arg body -> Lam arg body) $4 $2 }
 
+                |   Exp '`' Var '`' Exp                             { App (App (Var $3) $1) $5 }
+                |   Exp Op Exp                                      { App (App (Op $2) $1) $3 }
                 |   '(' Exp OneOrMany(Exp) ')'                      { foldl App $2 $3 }
                 --  NOTE: what about (fn) ? you can't call a function without arguments!
                 |   '(' Exp ')'                                     { $2 }
