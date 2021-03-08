@@ -62,9 +62,13 @@ token :-
 <0>         "["             { plainTok TokLeftBracket }
 <0>         "]"             { plainTok TokRightBracket }
 <0>         ","             { plainTok TokComma }
+<0>         "`"             { plainTok TokBackTick }
+
 <0>         "#="            { plainTok $ TokNativeSym "#=" }
 <0>         "#<"            { plainTok $ TokNativeSym "#<" }
 <0>         "#>"            { plainTok $ TokNativeSym "#>" }
+
+<0>         "+"             { plainTok $ TokNativeSym "+" }
 <0>         "#+"            { plainTok $ TokNativeSym "#+" }
 <0>         "#-"            { plainTok $ TokNativeSym "#-" }
 <0>         "#*"            { plainTok $ TokNativeSym "#*" }
