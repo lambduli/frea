@@ -70,7 +70,7 @@ evaluate expr = case expr of
     Right val -> apply'operator op val
   App left right -> case evaluate left of
     Left err -> Left err
-    Right fn' -> evaluate $ App fn' right    
+    Right fn' -> evaluate $ App fn' right
   If cond' then' else' -> case evaluate cond' of
     Left err -> Left err
     Right (Lit (LitBool b)) -> if b then evaluate then' else evaluate else'
@@ -104,7 +104,7 @@ apply'operator "#;" (Tuple [Lit (LitChar ch'l), Lit (LitString s'r)])
 apply'operator "#:" (Tuple [expr, List exprs])
   = Right $ List $ expr : exprs
 apply'operator "#!!" (Tuple [Lit (LitInt i), List exprs])
-  | i < 0 || i >= (length exprs) = Left $ IndexOutOfBound i
+  | i < 0 || i >= length exprs = Left $ IndexOutOfBound i
   | otherwise = Right $ exprs !! i
 apply'operator "#head" (List []) = Left $ NilHeadException
 apply'operator "#head" (List (e : es)) = Right e
