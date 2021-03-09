@@ -1,10 +1,11 @@
 module Interpreter.Error where
 
 import Compiler.Syntax (Expression)
+import Interpreter.Value
 
 data EvaluationError
   = UnboundVar String
-  | BadOperatorApplication String Expression
+  | BadOperatorApplication String Value
   | IndexOutOfBound Int
   | NilHeadException
   | NilTailException
