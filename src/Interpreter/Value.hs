@@ -7,6 +7,7 @@ import Compiler.Syntax.Literal
 
 
 newtype Env = Env [(String, Closed)]
+  deriving (Show)
 
 type Closed = (Expression, Env)
 
