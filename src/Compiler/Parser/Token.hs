@@ -32,6 +32,7 @@ data Token
   | TokVarId String
   -- | TokConstrId String
   | TokNativeSym String
+  | TokOperator String
   
 
   -- special symbols
@@ -51,6 +52,9 @@ data Token
   | TokBool Bool -- #t / #f
   | TokUnit -- ()
 
+
+  | TokAssume -- assume
+  | TokRec    -- rec
 
   | TokEOF
   deriving (Eq, Show)
