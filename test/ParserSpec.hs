@@ -49,6 +49,25 @@ spec = describe "Test the parser" $ do
         (Fix (Lam "fn" (Lam "n" (App (Var "fn") (Var "n")))))
         (App (Var "fn") (Lit (LitInt 2)))
   it "Parses a simple arithmetic expression equivalent to 23 + 42" $ do
-    parse'expr "(#+ (23, 42))" `shouldBe`
+    parse'expr "((#+) (23, 42))" `shouldBe`
       App (Op "#+") (Tuple [Lit (LitInt 23), Lit (LitInt 42)])
+  it "Parses a simple arithmetic expression (23 + 42)" $ do
+    parse'expr "(23 + 42)" `shouldBe`
+      App (App (Op "+") (Lit (LitInt 23))) (Lit (LitInt 42))
+  it "Parses a simple arithmetic expression [prefix] ((+) 23 42)" $ do
+    parse'expr "((+) 23 42)" `shouldBe`
+      App (App (Op "+") (Lit (LitInt 23))) (Lit (LitInt 42))
+
+  it "Parses a simple infix function expression (23 `plus` 42)" $ do
+    parse'expr "(23 `plus` 42)" `shouldBe`
+      App (App (Var "plus") (Lit (LitInt 23))) (Lit (LitInt 42))
+  it "Parses a let-in expression with simple infix function expression (let plus = plus in 23 `plus` 42)" $ do
+    parse'expr "let plus = plus in 23 `plus` 42" `shouldBe`
+      Let "plus" (Var "plus") (App (App (Var "plus") (Lit (LitInt 23))) (Lit (LitInt 42)))
+  it "Parses a let-in expression with simple infix function expression (let plus = (\\ a b -> ((#+) (a, b))) in (23 `plus` 42))" $ do
+    parse'expr "let plus = (\\ a b -> ((#+) (a, b))) in (23 `plus` 42)" `shouldBe`
+      Let
+        "plus"
+        (Lam "a" (Lam "b" (App (Op "#+") (Tuple [Var "a", Var "b"]))))
+        (App (App (Var "plus") (Lit (LitInt 23))) (Lit (LitInt 42)))
 

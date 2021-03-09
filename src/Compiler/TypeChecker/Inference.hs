@@ -5,8 +5,9 @@ import Data.List (elem, foldl)
 import qualified Data.Set as Set
 import Control.Monad.State
 import Control.Monad.Except
+import Data.Bifunctor (second)
 
-import Compiler.Syntax 
+import Compiler.Syntax
   ( Bind(..)
   , Declaration(..), ConstrDecl(..)
   , Expression(..)
@@ -37,11 +38,11 @@ instance Substitutable Type where
     | name == varname = repl
     | otherwise = var
   apply (Sub [(name, repl)]) (TyCon conname)
-    = (TyCon conname)
+    = TyCon conname
   apply (Sub [(name, repl)]) (TyArr left right)
     = TyArr (apply (Sub [(name, repl)]) left) (apply (Sub [(name, repl)]) right)
   apply (Sub [(name, repl)]) (TyTuple types)
-    = TyTuple $ map (\ t' -> apply (Sub [(name, repl)]) t') types
+    = TyTuple $ map (apply (Sub [(name, repl)])) types
   apply (Sub [(name, repl)]) (TyList type') = case type' of
     TyVar var | name == var -> TyList repl
     TyVar _ -> TyList type'
@@ -62,7 +63,7 @@ instance Substitutable Type where
 
 instance Substitutable Scheme where
   apply (Sub [(name, replacement)]) (ForAll varnames type')
-    | elem name varnames = ForAll varnames type'
+    | name `elem` varnames = ForAll varnames type'
     | otherwise = ForAll varnames $ apply (Sub [(name, replacement)]) type'
   apply (Sub subst) scheme
     = foldl
@@ -78,7 +79,7 @@ instance Substitutable Scheme where
 instance Substitutable Subst where
   apply subst'left (Sub subst'right)
     = Sub $ map
-        (\ (name, type') -> (name, apply subst'left type'))
+        (second (apply subst'left))
         subst'right
 
   ftv (Sub subst)
@@ -91,7 +92,7 @@ instance Substitutable Subst where
 instance Substitutable TypeEnv where
   apply subst (Env type'env)
     = Env $ Map.map
-        (\ scheme -> apply subst scheme)
+        (apply subst)
         type'env
 
   ftv (Env type'env)
@@ -115,7 +116,7 @@ runInfer m
 closeOver :: (Subst, Type) -> Scheme
 closeOver (subst, type')
   = normalize sc
-  where sc = generalize (Env Map.empty) (apply subst type')  
+  where sc = generalize (Env Map.empty) (apply subst type')
 
 
 normalize :: Scheme -> Scheme
@@ -130,7 +131,7 @@ normalize (ForAll type'args body) = ForAll (fmap snd ord) (normtype body)
     normtype (TyVar a) =
       case lookup a ord of
         Just x -> TyVar x
-        Nothing -> error $ "Type variable " ++ show a ++ " not in the signature." 
+        Nothing -> error $ "Type variable " ++ show a ++ " not in the signature."
 
 
 empty'subst :: Subst
@@ -142,25 +143,26 @@ empty'env :: TypeEnv
 empty'env = Env $ Map.fromList
   [ ("#fst",  ForAll ["a", "b"] (TyArr (TyTuple [TyVar "a", TyVar "b"]) (TyVar "a")))
   , ("#snd",  ForAll ["a", "b"] (TyArr (TyTuple [TyVar "a", TyVar "b"]) (TyVar "b")))
-  , ("#=",    ForAll ["a"]      ((TyTuple [TyVar "a", TyVar "a"]) `TyArr` (TyCon "Bool")))
-  , ("#<",    ForAll []         ((TyTuple [TyCon "Int", TyCon "Int"]) `TyArr` (TyCon "Bool")))
-  , ("#>",    ForAll []         ((TyTuple [TyCon "Int", TyCon "Int"]) `TyArr` (TyCon "Bool")))
-  , ("#+",    ForAll []         ((TyTuple [TyCon "Int", TyCon "Int"]) `TyArr` (TyCon "Int")))
-  , ("#*",    ForAll []         ((TyTuple [TyCon "Int", TyCon "Int"]) `TyArr` (TyCon "Int")))
-  , ("#-",    ForAll []         ((TyTuple [TyCon "Int", TyCon "Int"]) `TyArr` (TyCon "Int")))
-  , ("#/",    ForAll []         ((TyTuple [TyCon "Int", TyCon "Int"]) `TyArr` (TyCon "Int")))
+  , ("#=",    ForAll ["a"]      (TyTuple [TyVar "a", TyVar "a"] `TyArr` TyCon "Bool"))
+  , ("#<",    ForAll []         (TyTuple [TyCon "Int", TyCon "Int"] `TyArr` TyCon "Bool"))
+  , ("#>",    ForAll []         (TyTuple [TyCon "Int", TyCon "Int"] `TyArr` TyCon "Bool"))
+  , ("+",     ForAll []         (TyCon "Int" `TyArr` (TyCon "Int" `TyArr` TyCon "Int")))
+  , ("#+",    ForAll []         (TyTuple [TyCon "Int", TyCon "Int"] `TyArr` TyCon "Int"))
+  , ("#*",    ForAll []         (TyTuple [TyCon "Int", TyCon "Int"] `TyArr` TyCon "Int"))
+  , ("#-",    ForAll []         (TyTuple [TyCon "Int", TyCon "Int"] `TyArr` TyCon "Int"))
+  , ("#/",    ForAll []         (TyTuple [TyCon "Int", TyCon "Int"] `TyArr` TyCon "Int"))
   -- concat two strings
-  , ("#.",    ForAll []         ((TyTuple [TyCon "String", TyCon "String"]) `TyArr` (TyCon "String")))
-  , ("#++",   ForAll ["a"]      ((TyTuple [TyList (TyVar "a"), TyList (TyVar "a")]) `TyArr` (TyList (TyVar "a"))))
-  , ("#!!",   ForAll ["a"]      ((TyTuple [TyCon "Int", TyList (TyVar "a")]) `TyArr` (TyVar "a")))
+  , ("#.",    ForAll []         (TyTuple [TyCon "String", TyCon "String"] `TyArr` TyCon "String"))
+  , ("#++",   ForAll ["a"]      (TyTuple [TyList (TyVar "a"), TyList (TyVar "a")] `TyArr` TyList (TyVar "a")))
+  , ("#!!",   ForAll ["a"]      (TyTuple [TyCon "Int", TyList (TyVar "a")] `TyArr` TyVar "a"))
   -- prepend element to a list
-  , ("#:",    ForAll ["a"]      ((TyTuple [TyVar "a", TyList (TyVar "a")]) `TyArr` (TyList (TyVar "a"))))
+  , ("#:",    ForAll ["a"]      (TyTuple [TyVar "a", TyList (TyVar "a")] `TyArr` TyList (TyVar "a")))
   -- prepend a char to a string
-  , ("#;",    ForAll []         ((TyTuple [TyCon "Char", TyCon "String"]) `TyArr` (TyCon "String")))
+  , ("#;",    ForAll []         (TyTuple [TyCon "Char", TyCon "String"] `TyArr` TyCon "String"))
   -- head of the list
-  , ("#head", ForAll ["a"]      ((TyList (TyVar "a")) `TyArr` (TyVar "a")))
-  , ("#tail", ForAll ["a"]      ((TyList (TyVar "a")) `TyArr` (TyList (TyVar "a"))))
-  , ("#nil?", ForAll ["a"]      ((TyList (TyVar "a")) `TyArr` (TyCon "Bool")))
+  , ("#head", ForAll ["a"]      (TyList (TyVar "a") `TyArr` TyVar "a"))
+  , ("#tail", ForAll ["a"]      (TyList (TyVar "a") `TyArr` TyList (TyVar "a")))
+  , ("#nil?", ForAll ["a"]      (TyList (TyVar "a") `TyArr` TyCon "Bool"))
   ]
 
 
@@ -176,7 +178,7 @@ occurs name (TyVar varname)
 occurs name (TyCon conname)
   = False
 occurs name (TyTuple ts)
-  = any (occurs $ name) ts
+  = any (occurs name) ts
 occurs name (TyList t)
   = occurs name t
 occurs name (TyArr left right)
@@ -203,7 +205,7 @@ unify (TyCon name'l) (TyCon name'r)
 
 unify (TyTuple ts'left) (TyTuple ts'right)
   = if length ts'left /= length ts'right
-    then throwError $ UnifShapeMismatch (TyTuple ts'left) (TyTuple ts'right) 
+    then throwError $ UnifShapeMismatch (TyTuple ts'left) (TyTuple ts'right)
     else foldM
       (\ subst' (t'left, t'right) -> do
         subst'new <- unify (apply subst' t'left) (apply subst' t'right)
@@ -219,7 +221,7 @@ unify (TyArr left'a right'a) (TyArr left'b right'b) = do
   subst'right <- unify (apply subst'left right'a) (apply subst'left right'b)
   return (subst'right `compose'subst` subst'left)
 
-unify t'left t'right = do
+unify t'left t'right =
   throwError $ UnifShapeMismatch t'left t'right
 
 
@@ -268,7 +270,7 @@ infer (Env env) expr = case expr of
 
   Lam x body -> do
     type'var <- fresh
-    let env' = (Env env) `extend` (x, ForAll [] type'var)
+    let env' = Env env `extend` (x, ForAll [] type'var)
     (subst', type') <- infer env' body
     return (subst', apply subst' (type'var `TyArr` type'))
 
@@ -299,7 +301,7 @@ infer (Env env) expr = case expr of
 
     let final'type = apply final'subst then'type' -- or else'type' both should work I think
     return (final'subst, final'type)
-  
+
   Let name value expression -> do
     (subst'val, type'val) <- infer (Env env) value
     let env' = apply subst'val (Env env)
@@ -308,8 +310,8 @@ infer (Env env) expr = case expr of
     return (subst'expr `compose'subst` subst'val, type'expr)
 
   Tuple exprs -> do
-    (subst'fin, env'fin, types) <- foldM infer' (empty'subst, (Env env), []) exprs
-    let types'fin = map (\ t -> apply subst'fin t) types
+    (subst'fin, env'fin, types) <- foldM infer' (empty'subst, Env env, []) exprs
+    let types'fin = map (apply subst'fin) types
     return (subst'fin, TyTuple types'fin)
       where
         infer' (sub, env, ts) exp' = do
@@ -318,8 +320,8 @@ infer (Env env) expr = case expr of
           return (sub `compose'subst` subst', env', ts ++ [type'])
 
   List exprs -> do
-    (subst', env'fin, types) <- foldM infer' (empty'subst, (Env env), []) exprs
-    let types' = map (\ t -> apply subst' t) types
+    (subst', env'fin, types) <- foldM infer' (empty'subst, Env env, []) exprs
+    let types' = map (apply subst') types
     type'var <- fresh
     (subst'fin, type'fin) <- foldM unify' (empty'subst, type'var) types'
     return (subst'fin, TyList type'fin)
@@ -340,12 +342,12 @@ infer (Env env) expr = case expr of
     sub' <- unify (t `TyArr` type'var') t'
     return (sub' `compose'subst` sub, apply sub' type'var')
 
-  Lit (LitInt i) -> return (empty'subst, (TyCon "Int"))
-  Lit (LitDouble d) -> return (empty'subst, (TyCon "Double"))
-  Lit (LitChar ch) -> return (empty'subst, (TyCon "Char"))
-  Lit (LitString s) -> return (empty'subst, (TyCon "String"))
-  Lit (LitBool b) -> return (empty'subst, (TyCon "Bool"))
-  Lit LitUnit -> return (empty'subst, (TyCon "Unit"))
+  Lit (LitInt i) -> return (empty'subst, TyCon "Int")
+  Lit (LitDouble d) -> return (empty'subst, TyCon "Double")
+  Lit (LitChar ch) -> return (empty'subst, TyCon "Char")
+  Lit (LitString s) -> return (empty'subst, TyCon "String")
+  Lit (LitBool b) -> return (empty'subst, TyCon "Bool")
+  Lit LitUnit -> return (empty'subst, TyCon "Unit")
 
 
 infer'expression :: TypeEnv -> Expression -> Either TypeError Scheme
@@ -353,7 +355,7 @@ infer'expression env = runInfer . infer env
 
 
 typeof :: Expression -> Either TypeError Scheme
-typeof expr = infer'expression empty'env expr
+typeof = infer'expression empty'env
 
 
 -- inferTop :: TypeEnv -> [(String, Expression)] -> Either TypeError TypeEnv
