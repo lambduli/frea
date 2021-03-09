@@ -15,6 +15,7 @@ import Compiler.Parser.Token (Token (..))
 import Compiler.Parser.Utils
 import Compiler.TypeChecker.Inference
 import Interpreter.Evaluate
+import qualified Interpreter.Value as Val
 
 
 main :: IO ()
@@ -86,7 +87,7 @@ repl = do
           putStrLn $ "Type Error: " ++ show err
           repl
         _ -> do
-          let error'or'expr = evaluate expression
+          let error'or'expr = evaluate expression $ Val.Env []
           -- print
           case error'or'expr of
             Left err -> putStrLn $ "Evaluation Error: " ++ show err
