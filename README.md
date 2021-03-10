@@ -13,8 +13,8 @@ To test: `$ stack test`
 ```haskell
 let
   list = [1, 2, 3, 4, 5]
-  double = (\ x -> (2 * x))
-in let rec
+  double x = (2 * x)
+rec
   map lst fn = if (nil? lst)
                 then []
                 else ((fn (head lst)) : (map (tail lst) fn))
@@ -23,11 +23,12 @@ in (map list double)
 ### Factorial of 5
 ```haskell
 let
-  zero = (\ n -> (n == 0))
-in let rec
+  zero n = (n == 0)
+  dec n = (n - 1)
+rec
   fact n = if (zero n)
             then 1
-            else (n * (fact (n - 1)))
+            else (n * (fact (dec n)))
 in (fact 5)
 ```
 
@@ -46,7 +47,7 @@ Language supports:
 ## Various Simple Literals
 
 ```haskell
-frea λ > :t 23
+frea λ > :t -23
 
 :: Int
 ```
@@ -111,7 +112,7 @@ frea λ > :t (+)
 > Other (binary) operators can be used in infix as well as (binary) functions with help of backtick symbol like in the Haskell.
 
 ```haskell
-frea λ > let plus = (\ a b -> (a + b)) in (23 `plus` 42)
+frea λ > let plus a b = (a + b) in (23 `plus` 42)
 
 65
 ```
@@ -135,6 +136,22 @@ frea λ > if #t then 23 else 42
 frea λ > let name = "Frea" in (name . " is awesome!")
 
 "Frea is awesome!"
+```
+
+You can also define binary operators or functions using infix notation:
+
+```haskell
+frea λ > let a `plus` b = (a + b) in (23 `plus` 42)
+
+65
+```
+
+or operator:
+
+```haskell
+frea λ > let a |> b = b in ("left" |> "right")
+
+"right"
 ```
 
 ### Operators
@@ -179,9 +196,9 @@ frea λ > (fix (\ fact n -> if (n == 0) then 1 else (n * (fact (n - 1)))) 5)
 ### Recursion using Let rec
 ```haskell
 let
-  zero = (\ n -> (n == 0))
-  dec = (\ n -> (n - 1))
-in let rec
+  zero n = (n == 0)
+  dec n = (n - 1)
+rec
   fact n = if (zero n)
             then 1
             else (n * (fact (dec n)))
@@ -219,10 +236,10 @@ You can use `assume` keyword, which works similar to the `let`. You can write st
 
 ```haskell
 assume
-  (==)  = (\ a b -> ((#=) (a, b)))
-  (<)   = (\ a b -> ((#<) (a, b)))
-  (>)   = (\ a b -> ((#>) (a, b)))
-  (+)   = (\ a b -> ((#+) (a, b)))
+  a == b  = ((#=) (a, b))
+  a < b  = ((#<) (a, b))
+  a > b  = ((#>) (a, b))
+  a + b  = ((#+) (a, b))
 ```
 
 You can also use `rec` with the `assume`:
