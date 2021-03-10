@@ -1,73 +1,101 @@
 module ParserSpec where
 
 import Test.Hspec
+import System.Exit
 
 import Compiler.Parser.Parser (parse'expr)
 import Compiler.Syntax.Expression
 import Compiler.Syntax.Literal
 
 
+-- TODO:  test assume
+
 spec :: Spec
 spec = describe "Test the parser" $ do
   it "Parses a single integer" $ do
-    parse'expr "23" `shouldBe` Lit (LitInt 23)
+    "23" <=> Lit (LitInt 23)
   it "Parses a single double" $ do
-    parse'expr "24.42" `shouldBe` Lit (LitDouble 24.42)
+    "24.42" <=> Lit (LitDouble 24.42)
   it "Parses a single char" $ do
-    parse'expr "'c'" `shouldBe` Lit (LitChar 'c')
+    "'c'" <=> Lit (LitChar 'c')
   it "Parses a single string" $ do
-    parse'expr "\"hello\"" `shouldBe` Lit (LitString "hello")
+    "\"hello\"" <=> Lit (LitString "hello")
   it "Parses a single boolean (True)" $ do
-    parse'expr "#t" `shouldBe` Lit (LitBool True)
+    "#t" <=> Lit (LitBool True)
   it "Parses a single boolean (False)" $ do
-    parse'expr "#f" `shouldBe` Lit (LitBool False)
+    "#f" <=> Lit (LitBool False)
   it "Parses a single unit" $ do
-    parse'expr "()" `shouldBe` Lit LitUnit
+    "()" <=> Lit LitUnit
   it "Parses a single empty list" $ do
-    parse'expr "[]" `shouldBe` List []
+    "[]" <=> List []
   it "Parses a single short list" $ do
-    parse'expr "[1, 2]" `shouldBe` List [Lit (LitInt 1), Lit (LitInt 2)]
+    "[1, 2]" <=> List [Lit (LitInt 1), Lit (LitInt 2)]
   it "Parses a single tuple (Pair) of values" $ do
-    parse'expr "(23, #t)" `shouldBe` Tuple [Lit (LitInt 23), Lit (LitBool True)]
+    "(23, #t)" <=> Tuple [Lit (LitInt 23), Lit (LitBool True)]
   
   it "Parses a lambda function" $ do
-    parse'expr "\\ a b -> a" `shouldBe`
+    "\\ a b -> a" <=>
       Lam "a" (Lam "b" (Var "a"))
+
   it "Parses an if expression" $ do
-    parse'expr "if #t then 23 else 42" `shouldBe`
+    "if #t then 23 else 42" <=>
       If (Lit (LitBool True)) (Lit (LitInt 23)) (Lit (LitInt 42))
-  it "Parses a let expression" $ do
-    parse'expr "let a = 23 in a" `shouldBe`
+
+  it "Parses a simple let expression" $ do
+    "let a = 23 in a" <=>
       Let "a" (Lit (LitInt 23)) (Var "a")
+  it "Parses a multi let expression" $ do
+    "let a = 23 b = 42 in a" <=>
+      Let "a" (Lit (LitInt 23)) (Let "b" (Lit (LitInt 42)) (Var "a"))
+  it "Parses a multi let with operators" $ do
+    "let (+) = 23 (<=>) = 42 in a" <=>
+      Let "+" (Lit (LitInt 23)) (Let "<=>" (Lit (LitInt 42)) (Var "a"))
+  it "Parses a multi let with cross-level references" $ do
+    "let (+) = 23 (++) = (+) in a" <=>
+      Let "+" (Lit (LitInt 23)) (Let "++" (Var "+") (Var "a"))
+
   it "Parses a fix expression" $ do
-    parse'expr "fix (\\ fn n -> (fn n))" `shouldBe`
+    "fix (\\ fn n -> (fn n))" <=>
       Fix (Lam "fn" (Lam "n" (App (Var "fn") (Var "n"))))
+
   it "Parses a let rec expression" $ do
-    parse'expr "let rec fn n = (fn n) in (fn 2)" `shouldBe`
+    "let rec fn n = (fn n) in (fn 2)" <=>
       Let
         "fn"
         (Fix (Lam "fn" (Lam "n" (App (Var "fn") (Var "n")))))
         (App (Var "fn") (Lit (LitInt 2)))
+
   it "Parses a simple arithmetic expression equivalent to 23 + 42" $ do
-    parse'expr "((#+) (23, 42))" `shouldBe`
+    "((#+) (23, 42))" <=>
       App (Op "#+") (Tuple [Lit (LitInt 23), Lit (LitInt 42)])
-  it "Parses a simple arithmetic expression (23 + 42)" $ do
-    parse'expr "(23 + 42)" `shouldBe`
-      App (App (Op "+") (Lit (LitInt 23))) (Lit (LitInt 42))
-  it "Parses a simple arithmetic expression [prefix] ((+) 23 42)" $ do
-    parse'expr "((+) 23 42)" `shouldBe`
-      App (App (Op "+") (Lit (LitInt 23))) (Lit (LitInt 42))
+  
+  it "Parses a simple arithmetic expression (23 #+ 42)" $ do
+    "(23 #+ 42)" <=>
+      App (App (Op "#+") (Lit (LitInt 23))) (Lit (LitInt 42))
+  -- NOTE: This is just a parser tests, this is not a valid expression in the language's evaluation semantisc.
+  it "Parses a simple arithmetic expression [prefix] ((#+) 23 42)" $ do
+    "((#+) 23 42)" <=>
+      App (App (Op "#+") (Lit (LitInt 23))) (Lit (LitInt 42))
+  -- NOTE: This is just a parser tests, this is not a valid expression in the language's evaluation semantisc.
 
   it "Parses a simple infix function expression (23 `plus` 42)" $ do
-    parse'expr "(23 `plus` 42)" `shouldBe`
+    "(23 `plus` 42)" <=>
       App (App (Var "plus") (Lit (LitInt 23))) (Lit (LitInt 42))
   it "Parses a let-in expression with simple infix function expression (let plus = plus in 23 `plus` 42)" $ do
-    parse'expr "let plus = plus in 23 `plus` 42" `shouldBe`
+    "let plus = plus in 23 `plus` 42" <=>
       Let "plus" (Var "plus") (App (App (Var "plus") (Lit (LitInt 23))) (Lit (LitInt 42)))
   it "Parses a let-in expression with simple infix function expression (let plus = (\\ a b -> ((#+) (a, b))) in (23 `plus` 42))" $ do
-    parse'expr "let plus = (\\ a b -> ((#+) (a, b))) in (23 `plus` 42)" `shouldBe`
+    "let plus = (\\ a b -> ((#+) (a, b))) in (23 `plus` 42)" <=>
       Let
         "plus"
         (Lam "a" (Lam "b" (App (Op "#+") (Tuple [Var "a", Var "b"]))))
         (App (App (Var "plus") (Lit (LitInt 23))) (Lit (LitInt 42)))
 
+
+infix 4 <=>
+
+(<=>) :: String -> Expression -> IO ()
+(<=>) expr ast = do
+  case parse'expr expr of
+    Left cmd -> exitFailure
+    Right ast' -> ast' `shouldBe` ast
