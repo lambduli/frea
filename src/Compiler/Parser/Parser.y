@@ -133,6 +133,7 @@ Exp             ::  { Expression }
 
 Binding         ::  { (String, Expression) }
                 :   Ident '=' Exp                                   { ($1, $3) }
+                |   rec Ident Params '=' Exp                        { ($2, Fix $ foldr (\ arg body -> Lam arg body) $5 ($2 : $3)) }
 
 Lit             ::  { Lit }
                 :   Integer                                         { $1 }
