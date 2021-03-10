@@ -130,7 +130,7 @@ repl env@(Val.Env bs) t'env@(Env t'map) = do
               -- print
               case error'or'expr of
                 Left err -> putStrLn $ "Evaluation Error: " ++ show err
-                Right expr' -> print expr'
+                Right expr' -> putStrLn $ "         " ++ show expr'
 
               -- loop
               repl env t'env
