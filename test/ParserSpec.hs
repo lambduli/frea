@@ -54,6 +54,10 @@ spec = describe "Test the parser" $ do
     "let (+) = 23 (++) = (+) in a" <=>
       Let "+" (Lit (LitInt 23)) (Let "++" (Var "+") (Var "a"))
 
+  it "Parses a multi let rec with cross-level references" $ do
+    "let n = 23 rec f m = m in (f n)" <=>
+      Let "n" (Lit (LitInt 23)) (Let "f" (Fix (Lam "f" (Lam "m" (Var "m"))) ) (App (Var "f") (Var "n")))
+
   it "Parses a fix expression" $ do
     "fix (\\ fn n -> (fn n))" <=>
       Fix (Lam "fn" (Lam "n" (App (Var "fn") (Var "n"))))
