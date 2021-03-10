@@ -57,6 +57,10 @@ spec = describe "Test the parser" $ do
     "let f a b = b in x" <=>
       Let "f" (Lam "a" (Lam "b" (Var "b"))) (Var "x")
 
+  it "Parses an operator in infix let" $ do
+    "let a + b = b in x" <=>
+      Let "+" (Lam "a" (Lam "b" (Var "b"))) (Var "x")
+
   it "Parses a multi let rec" $ do
     "let n = 23 rec f m = m in (f n)" <=>
       Let "n" (Lit (LitInt 23)) (Let "f" (Fix (Lam "f" (Lam "m" (Var "m"))) ) (App (Var "f") (Var "n")))
