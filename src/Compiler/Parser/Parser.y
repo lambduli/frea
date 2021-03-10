@@ -86,6 +86,7 @@ Assume          ::  { Command }
 
 Assumption      ::  { (String, Expression) }
                 :   Ident '=' Exp                                   { ($1, $3) }
+                |   Ident Params '=' Exp                            { ($1, foldr (\ arg body -> Lam arg body) $4 $2) }
                 |   rec Ident Params '=' Exp                        { ($2, Fix $ foldr (\ arg body -> Lam arg body) $5 ($2 : $3)) }
 
 Params          ::  { [String] }
@@ -133,6 +134,7 @@ Exp             ::  { Expression }
 
 Binding         ::  { (String, Expression) }
                 :   Ident '=' Exp                                   { ($1, $3) }
+                |   Ident Params '=' Exp                            { ($1, foldr (\ arg body -> Lam arg body) $4 $2) }
                 |   rec Ident Params '=' Exp                        { ($2, Fix $ foldr (\ arg body -> Lam arg body) $5 ($2 : $3)) }
 
 Lit             ::  { Lit }
