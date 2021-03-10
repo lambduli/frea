@@ -229,5 +229,5 @@ You can also use `rec` with the `assume`:
 
 ```haskell
 assume
-  rec fact n = if (zero n) then 1 else (n * (fact (dec n)))
+  rec fact n = if (n == 0) then 1 else (n * (fact (n - 1)))
 ```
