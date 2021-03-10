@@ -146,7 +146,7 @@ empty'env = Env $ Map.fromList
   , ("#=",    ForAll ["a"]      (TyTuple [TyVar "a", TyVar "a"] `TyArr` TyCon "Bool"))
   , ("#<",    ForAll []         (TyTuple [TyCon "Int", TyCon "Int"] `TyArr` TyCon "Bool"))
   , ("#>",    ForAll []         (TyTuple [TyCon "Int", TyCon "Int"] `TyArr` TyCon "Bool"))
-  , ("+",     ForAll []         (TyCon "Int" `TyArr` (TyCon "Int" `TyArr` TyCon "Int")))
+  -- , ("+",     ForAll []         (TyCon "Int" `TyArr` (TyCon "Int" `TyArr` TyCon "Int")))
   , ("#+",    ForAll []         (TyTuple [TyCon "Int", TyCon "Int"] `TyArr` TyCon "Int"))
   , ("#*",    ForAll []         (TyTuple [TyCon "Int", TyCon "Int"] `TyArr` TyCon "Int"))
   , ("#-",    ForAll []         (TyTuple [TyCon "Int", TyCon "Int"] `TyArr` TyCon "Int"))
@@ -356,6 +356,22 @@ infer'expression env = runInfer . infer env
 
 typeof :: Expression -> Either TypeError Scheme
 typeof = infer'expression empty'env
+
+
+infer'env :: [(String, Expression)] -> TypeEnv -> Either TypeError TypeEnv
+infer'env binds t'env
+  = case sequence eiths of
+      Left t'err -> Left t'err
+      Right pairs -> Right $ Env $ Map.fromList pairs
+
+    where
+      infer'pair :: (String, Expression) -> Either TypeError (String, Scheme)
+      infer'pair (name, exp) = case infer'expression t'env exp of
+        Left t'err -> Left t'err
+        Right scheme -> Right (name, scheme)
+
+      eiths :: [Either TypeError (String, Scheme)]
+      eiths = map infer'pair binds
 
 
 -- inferTop :: TypeEnv -> [(String, Expression)] -> Either TypeError TypeEnv

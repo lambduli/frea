@@ -19,11 +19,13 @@ $hexit      = [a-f A-F $digit]
 $lower  = [a-z]
 $upper  = [A-Z]
 
-$symbol  = [ \! \$ \# \% \& \* \+ \. \/ \< \= \> \? \@ \\ \^ \| \- \~ \: ]
+$symbol  = [ \! \$ \# \% \& \* \+ \. \/ \< \= \> \? \@ \\ \^ \| \- \~ \: \; ]
 
 $identchar    = [$lower $upper $digit $symbol]
 
-@variableident      = [$lower $upper $symbol] $identchar*
+@variableident      = [$lower $upper] $identchar*
+
+@operator     = $symbol [$lower $upper $symbol]*
 
 $space  = [\ \t\f\v]
 
@@ -35,6 +37,9 @@ $space  = [\ \t\f\v]
 token :-
 
 -- reserved keywords
+<0>         assume          { plainTok TokAssume }
+<0>         rec             { plainTok TokRec }
+
 <0>         match           { plainTok TokMatch }
 <0>         with            { plainTok TokWith }
 <0>         data            { plainTok TokData }
@@ -55,7 +60,7 @@ token :-
 
 
 -- special symbols
--- [ \( \) \, \. \; \[ \] \` \' \{ \} ]
+-- [ \( \) \, \[ \] \` \' \{ \} ]
 <0>         "()"            { plainTok TokUnit }
 <0>         "("             { plainTok TokLeftParen }
 <0>         ")"             { plainTok TokRightParen }
@@ -67,8 +72,6 @@ token :-
 <0>         "#="            { plainTok $ TokNativeSym "#=" }
 <0>         "#<"            { plainTok $ TokNativeSym "#<" }
 <0>         "#>"            { plainTok $ TokNativeSym "#>" }
-
-<0>         "+"             { plainTok $ TokNativeSym "+" }
 <0>         "#+"            { plainTok $ TokNativeSym "#+" }
 <0>         "#-"            { plainTok $ TokNativeSym "#-" }
 <0>         "#*"            { plainTok $ TokNativeSym "#*" }
@@ -87,7 +90,8 @@ token :-
 <0>         "#f"            { plainTok $ TokBool False }
 
 -- variables and constructors - qualified and un-qualified
-<0>         @variableident        { parametrizedTok TokVarId id }
+<0>         @variableident  { parametrizedTok TokVarId id }
+<0>         @operator       { parametrizedTok TokOperator id }
 
 <0>         \n              ;
 <0>         $space+         ;
@@ -96,11 +100,16 @@ token :-
 -- literals
 
 <0>         @decimal
+          | \-@decimal
           | 0[oO] @octal
-          | 0[xX] @hexadecimal  { parametrizedTok TokInt read }
+          | \-0[oO] @octal
+          | 0[xX] @hexadecimal
+          | \-0[xX] @hexadecimal  { parametrizedTok TokInt read }
 
 <0>         @decimal \. @decimal @exponent?
-          | @decimal @exponent  { parametrizedTok TokDouble read }
+          | \-@decimal \. @decimal @exponent?
+          | @decimal @exponent
+          | \-@decimal @exponent  { parametrizedTok TokDouble read }
 
 
 <0>         \'              { beginChar }
@@ -121,7 +130,7 @@ token :-
 <mlStrSC>   \n              { carryReturnString }
 
 
-<0>         \;.*\n          ;
+<0>         \-\-.*\n          ;
 
 {
 

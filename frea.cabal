@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: c533435e60b4c1c84f8c10343477b9d9deb8aba8ebec7ca08c3b65961651e821
+-- hash: 2c22fd24f80b3a13eedf9c11384a461d7bb3ee825c3b32d37823964df924dcea
 
 name:           frea
 version:        0.1.0.0
@@ -44,8 +44,10 @@ library
       Compiler.Syntax.Type
       Compiler.TypeChecker.Inference
       Compiler.TypeChecker.TypeError
+      Interpreter.Command
       Interpreter.Error
       Interpreter.Evaluate
+      Interpreter.Value
   other-modules:
       Paths_frea
   hs-source-dirs:
@@ -84,6 +86,7 @@ test-suite frea-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      EvalSpec
       InferenceSpec
       ParserSpec
       Paths_frea
