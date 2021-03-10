@@ -358,15 +358,15 @@ typeof :: Expression -> Either TypeError Scheme
 typeof = infer'expression empty'env
 
 
-infer'env :: [(String, Expression)] -> Either TypeError TypeEnv
-infer'env binds
+infer'env :: [(String, Expression)] -> TypeEnv -> Either TypeError TypeEnv
+infer'env binds t'env
   = case sequence eiths of
       Left t'err -> Left t'err
       Right pairs -> Right $ Env $ Map.fromList pairs
 
     where
       infer'pair :: (String, Expression) -> Either TypeError (String, Scheme)
-      infer'pair (name, exp) = case infer'expression empty'env exp of
+      infer'pair (name, exp) = case infer'expression t'env exp of
         Left t'err -> Left t'err
         Right scheme -> Right (name, scheme)
 

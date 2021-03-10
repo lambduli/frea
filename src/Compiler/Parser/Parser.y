@@ -86,7 +86,7 @@ Assume          ::  { Command }
 
 Assumption      ::  { (String, Expression) }
                 :   Ident '=' Exp                                   { ($1, $3) }
-                |   rec Ident '=' Exp                               { ($2, Lam $2 $4) }
+                |   rec Ident Params '=' Exp                        { ($2, Fix $ foldr (\ arg body -> Lam arg body) $5 ($2 : $3)) }
 
 Params          ::  { [String] }
                 :   NoneOrMany(Var)                                 { $1 }

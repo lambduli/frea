@@ -34,7 +34,7 @@ main = do
     Left (Assume binds) -> do
       let
         env' = Val.Env $ map (second (, Val.Env [])) binds
-      case infer'env binds of
+      case infer'env binds empty'env of
         Left err -> do
           putStrLn $ "Type Error in Prelude: " ++ show err
         Right (Env mp) -> do
@@ -111,8 +111,8 @@ repl env@(Val.Env bs) t'env@(Env t'map) = do
       case parse'expr line of
         Left (Assume binds) -> do
           let
-            env' = Val.Env $ bs ++ map (second (, Val.Env [])) binds
-          case infer'env binds of
+            env' = Val.Env $ bs ++ map (second (, env)) binds
+          case infer'env binds t'env of
             Left err -> do
               putStrLn $ "Type Error: " ++ show err
             Right (Env mp) -> do
