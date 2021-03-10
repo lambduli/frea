@@ -63,7 +63,7 @@ readExpression = do
       return $ line ++ ['\n'] ++ next'line
     where
       read'expr' = do
-        putStr "       > "
+        putStr "         "
         hFlush stdout
         line <- getLine
         case line of
