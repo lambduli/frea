@@ -133,7 +133,7 @@ apply'operator "#;" (Val.Tuple [Val.Lit (LitChar ch'l), Val.Lit (LitString s'r)]
   = Right $ Val.Lit (LitString (ch'l : s'r))
 apply'operator "#:" (Val.Tuple [expr, Val.List exprs]) env
   = Right $ Val.List $ expr : exprs 
-apply'operator "#!!" (Val.Tuple [Val.Lit (LitInt i), Val.List exprs]) env
+apply'operator "#!!" (Val.Tuple [Val.List exprs, Val.Lit (LitInt i)]) env
   | i < 0 || i >= length exprs = Left $ IndexOutOfBound i
   | otherwise = Right $ exprs !! i
 apply'operator "#head" (Val.List []) env

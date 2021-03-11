@@ -154,7 +154,7 @@ empty'env = Env $ Map.fromList
   -- concat two strings
   , ("#.",    ForAll []         (TyTuple [TyCon "String", TyCon "String"] `TyArr` TyCon "String"))
   , ("#++",   ForAll ["a"]      (TyTuple [TyList (TyVar "a"), TyList (TyVar "a")] `TyArr` TyList (TyVar "a")))
-  , ("#!!",   ForAll ["a"]      (TyTuple [TyCon "Int", TyList (TyVar "a")] `TyArr` TyVar "a"))
+  , ("#!!",   ForAll ["a"]      (TyTuple [TyList (TyVar "a"), TyCon "Int"] `TyArr` TyVar "a"))
   -- prepend element to a list
   , ("#:",    ForAll ["a"]      (TyTuple [TyVar "a", TyList (TyVar "a")] `TyArr` TyList (TyVar "a")))
   -- prepend a char to a string
