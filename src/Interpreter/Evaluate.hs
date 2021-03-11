@@ -10,31 +10,6 @@ import Interpreter.Error
 import qualified Interpreter.Value as Val
 
 
--- substitute :: Expression -> String -> Expression -> Expression
--- substitute (Var name) var replacement
---   | name == var = replacement
---   | otherwise = Var name
--- substitute (Op o) _ _ = Op o
--- substitute (Lit l) _ _ = Lit l
--- substitute (Lam par body) var replacement
---   | par /= var = Lam par $ substitute body var replacement
---   | otherwise = Lam par body
--- substitute (App left right) var replacement
---   = App (substitute left var replacement) (substitute right var replacement)
--- substitute (Tuple exprs) var replacement
---   = Tuple $ map (\ e -> substitute e var replacement) exprs
--- substitute (List exprs) var replacement
---   = List $ map (\ e -> substitute e var replacement) exprs
--- substitute (If cond' then' else') var replacement
---   = If (substitute cond' var replacement) (substitute then' var replacement) (substitute else' var replacement)
--- substitute (Let name val expr) var replacement
---   | name /= var = Let name (substitute val var replacement) (substitute expr var replacement)
---   | otherwise = Let name val expr
--- substitute (Fix expr) var replacement
---   = Fix $ substitute expr var replacement
---   = Typed type' (substitute expr var replacement)
-
-
 evaluate :: Expression -> Val.Env -> Either EvaluationError Val.Value
 evaluate expr env@(Val.Env bs) = case expr of
   Var name
@@ -80,9 +55,6 @@ evaluate expr env@(Val.Env bs) = case expr of
 
   App (Lam par body) right ->
     evaluate body $ Val.Env ((par, (right, env)) : bs)
-    -- case evaluate right env of
-    --   Right r'val -> 
-    --   Left err -> Left err
 
   App (Op op) right ->
     case evaluate right env of
@@ -94,9 +66,6 @@ evaluate expr env@(Val.Env bs) = case expr of
       Left err -> Left err
       Right (Val.Lam par body (Val.Env bs')) ->
         evaluate body $ Val.Env ((par, (right, env)) : bs')
-        -- case evaluate right env of
-        --   Right r'val -> evaluate body $ Val.Env ((par, r'val) : env)
-        --   Left err -> Left err
 
   If cond' then' else' ->
     case evaluate cond' env of

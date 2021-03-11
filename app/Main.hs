@@ -45,9 +45,6 @@ main = do
     _ -> do
       putStrLn "Error: Prelude is badly defined."
 
-  -- repl (Val.Env []) (empty'env)
-  -- return ()
-
 
 readExpression :: IO String
 readExpression = do

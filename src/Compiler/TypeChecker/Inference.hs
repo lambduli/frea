@@ -146,7 +146,6 @@ empty'env = Env $ Map.fromList
   , ("#=",    ForAll ["a"]      (TyTuple [TyVar "a", TyVar "a"] `TyArr` TyCon "Bool"))
   , ("#<",    ForAll []         (TyTuple [TyCon "Int", TyCon "Int"] `TyArr` TyCon "Bool"))
   , ("#>",    ForAll []         (TyTuple [TyCon "Int", TyCon "Int"] `TyArr` TyCon "Bool"))
-  -- , ("+",     ForAll []         (TyCon "Int" `TyArr` (TyCon "Int" `TyArr` TyCon "Int")))
   , ("#+",    ForAll []         (TyTuple [TyCon "Int", TyCon "Int"] `TyArr` TyCon "Int"))
   , ("#*",    ForAll []         (TyTuple [TyCon "Int", TyCon "Int"] `TyArr` TyCon "Int"))
   , ("#-",    ForAll []         (TyTuple [TyCon "Int", TyCon "Int"] `TyArr` TyCon "Int"))
@@ -373,13 +372,3 @@ infer'env binds t'env
       eiths :: [Either TypeError (String, Scheme)]
       eiths = map infer'pair binds
 
-
--- inferTop :: TypeEnv -> [(String, Expression)] -> Either TypeError TypeEnv
--- inferTop env [] = Right env
--- inferTop env ((name, ex):xs) = case infer'expression env ex of
---   Left err -> Left err
---   Right ty -> inferTop (extend env (name, ty)) xs
-
-
--- typeof :: TypeEnv -> String -> Maybe Scheme
--- typeof env name = Map.lookup name env
