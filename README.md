@@ -204,14 +204,19 @@ rec
             else (n * (fact (dec n)))
 in (fact 5)
 ```
+
+> Frea also uses bit more verbose version `letrec fact n = ... in (fact 5)`.
+
 ___
+
+### Primitive operations
 
 > "Binary" primitive operations take tuple with two values!
 
 Those operators are the low level machinery which is used to implement the small prelude.
 You you can use them to implement your own functions and operators.
 
-### Supported built-in operations:
+## Supported built-in operations:
 - `(#=)` :: forall a . (a, a) -> Bool
 - `(#<)` :: (Int, Int) -> Bool
 - `(#>)` :: (Int, Int) -> Bool
@@ -232,10 +237,10 @@ You you can use them to implement your own functions and operators.
 
 ### Declaring bindings in the REPL
 
-You can use `assume` keyword, which works similar to the `let`. You can write stuff like:
+You can just write a list of bindings as in `let in` expression but dropping the `let` and `in` keywords.
+You can write stuff like:
 
 ```haskell
-assume
   a == b  = ((#=) (a, b))
   a < b  = ((#<) (a, b))
   a > b  = ((#>) (a, b))
@@ -245,6 +250,5 @@ assume
 You can also use `rec` with the `assume`:
 
 ```haskell
-assume
   rec fact n = if (n == 0) then 1 else (n * (fact (n - 1)))
 ```
