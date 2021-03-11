@@ -82,7 +82,7 @@ Program         ::  { Either Command Expression }
                 |   Assume                                          { Left $1 }
 
 Assume          ::  { Command }
-                :   assume OneOrMany(Binding)                       { Assume $2 }
+                :   OneOrMany(Binding)                              { Assume $1 }
 
 -- Assumption      ::  { (String, Expression) }
 --                 :   Ident '=' Exp                                   { ($1, $3) }
@@ -112,7 +112,10 @@ Oper            ::  { Expression }
 
 Exp             ::  { Expression }
                 :   Var                                             { Var $1 }
-                |   '(' Oper ')'                                    { $2 }
+                -- |   '(' Oper ')'                                    { $2 }
+                |   '(' op ')'                                      { Var $2 }
+                |   '(' symid ')'                                   { Op $2 }
+                -- NOTE: To resolve 2 R/R conflicts
                 |   Lit                                             { Lit $1 }
                 |   lambda Params '->' Exp                          { foldr (\ arg body -> Lam arg body) $4 $2 }
 
