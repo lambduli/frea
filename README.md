@@ -247,7 +247,7 @@ You can write stuff like:
   a + b  = ((#+) (a, b))
 ```
 
-You can also use `rec` with the `assume`:
+You can also use `rec`:
 
 ```haskell
   rec fact n = if (n == 0) then 1 else (n * (fact (n - 1)))
