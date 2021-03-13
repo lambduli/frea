@@ -14,7 +14,6 @@ To test: `$ stack test`
 let
   list = [1, 2, 3, 4, 5]
   double x = (2 * x)
-rec
   map lst fn = if (nil? lst)
                 then []
                 else ((fn (head lst)) : (map (tail lst) fn))
@@ -25,7 +24,6 @@ in (map list double)
 let
   zero n = (n == 0)
   dec n = (n - 1)
-rec
   fact n = if (zero n)
             then 1
             else (n * (fact (dec n)))
@@ -198,14 +196,14 @@ frea λ > (fix (\ fact n -> if (n == 0) then 1 else (n * (fact (n - 1)))) 5)
 let
   zero n = (n == 0)
   dec n = (n - 1)
-rec
+in let rec
   fact n = if (zero n)
             then 1
             else (n * (fact (dec n)))
 in (fact 5)
 ```
 
-> Frea also uses bit more verbose version `letrec fact n = ... in (fact 5)`.
+> This is archaic, more verbose version. You can safely ommit the `rec` keyword.
 
 ___
 
@@ -245,10 +243,4 @@ You can write stuff like:
   a < b  = ((#<) (a, b))
   a > b  = ((#>) (a, b))
   a + b  = ((#+) (a, b))
-```
-
-You can also use `rec`:
-
-```haskell
-  rec fact n = if (n == 0) then 1 else (n * (fact (n - 1)))
 ```
