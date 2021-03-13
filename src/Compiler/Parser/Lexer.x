@@ -76,13 +76,10 @@ token :-
 <0>         "#-"            { plainTok $ TokNativeSym "#-" }
 <0>         "#*"            { plainTok $ TokNativeSym "#*" }
 <0>         "#/"            { plainTok $ TokNativeSym "#/" }
-<0>         "#."            { plainTok $ TokNativeSym "#." }
 <0>         "#++"           { plainTok $ TokNativeSym "#++" }
 <0>         "#:"            { plainTok $ TokNativeSym "#:" }
-<0>         "#;"            { plainTok $ TokNativeSym "#;" }
 <0>         "#fst"          { plainTok $ TokNativeSym "#fst" }
 <0>         "#snd"          { plainTok $ TokNativeSym "#snd" }
-<0>         "#!!"           { plainTok $ TokNativeSym "#!!" }
 <0>         "#head"         { plainTok $ TokNativeSym "#head" }
 <0>         "#tail"         { plainTok $ TokNativeSym "#tail" }
 <0>         "#nil?"         { plainTok $ TokNativeSym "#nil?" }

@@ -95,30 +95,15 @@ apply'operator "#/" (Val.Tuple [Val.Lit (LitInt i'l), Val.Lit (LitInt 0)]) env
 apply'operator "#/" (Val.Tuple [Val.Lit (LitInt i'l), Val.Lit (LitInt i'r)]) env
   = Right $ Val.Lit (LitInt (i'l `div` i'r))
 
--- apply'operator "#." (Val.Tuple [Val.Lit (LitString s'l), Val.Lit (LitString s'r)]) env
---   = Right $ Val.Lit (LitString (s'l ++ s'r))
-
 apply'operator "#++" (Val.Tuple [Val.List exprs'left, Val.List exprs'right]) env
   = Right $ Val.List $ exprs'left ++ exprs'right
 apply'operator "#++" (Val.Tuple [Val.Lit (LitString str'left), Val.Lit (LitString str'right)]) env
   = Right $ Val.Lit $ LitString $ str'left ++ str'right
 
-
--- apply'operator "#;" (Val.Tuple [Val.Lit (LitChar ch'l), Val.Lit (LitString s'r)]) env
-  -- = Right $ Val.Lit (LitString (ch'l : s'r))
-
 apply'operator "#:" (Val.Tuple [expr, Val.List exprs]) env
   = Right $ Val.List $ expr : exprs 
 apply'operator "#:" (Val.Tuple [Val.Lit (LitChar ch), Val.Lit (LitString str)]) env
   = Right $ Val.Lit $ LitString $ ch : str
-
-apply'operator "#!!" (Val.Tuple [Val.List exprs, Val.Lit (LitInt i)]) env
-  | i < 0 || i >= length exprs = Left $ IndexOutOfBound i
-  | otherwise = Right $ exprs !! i
-
--- apply'operator "#!!" (Val.Tuple [Val.List exprs, Val.Lit (LitInt i)]) env
---   | i < 0 || i >= length exprs = Left $ IndexOutOfBound i
---   | otherwise = Right $ exprs !! i
 
 apply'operator "#head" (Val.List []) env
   = Left NilHeadException

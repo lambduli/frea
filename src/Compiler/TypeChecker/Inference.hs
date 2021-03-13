@@ -150,15 +150,9 @@ empty'env = Env $ Map.fromList
   , ("#*",    ForAll []         (TyTuple [TyCon "Int", TyCon "Int"] `TyArr` TyCon "Int"))
   , ("#-",    ForAll []         (TyTuple [TyCon "Int", TyCon "Int"] `TyArr` TyCon "Int"))
   , ("#/",    ForAll []         (TyTuple [TyCon "Int", TyCon "Int"] `TyArr` TyCon "Int"))
-  -- concat two strings
-  -- , ("#.",    ForAll []         (TyTuple [TyCon "String", TyCon "String"] `TyArr` TyCon "String"))
   , ("#++",   ForAll ["a"]      (TyTuple [TyList (TyVar "a"), TyList (TyVar "a")] `TyArr` TyList (TyVar "a")))
-  , ("#!!",   ForAll ["a"]      (TyTuple [TyList (TyVar "a"), TyCon "Int"] `TyArr` TyVar "a"))
   -- prepend element to a list
   , ("#:",    ForAll ["a"]      (TyTuple [TyVar "a", TyList (TyVar "a")] `TyArr` TyList (TyVar "a")))
-  -- prepend a char to a string
-  -- , ("#;",    ForAll []         (TyTuple [TyCon "Char", TyCon "String"] `TyArr` TyCon "String"))
-  -- head of the list
   , ("#head", ForAll ["a"]      (TyList (TyVar "a") `TyArr` TyVar "a"))
   , ("#tail", ForAll ["a"]      (TyList (TyVar "a") `TyArr` TyList (TyVar "a")))
   , ("#nil?", ForAll ["a"]      (TyList (TyVar "a") `TyArr` TyCon "Bool"))
