@@ -151,13 +151,13 @@ empty'env = Env $ Map.fromList
   , ("#-",    ForAll []         (TyTuple [TyCon "Int", TyCon "Int"] `TyArr` TyCon "Int"))
   , ("#/",    ForAll []         (TyTuple [TyCon "Int", TyCon "Int"] `TyArr` TyCon "Int"))
   -- concat two strings
-  , ("#.",    ForAll []         (TyTuple [TyCon "String", TyCon "String"] `TyArr` TyCon "String"))
+  -- , ("#.",    ForAll []         (TyTuple [TyCon "String", TyCon "String"] `TyArr` TyCon "String"))
   , ("#++",   ForAll ["a"]      (TyTuple [TyList (TyVar "a"), TyList (TyVar "a")] `TyArr` TyList (TyVar "a")))
   , ("#!!",   ForAll ["a"]      (TyTuple [TyList (TyVar "a"), TyCon "Int"] `TyArr` TyVar "a"))
   -- prepend element to a list
   , ("#:",    ForAll ["a"]      (TyTuple [TyVar "a", TyList (TyVar "a")] `TyArr` TyList (TyVar "a")))
   -- prepend a char to a string
-  , ("#;",    ForAll []         (TyTuple [TyCon "Char", TyCon "String"] `TyArr` TyCon "String"))
+  -- , ("#;",    ForAll []         (TyTuple [TyCon "Char", TyCon "String"] `TyArr` TyCon "String"))
   -- head of the list
   , ("#head", ForAll ["a"]      (TyList (TyVar "a") `TyArr` TyVar "a"))
   , ("#tail", ForAll ["a"]      (TyList (TyVar "a") `TyArr` TyList (TyVar "a")))
@@ -344,7 +344,7 @@ infer (Env env) expr = case expr of
   Lit (LitInt i) -> return (empty'subst, TyCon "Int")
   Lit (LitDouble d) -> return (empty'subst, TyCon "Double")
   Lit (LitChar ch) -> return (empty'subst, TyCon "Char")
-  Lit (LitString s) -> return (empty'subst, TyCon "String")
+  Lit (LitString s) -> return (empty'subst, TyList (TyCon "Char"))
   Lit (LitBool b) -> return (empty'subst, TyCon "Bool")
   Lit LitUnit -> return (empty'subst, TyCon "Unit")
 

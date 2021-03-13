@@ -25,4 +25,6 @@ instance Show Value where
   show (Lit lit) = show lit
   show (Lam par body env) = "<lambda>"
   show (Tuple values) = "(" ++ intercalate ", " (map show values) ++ ")"
+  -- show (List vals@(Lit (LitChar c) : _))
+  --   = "\"" ++ intercalate "" (map show vals) ++ "\""
   show (List values) = "[" ++ intercalate ", " (map show values) ++ "]"

@@ -94,32 +94,73 @@ apply'operator "#/" (Val.Tuple [Val.Lit (LitInt i'l), Val.Lit (LitInt 0)]) env
   = Left $ DivisionByZero i'l
 apply'operator "#/" (Val.Tuple [Val.Lit (LitInt i'l), Val.Lit (LitInt i'r)]) env
   = Right $ Val.Lit (LitInt (i'l `div` i'r))
-apply'operator "#." (Val.Tuple [Val.Lit (LitString s'l), Val.Lit (LitString s'r)]) env
-  = Right $ Val.Lit (LitString (s'l ++ s'r))
+
+-- apply'operator "#." (Val.Tuple [Val.Lit (LitString s'l), Val.Lit (LitString s'r)]) env
+--   = Right $ Val.Lit (LitString (s'l ++ s'r))
+
 apply'operator "#++" (Val.Tuple [Val.List exprs'left, Val.List exprs'right]) env
   = Right $ Val.List $ exprs'left ++ exprs'right
-apply'operator "#;" (Val.Tuple [Val.Lit (LitChar ch'l), Val.Lit (LitString s'r)]) env
-  = Right $ Val.Lit (LitString (ch'l : s'r))
+apply'operator "#++" (Val.Tuple [Val.Lit (LitString str'left), Val.Lit (LitString str'right)]) env
+  = Right $ Val.Lit $ LitString $ str'left ++ str'right
+
+
+-- apply'operator "#;" (Val.Tuple [Val.Lit (LitChar ch'l), Val.Lit (LitString s'r)]) env
+  -- = Right $ Val.Lit (LitString (ch'l : s'r))
+
 apply'operator "#:" (Val.Tuple [expr, Val.List exprs]) env
   = Right $ Val.List $ expr : exprs 
+apply'operator "#:" (Val.Tuple [Val.Lit (LitChar ch), Val.Lit (LitString str)]) env
+  = Right $ Val.Lit $ LitString $ ch : str
+
 apply'operator "#!!" (Val.Tuple [Val.List exprs, Val.Lit (LitInt i)]) env
   | i < 0 || i >= length exprs = Left $ IndexOutOfBound i
   | otherwise = Right $ exprs !! i
+
+-- apply'operator "#!!" (Val.Tuple [Val.List exprs, Val.Lit (LitInt i)]) env
+--   | i < 0 || i >= length exprs = Left $ IndexOutOfBound i
+--   | otherwise = Right $ exprs !! i
+
 apply'operator "#head" (Val.List []) env
   = Left NilHeadException
+
+apply'operator "#head" (Val.Lit (LitString "")) env
+  = Left EmptyStringException
+
 apply'operator "#head" (Val.List (e : es)) env
   = Right e
+
+apply'operator "#head" (Val.Lit (LitString (e : es))) env
+  = Right $ Val.Lit $ LitChar e
+
 apply'operator "#tail" (Val.List []) env
   = Left NilTailException
+
+apply'operator "#tail" (Val.Lit (LitString "")) env
+  = Left EmptyStringException
+
 apply'operator "#tail" (Val.List (e : es)) env
   = Right $ Val.List es
+
+apply'operator "#tail" (Val.Lit (LitString (e : es))) env
+  = Right $ Val.Lit $ LitString es
+
 apply'operator "#nil?" (Val.List []) env
   = Right $ Val.Lit $ LitBool True
+
+apply'operator "#nil?" (Val.Lit (LitString "")) env
+  = Right $ Val.Lit $ LitBool True
+
 apply'operator "#nil?" (Val.List (e : es)) env
   = Right $ Val.Lit $ LitBool False
+
+apply'operator "#nil?" (Val.Lit (LitString (e : es))) env
+  = Right $ Val.Lit $ LitBool False
+
 apply'operator "#fst" (Val.Tuple [f, s]) env
   = Right f
+
 apply'operator "#snd" (Val.Tuple [f, s]) env
   = Right s
+
 apply'operator name expr env
   = Left $ BadOperatorApplication name expr

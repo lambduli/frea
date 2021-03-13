@@ -9,6 +9,7 @@ data EvaluationError
   | IndexOutOfBound Int
   | NilHeadException
   | NilTailException
+  | EmptyStringException
   | DivisionByZero Int
 
 instance Show EvaluationError where
@@ -17,4 +18,5 @@ instance Show EvaluationError where
   show (IndexOutOfBound ind) = "Index out of the bound error. (" ++ show ind ++ ")"
   show NilHeadException = "Native function #head called on an empty list."
   show NilTailException = "Native function #tail called on an empty list."
+  show EmptyStringException = "Operation called with an empty string."
   show (DivisionByZero left) = "Division by zero error. (" ++ show left ++ " / 0)"
