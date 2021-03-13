@@ -18,6 +18,7 @@ data Value
   | Lam String Expression Env
   | Tuple [Value]
   | List [Value]
+  | Thunk (() -> Value)
 
 
 instance Show Value where
@@ -28,3 +29,6 @@ instance Show Value where
   -- show (List vals@(Lit (LitChar c) : _))
   --   = "\"" ++ intercalate "" (map show vals) ++ "\""
   show (List values) = "[" ++ intercalate ", " (map show values) ++ "]"
+  show (Thunk force'f)
+    = let val = force'f ()
+      in show val
