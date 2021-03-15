@@ -240,10 +240,25 @@ You can just write a list of bindings as in `let in` expression but dropping the
 You can write stuff like:
 
 ```haskell
-  a == b  = ((#=) (a, b))
-  a < b  = ((#<) (a, b))
-  a > b  = ((#>) (a, b))
+a == b  = ((#=) (a, b))
+a < b   = ((#<) (a, b))
+a > b   = ((#>) (a, b))
 
-  a + b  = ((#+) (a, b))
-  a +. b  = ((#+.) (a, b))
+a + b   = ((#+) (a, b))
+a +. b  = ((#+.) (a, b))
 ```
+
+### Evaluation Strategy
+
+Frea employs `"call-by-name"` semantics. Programs like this one are absolutely valid:
+
+```haskell
+forever n = (forever n)
+
+result = (forever 0)
+
+lst = (result : [1, 2, 3])
+
+(lst !! 1)
+```
+And won't trigger infinite loop.
