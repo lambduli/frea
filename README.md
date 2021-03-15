@@ -216,17 +216,18 @@ You you can use them to implement your own functions and operators.
 
 ## Supported built-in operations:
 - `(#=)` :: forall a . (a, a) -> Bool
-- `(#<)` :: (Int, Int) -> Bool
-- `(#>)` :: (Int, Int) -> Bool
-- `(#+)` :: (Int, Int) -> Bool
-- `(#*)` :: (Int, Int) -> Bool
-- `(#-)` :: (Int, Int) -> Bool
-- `(#/)` :: (Int, Int) -> Bool
-- `(#.)` :: (String, String) -> String
+- `(#<)` :: forall a . (a, a) -> Bool
+- `(#>)` :: forall a . (a, a) -> Bool
+- `(#+)` :: (Int, Int) -> Int
+- `(#+.)` :: (Double, Double) -> Double
+- `(#*)` :: (Int, Int) -> Int
+- `(#*.)` :: (Double, Double) -> Double
+- `(#-)` :: (Int, Int) -> Int
+- `(#-.)` :: (Double, Double) -> Double
+- `(#div)` :: (Int, Int) -> Int
+- `(#/)` :: (Double, Double) -> Double
 - `(#++)` :: forall a . ([a], [a]) -> [a]
-- `(#;)` :: (Char, String) -> String
 - `(#:)` :: forall a . (a, [a]) -> [a]
-- `(#!!)` :: forall a . (Int, [a]) -> a
 - `(#head)` :: forall a . [a] -> a
 - `(#tail)` :: forall a . [a] -> [a]
 - `(#nil?)` :: forall a . [a] -> Bool
@@ -242,5 +243,7 @@ You can write stuff like:
   a == b  = ((#=) (a, b))
   a < b  = ((#<) (a, b))
   a > b  = ((#>) (a, b))
+
   a + b  = ((#+) (a, b))
+  a +. b  = ((#+.) (a, b))
 ```
