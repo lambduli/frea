@@ -1,15 +1,27 @@
 a == b  = ((#=) (a, b))
 a < b  = ((#<) (a, b))
 a > b  = ((#>) (a, b))
+
 a + b  = ((#+) (a, b))
+a +. b  = ((#+.) (a, b))
+
 a - b  = ((#-) (a, b))
+a -. b  = ((#-.) (a, b))
+
 a * b  = ((#*) (a, b))
+a *. b  = ((#*.) (a, b))
+
+a `div` b = ((#div) (a, b))
 a / b  = ((#/) (a, b))
+
 a ++ b  = ((#++) (a, b))
 a : b  = ((#:) (a, b))
+
 head a  = ((#head) a)
 tail a  = ((#tail) a)
-a !! b  = if ((#=) (b, 0)) then ((#head) a) else (((#tail) a) !! ((#-) (b, 1)))
 nil? a b  = ((#nil?) a)
+
+a !! b  = if ((#=) (b, 0)) then ((#head) a) else (((#tail) a) !! ((#-) (b, 1)))
+
 fst  a b  = ((#fst) a)
 snd  a b  = ((#snd) a)
