@@ -73,8 +73,12 @@ token :-
 <0>         "#<"            { plainTok $ TokNativeSym "#<" }
 <0>         "#>"            { plainTok $ TokNativeSym "#>" }
 <0>         "#+"            { plainTok $ TokNativeSym "#+" }
+<0>         "#+."           { plainTok $ TokNativeSym "#+." }
 <0>         "#-"            { plainTok $ TokNativeSym "#-" }
+<0>         "#-."           { plainTok $ TokNativeSym "#-." }
 <0>         "#*"            { plainTok $ TokNativeSym "#*" }
+<0>         "#*."           { plainTok $ TokNativeSym "#*." }
+<0>         "#div"          { plainTok $ TokNativeSym "#div" }
 <0>         "#/"            { plainTok $ TokNativeSym "#/" }
 <0>         "#++"           { plainTok $ TokNativeSym "#++" }
 <0>         "#:"            { plainTok $ TokNativeSym "#:" }

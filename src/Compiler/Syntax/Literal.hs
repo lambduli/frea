@@ -8,7 +8,9 @@ data Lit
   | LitChar Char
   | LitString String
   | LitUnit
-  deriving (Eq)
+  deriving (Eq, Ord)
+  -- I can safely derive and use Ord because the type of Freas comparision operations
+  -- prohibits from comparing two things of different types
 
 instance Show Lit where
   show (LitInt i) = show i
