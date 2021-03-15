@@ -144,12 +144,20 @@ empty'env = Env $ Map.fromList
   [ ("#fst",  ForAll ["a", "b"] (TyArr (TyTuple [TyVar "a", TyVar "b"]) (TyVar "a")))
   , ("#snd",  ForAll ["a", "b"] (TyArr (TyTuple [TyVar "a", TyVar "b"]) (TyVar "b")))
   , ("#=",    ForAll ["a"]      (TyTuple [TyVar "a", TyVar "a"] `TyArr` TyCon "Bool"))
-  , ("#<",    ForAll []         (TyTuple [TyCon "Int", TyCon "Int"] `TyArr` TyCon "Bool"))
-  , ("#>",    ForAll []         (TyTuple [TyCon "Int", TyCon "Int"] `TyArr` TyCon "Bool"))
+  , ("#<",    ForAll ["a"]      (TyTuple [TyVar "a", TyVar "a"] `TyArr` TyCon "Bool"))
+  , ("#>",    ForAll ["a"]      (TyTuple [TyVar "a", TyVar "a"] `TyArr` TyCon "Bool"))
+
   , ("#+",    ForAll []         (TyTuple [TyCon "Int", TyCon "Int"] `TyArr` TyCon "Int"))
+  , ("#+.",    ForAll []         (TyTuple [TyCon "Double", TyCon "Double"] `TyArr` TyCon "Double"))
+
   , ("#*",    ForAll []         (TyTuple [TyCon "Int", TyCon "Int"] `TyArr` TyCon "Int"))
+  , ("#*.",    ForAll []         (TyTuple [TyCon "Double", TyCon "Double"] `TyArr` TyCon "Double"))
+
   , ("#-",    ForAll []         (TyTuple [TyCon "Int", TyCon "Int"] `TyArr` TyCon "Int"))
-  , ("#/",    ForAll []         (TyTuple [TyCon "Int", TyCon "Int"] `TyArr` TyCon "Int"))
+  , ("#-.",    ForAll []         (TyTuple [TyCon "Double", TyCon "Double"] `TyArr` TyCon "Double"))
+
+  , ("#div",  ForAll []         (TyTuple [TyCon "Int", TyCon "Int"] `TyArr` TyCon "Int"))
+  , ("#/",    ForAll []         (TyTuple [TyCon "Double", TyCon "Double"] `TyArr` TyCon "Double"))
   , ("#++",   ForAll ["a"]      (TyTuple [TyList (TyVar "a"), TyList (TyVar "a")] `TyArr` TyList (TyVar "a")))
   -- prepend element to a list
   , ("#:",    ForAll ["a"]      (TyTuple [TyVar "a", TyList (TyVar "a")] `TyArr` TyList (TyVar "a")))
