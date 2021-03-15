@@ -366,11 +366,15 @@ infer'env binds t'env
       Right pairs -> Right $ Env $ Map.fromList pairs
 
     where
-      infer'pair :: (String, Expression) -> Either TypeError (String, Scheme)
-      infer'pair (name, exp) = case infer'expression t'env exp of
-        Left t'err -> Left t'err
-        Right scheme -> Right (name, scheme)
+      infer'pair :: (TypeEnv, [Either TypeError (String, Scheme)]) -> (String, Expression) -> (TypeEnv, [Either TypeError (String, Scheme)])
+      infer'pair (t'env, eiths) (name, exp) = case infer'expression t'env exp of
+        Left t'err -> (t'env, Left t'err : eiths)
+        Right scheme ->
+          let Env env'map = t'env
+          in (Env $ Map.insert name scheme env'map, Right (name, scheme) : eiths)
 
       eiths :: [Either TypeError (String, Scheme)]
-      eiths = map infer'pair binds
+      (t'env', eiths) = foldl infer'pair (t'env, []) binds
+      
+      -- eiths = map infer'pair binds
 

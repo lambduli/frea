@@ -55,6 +55,7 @@ readExpression = do
     "" -> return line
     ':' : 'e' : 'x' : 'i' : 't' : _ -> return line
     ':' : 'q' : _ -> return line
+    ':' : 'Q' : _ -> return line
     _ -> do
       next'line <- read'expr'
       return $ line ++ ['\n'] ++ next'line
@@ -67,6 +68,7 @@ readExpression = do
           "" -> return line
           ':' : 'e' : 'x' : 'i' : 't' : _ -> return line
           ':' : 'q' : _ -> return line
+          ':' : 'Q' : _ -> return line
           _ -> do
             next'line <- read'expr'
             return $ line ++ ['\n'] ++ next'line
@@ -81,6 +83,8 @@ repl env@(Val.Env bs) t'env@(Env t'map) = do
   case line of
     [] -> do
       putStrLn ""
+
+      -- loop
       repl env t'env
     ":exit" -> do
       putStrLn "Bye!"
@@ -88,10 +92,15 @@ repl env@(Val.Env bs) t'env@(Env t'map) = do
     ":q" -> do
       putStrLn "Bye!"
       return ()
+    ":Q" -> do
+      putStrLn "Bye!"
+      return ()
     ':' : 't' : line -> do
       case parse'expr line of
         Left (Assume binds) -> do
           putStrLn "Incorrect Format! An expression must follow the :t command, not a declaration."
+
+          -- loop
           repl env t'env
         Right expression -> do
           let error'or'type = infer'expression t'env expression
@@ -99,21 +108,36 @@ repl env@(Val.Env bs) t'env@(Env t'map) = do
           case error'or'type of
             Left err -> do
               putStrLn $ "Type Error: " ++ show err
+
+              -- loop
               repl env t'env
             Right type' -> do
               putStrLn $ "frea λ > :: " ++ show type'
+
+              -- loop
               repl env t'env
           
     _ -> do
       case parse'expr line of
         Left (Assume binds) -> do
           let
-            env' = Val.Env $ bs ++ map (second (, env)) binds
+            -- :: (Env, [(String, (Expression, Env))]) -> (String, Expression) -> (Env, [(String, (Expression, Env))])
+            close'with (env, binds) (name, expr) =
+              let
+                Val.Env env'binds = env
+                new'env = Val.Env $ (name, (expr, env)) : env'binds
+                closed = (expr, new'env)
+              in
+                (new'env, (name, closed) : binds)
+            (_, closed) = foldl close'with (env, []) binds
+            env' = Val.Env $ bs ++ closed
           case infer'env binds t'env of
             Left err -> do
               putStrLn $ "Type Error: " ++ show err
             Right (Env mp) -> do
               let t'env' = Env $ mp `Map.union` t'map
+
+              -- loop              
               repl env' t'env'
               
         Right expression -> do
@@ -121,6 +145,8 @@ repl env@(Val.Env bs) t'env@(Env t'map) = do
           case error'or'type of
             Left err -> do
               putStrLn $ "Type Error: " ++ show err
+
+              -- loop
               repl env t'env
             _ -> do
               let error'or'expr = evaluate expression env
