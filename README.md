@@ -218,6 +218,8 @@ You you can use them to implement your own functions and operators.
 - `(#=)` :: forall a . (a, a) -> Bool
 - `(#<)` :: forall a . (a, a) -> Bool
 - `(#>)` :: forall a . (a, a) -> Bool
+- `(#&&)` :: (Bool, Bool) -> Bool
+- `(#||)` :: (Bool, Bool) -> Bool
 - `(#+)` :: (Int, Int) -> Int
 - `(#+.)` :: (Double, Double) -> Double
 - `(#*)` :: (Int, Int) -> Int
