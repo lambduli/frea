@@ -29,7 +29,6 @@ force expr env
 evaluate :: Expression -> Env -> Either EvaluationError Val.Value
 evaluate expr env@(Env bs) = case expr of
   Var name
-    -- | Just (expr, env') <- lookup name bs -> trace ("0 eval var name = " ++ name ++ "  value = " ++ show expr) (evaluate expr env')
     | Just (expr, env') <- lookup name bs -> evaluate expr env'
 
     | otherwise -> Left $ UnboundVar name
@@ -42,67 +41,31 @@ evaluate expr env@(Env bs) = case expr of
     Right $ Val.Lit lit
 
   Tuple exprs ->
-    Right $ Val.Tuple $ map (\ expr -> Val.Thunk (\ _ -> evaluate expr env)) exprs -- used to be force
-
-    -- let
-    --   eiths = map (`evaluate` env) exprs
-    --   may'err = find isLeft eiths
-    -- in case may'err of
-    --   Nothing ->
-    --     let
-    --       from'right (Right x) = x
-    --       vals = map from'right eiths
-    --     in Right $ Val.Tuple vals
-    --   Just err -> err
+    Right $ Val.Tuple $ map (\ expr -> Val.Thunk (\ _ -> evaluate expr env)) exprs
 
   List exprs ->
-    Right $ Val.List $ map (\ expr -> Val.Thunk (\ _ -> evaluate expr env)) exprs -- used to be force
-
-    -- let
-    --   eiths = map (`evaluate` env) exprs
-    --   may'err = find isLeft eiths
-    -- in case may'err of
-    --   Nothing ->
-    --     let
-    --       from'right (Right x) = x
-    --       vals = map from'right eiths
-    --     in Right $ Val.List vals
-    --   Just err -> err
+    Right $ Val.List $ map (\ expr -> Val.Thunk (\ _ -> evaluate expr env)) exprs
 
   Let name val expr ->
-    Right $ Val.Thunk (\ _ -> evaluate (App (Lam name expr) val) env) -- forced
+    Right $ Val.Thunk (\ _ -> evaluate (App (Lam name expr) val) env)
 
   Lam par body ->
-    -- Right $ trace ("_ evaluating lambda par = " ++ par) $ Val.Lam par body env
     Right $ Val.Lam par body env
 
 
   App (Lam par body) right ->
-    -- Right $ trace ("3 eval app param = " ++ par)
-    --   Val.Thunk (\ _ -> trace ("4 forcing app param = " ++ par) $ evaluate body (Val.Env ((par, (right, env)) : bs))) -- forced
-    Right $ Val.Thunk (\ _ -> evaluate body (Val.Env ((par, (right, env)) : bs))) -- forced
+    Right $ Val.Thunk (\ _ -> evaluate body (Val.Env ((par, (right, env)) : bs)))
 
-
-  -- otazka je - mel bych evaluovat right pred tim nez provedu apply'operator?
-  -- kdyz to neudelam, bude apply'operator muset evaluovat sama
-  -- pokud by evaluovala -> mohla by dostat Thunk nebo hodnotu
-  -- taky bych to ale mohl rovnou evalnout, protoze vsechny nativni operatory stejne budou tu operaci delat
-  -- pokud v budoucnu nezavedu operator, kterej nebude evaluaci argumentu provadet, nebude problem
-  -- takze tohle se asi nebude menit
   App (Op op) right ->
     case force right env of
       Right r'val -> apply'operator op r'val env
       Left err -> Left err
 
   App left right ->
-    -- Right $ trace "5 evaluate general APP" $ Val.Thunk (\ _ ->
     Right $ Val.Thunk (\ _ ->
-
-      -- case trace ("6 force general APP  right = " ++ show right ) (force left env) of
       case force left env of
         Left err -> Left err
         Right (Val.Lam par body (Env bs')) ->
-          -- trace "6.1 forcnul jsem left a dostal jsem lambdu" $
           force body $ Val.Env ((par, (right, env)) : bs'))
 
   If cond' then' else' ->
@@ -113,8 +76,6 @@ evaluate expr env@(Env bs) = case expr of
           if b then evaluate then' env else evaluate else' env)
 
   Fix expr ->
-    -- Right $ trace "1 eval fix" Val.Thunk (\ _ ->
-    --   trace "2 force fix thunk"
     Right $ Val.Thunk (\ _ ->
       evaluate (App expr $ Fix expr) env)
 
@@ -141,15 +102,11 @@ apply'operator "#<" (Val.Tuple [val'l, val'r]) env
   | (Right (Val.Lit lit'l), Right (Val.Lit lit'r))
       <- (force'val $ Right val'l, force'val $ Right val'r)
         = Right $ Val.Lit (LitBool (lit'l < lit'r))
--- apply'operator "#<" (Val.Tuple [Val.Lit (LitInt i'l), Val.Lit (LitInt i'r)]) env
---   = Right $ Val.Lit (LitBool (i'l < i'r))
 
 apply'operator "#>" (Val.Tuple [val'l, val'r]) env
   | (Right (Val.Lit lit'l), Right (Val.Lit lit'r))
       <- (force'val $ Right val'l, force'val $ Right val'r)
         = Right $ Val.Lit (LitBool (lit'l > lit'r))
--- apply'operator "#>" (Val.Tuple [Val.Lit (LitInt i'l), Val.Lit (LitInt i'r)]) env
-  -- = Right $ Val.Lit (LitBool (i'l > i'r))
 
 apply'operator "#+" (Val.Tuple [val'l, val'r]) env
   | (Right (Val.Lit (LitInt i'l)), Right (Val.Lit (LitInt i'r)))
@@ -160,8 +117,6 @@ apply'operator "#+." (Val.Tuple [val'l, val'r]) env
   | (Right (Val.Lit (LitDouble d'l)), Right (Val.Lit (LitDouble d'r)))
       <- (force'val $ Right val'l, force'val $ Right val'r)
         = Right $ Val.Lit (LitDouble (d'l + d'r))
--- apply'operator "#+" (Val.Tuple [Val.Lit (LitInt i'l), Val.Lit (LitInt i'r)]) env
-  -- = Right $ Val.Lit (LitInt (i'l + i'r))
 
 apply'operator "#*" (Val.Tuple [val'l, val'r]) env
   | (Right (Val.Lit (LitInt i'l)), Right (Val.Lit (LitInt i'r)))
@@ -172,9 +127,6 @@ apply'operator "#*." (Val.Tuple [val'l, val'r]) env
   | (Right (Val.Lit (LitDouble d'l)), Right (Val.Lit (LitDouble d'r)))
       <- (force'val $ Right val'l, force'val $ Right val'r)
         = Right $ Val.Lit (LitDouble (d'l * d'r))
--- apply'operator "#*" (Val.Tuple [Val.Lit (LitInt i'l), Val.Lit (LitInt i'r)]) env
-  -- = Right $ Val.Lit (LitInt (i'l * i'r))
-
 
 apply'operator "#-" (Val.Tuple [val'l, val'r]) env
   | (Right (Val.Lit (LitInt i'l)), Right (Val.Lit (LitInt i'r)))
@@ -185,9 +137,6 @@ apply'operator "#-." (Val.Tuple [val'l, val'r]) env
   | (Right (Val.Lit (LitDouble d'l)), Right (Val.Lit (LitDouble d'r)))
       <- (force'val $ Right val'l, force'val $ Right val'r)
         = Right $ Val.Lit (LitDouble (d'l - d'r))
--- apply'operator "#-" (Val.Tuple [Val.Lit (LitInt i'l), Val.Lit (LitInt i'r)]) env
-  -- = Right $ Val.Lit (LitInt (i'l - i'r))
-
 
 apply'operator "#div" (Val.Tuple [val'l, val'r]) env
   | (Right (Val.Lit (LitInt i'l)), Right (Val.Lit (LitInt i'r)))
@@ -205,12 +154,6 @@ apply'operator "#/" (Val.Tuple [val'l, val'r]) env
       <- (force'val $ Right val'l, force'val $ Right val'r)
         = Left $ DivisionByZero 0
 
-
--- apply'operator "#/" (Val.Tuple [Val.Lit (LitInt i'l), Val.Lit (LitInt 0)]) env
-  -- = Left $ DivisionByZero i'l
--- apply'operator "#/" (Val.Tuple [Val.Lit (LitInt i'l), Val.Lit (LitInt i'r)]) env
-  -- = Right $ Val.Lit (LitInt (i'l `div` i'r))
-
 apply'operator "#++" (Val.Tuple [val'l, val'r]) env
   = Right $ Val.Thunk (\ _ ->
       case (force'val $ Right val'l, force'val $ Right val'r) of
@@ -220,11 +163,6 @@ apply'operator "#++" (Val.Tuple [val'l, val'r]) env
           Right $ Val.Lit $ LitString $ str'left ++ str'right
         (Left err, _) -> Left err
         (_, Left err) -> Left err)
--- apply'operator "#++" (Val.Tuple [Val.List exprs'left, Val.List exprs'right]) env
-  -- = Right $ Val.List $ exprs'left ++ exprs'right
--- 
--- apply'operator "#++" (Val.Tuple [Val.Lit (LitString str'left), Val.Lit (LitString str'right)]) env
-  -- = Right $ Val.Lit $ LitString $ str'left ++ str'right
 
 -- when the val'r is not a List, but an infinite expression instead
 -- forcing the val'r makes the program to run forever 
@@ -240,11 +178,6 @@ apply'operator "#:" (Val.Tuple [val'l, val'r]) env
         Right (Val.List exprs) -> Right $ Val.List $ val'l : exprs
 
         Left err -> Left err)
-
--- apply'operator "#:" (Val.Tuple [expr, Val.List exprs]) env
---   = Right $ Val.List $ expr : exprs 
--- apply'operator "#:" (Val.Tuple [Val.Lit (LitChar ch), Val.Lit (LitString str)]) env
---   = Right $ Val.Lit $ LitString $ ch : str
 
 apply'operator "#head" (Val.List []) env
   = Right $ Val.Thunk (\ _ -> Left NilHeadException)
