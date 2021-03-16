@@ -127,6 +127,18 @@ apply'operator "#=" (Val.Tuple [val'l, val'r]) env
       <- (force'val $ Right val'l, force'val $ Right val'r)
         = Right $ Val.Lit (LitBool (lit'l == lit'r))
 
+apply'operator "#&&" (Val.Tuple [val'l, val'r]) env
+  = case force'val $ Right val'l of
+      Right (Val.Lit (LitBool b))
+        | b -> Right val'r
+        | otherwise  -> Right $ Val.Lit $ LitBool False
+
+apply'operator "#||" (Val.Tuple [val'l, val'r]) env
+  = case force'val $ Right val'l of
+      Right (Val.Lit (LitBool b))
+        | not b -> Right val'r
+        | otherwise  -> Right $ Val.Lit $ LitBool True
+
 apply'operator "#<" (Val.Tuple [val'l, val'r]) env
   | (Right (Val.Lit lit'l), Right (Val.Lit lit'r))
       <- (force'val $ Right val'l, force'val $ Right val'r)
@@ -216,6 +228,8 @@ apply'operator "#++" (Val.Tuple [val'l, val'r]) env
 -- apply'operator "#++" (Val.Tuple [Val.Lit (LitString str'left), Val.Lit (LitString str'right)]) env
   -- = Right $ Val.Lit $ LitString $ str'left ++ str'right
 
+-- when the val'r is not a List, but an infinite expression instead
+-- forcing the val'r makes the program to run forever 
 apply'operator "#:" (Val.Tuple [val'l, val'r]) env
   = Right $ Val.Thunk (\ _ ->
       case force'val $ Right val'r of

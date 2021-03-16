@@ -143,6 +143,10 @@ empty'env :: TypeEnv
 empty'env = Env $ Map.fromList
   [ ("#fst",  ForAll ["a", "b"] (TyArr (TyTuple [TyVar "a", TyVar "b"]) (TyVar "a")))
   , ("#snd",  ForAll ["a", "b"] (TyArr (TyTuple [TyVar "a", TyVar "b"]) (TyVar "b")))
+
+  , ("#&&",   ForAll ["a"]      (TyTuple [TyCon "Bool", TyCon "Bool"] `TyArr` TyCon "Bool"))
+  , ("#||",   ForAll ["a"]      (TyTuple [TyCon "Bool", TyCon "Bool"] `TyArr` TyCon "Bool"))
+  
   , ("#=",    ForAll ["a"]      (TyTuple [TyVar "a", TyVar "a"] `TyArr` TyCon "Bool"))
   , ("#<",    ForAll ["a"]      (TyTuple [TyVar "a", TyVar "a"] `TyArr` TyCon "Bool"))
   , ("#>",    ForAll ["a"]      (TyTuple [TyVar "a", TyVar "a"] `TyArr` TyCon "Bool"))
