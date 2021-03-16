@@ -91,7 +91,6 @@ evaluate expr env@(Env bs) = case expr of
   -- takze tohle se asi nebude menit
   App (Op op) right ->
     case force right env of
-      Right (Val.Thunk _) -> Left $ Unexpected "z nejakyho duvodu po forcu stejne mam thunk"
       Right r'val -> apply'operator op r'val env
       Left err -> Left err
 
@@ -104,8 +103,7 @@ evaluate expr env@(Env bs) = case expr of
         Left err -> Left err
         Right (Val.Lam par body (Env bs')) ->
           -- trace "6.1 forcnul jsem left a dostal jsem lambdu" $
-          force body $ Val.Env ((par, (right, env)) : bs')
-        Right (Val.Thunk f'f) -> Left $ Unexpected "Po Forcu jsem dostal Thunk")
+          force body $ Val.Env ((par, (right, env)) : bs'))
 
   If cond' then' else' ->
     Right $ Val.Thunk (\ _ ->
