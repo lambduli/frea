@@ -67,7 +67,7 @@ evaluate expr env@(Env e'map) = case expr of
       case force left env of
         Left err -> Left err
         Right (Val.Lam par body (Env bs')) ->
-          force body $ Val.Env $ Map.insert par (right, env) e'map)
+          force body $ Val.Env $ Map.insert par (right, env) bs')
 
   If cond' then' else' ->
     Right $ Val.Thunk (\ _ ->
