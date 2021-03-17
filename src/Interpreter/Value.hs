@@ -1,12 +1,13 @@
 module Interpreter.Value where
 
 import Data.List
+import qualified Data.Map.Strict as Map
 
 import Compiler.Syntax.Expression (Expression)
 import Compiler.Syntax.Literal
 
 
-newtype Env = Env [(String, Closed)]
+newtype Env = Env (Map.Map String Closed) -- [(String, Closed)]
   deriving (Show)
 
 type Closed = (Expression, Env)

@@ -33,7 +33,7 @@ main = do
   case parse'expr contents of
     Left (Assume binds) -> do
       let
-        env' = Val.Env $ map (second (, Val.Env [])) binds
+        env' = Val.Env $ Map.fromList $ map (second (, Val.Env Map.empty)) binds
       case infer'env binds empty'env of
         Left err -> do
           putStrLn $ "Type Error in Prelude: " ++ show err
@@ -75,7 +75,7 @@ readExpression = do
 
 
 repl :: Val.Env -> TypeEnv -> IO ()
-repl env@(Val.Env bs) t'env@(Env t'map) = do
+repl env@(Val.Env env'map) t'env@(Env t'map) = do
   -- read
   line <- readExpression
 
@@ -124,13 +124,13 @@ repl env@(Val.Env bs) t'env@(Env t'map) = do
             -- :: (Env, [(String, (Expression, Env))]) -> (String, Expression) -> (Env, [(String, (Expression, Env))])
             close'with (env, binds) (name, expr) =
               let
-                Val.Env env'binds = env
-                new'env = Val.Env $ (name, (expr, env)) : env'binds
+                Val.Env env'map = env
+                new'env = Val.Env $ Map.insert name (expr, env) env'map
                 closed = (expr, new'env)
               in
                 (new'env, (name, closed) : binds)
             (_, closed) = foldl close'with (env, []) binds
-            env' = Val.Env $ bs ++ closed
+            env' = Val.Env $ Map.fromList closed `Map.union` env'map
           case infer'env binds t'env of
             Left err -> do
               putStrLn $ "Type Error: " ++ show err

@@ -1,8 +1,9 @@
 module Interpreter.Evaluate where
 
-import qualified Data.Map as Map
 import Data.Either
 import Data.List
+import Data.Map.Strict ((!?))
+import qualified Data.Map.Strict as Map
 
 import Compiler.Syntax.Expression
 import Compiler.Syntax.Literal
@@ -27,14 +28,14 @@ force expr env
 
 
 evaluate :: Expression -> Env -> Either EvaluationError Val.Value
-evaluate expr env@(Env bs) = case expr of
+evaluate expr env@(Env e'map) = case expr of
   Var name
-    | Just (expr, env') <- lookup name bs -> evaluate expr env'
+    | Just (expr, env') <- e'map !? name -> evaluate expr env'
 
     | otherwise -> Left $ UnboundVar name
 
   Op name
-    | Just (expr, env') <- lookup name bs -> evaluate expr env' -- TODO: future -> no lookup for primitive operations
+    | Just (expr, env') <- e'map !? name -> evaluate expr env' -- TODO: future -> no lookup for primitive operations
     | otherwise -> Right $ Val.Op name
 
   Lit lit ->
@@ -54,7 +55,7 @@ evaluate expr env@(Env bs) = case expr of
 
 
   App (Lam par body) right ->
-    Right $ Val.Thunk (\ _ -> evaluate body (Val.Env ((par, (right, env)) : bs)))
+    Right $ Val.Thunk (\ _ -> evaluate body (Val.Env$ Map.insert par (right, env) e'map))
 
   App (Op op) right ->
     case force right env of
@@ -66,7 +67,7 @@ evaluate expr env@(Env bs) = case expr of
       case force left env of
         Left err -> Left err
         Right (Val.Lam par body (Env bs')) ->
-          force body $ Val.Env ((par, (right, env)) : bs'))
+          force body $ Val.Env $ Map.insert par (right, env) e'map)
 
   If cond' then' else' ->
     Right $ Val.Thunk (\ _ ->
