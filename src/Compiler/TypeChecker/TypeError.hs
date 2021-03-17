@@ -8,6 +8,7 @@ data TypeError
   | UnifMismatch String String
   | UnboundVariable String
   | UnifShapeMismatch Type Type
+  | UnifShapeMismatch2 Type Type
   deriving (Eq)
 
 instance Show TypeError where
@@ -19,4 +20,6 @@ instance Show TypeError where
   show (UnboundVariable name)
     = "Unknown variable " ++ name
   show (UnifShapeMismatch type'l type'r)
-    = "Couldn't match type `" ++ show type'l ++ "` with `" ++ show type'r ++ "`"
+    = "[Shape] Couldn't match type `" ++ show type'l ++ "` with `" ++ show type'r ++ "`"
+  show (UnifShapeMismatch2 left right)
+    = "Obecne neco neni ok " ++ show left ++ " =/=  " ++ show right

@@ -33,7 +33,16 @@ main = do
   case parse'expr contents of
     Left (Assume binds) -> do
       let
-        env' = Val.Env $ Map.fromList $ map (second (, Val.Env Map.empty)) binds
+        close'with (env, binds) (name, expr) =
+          let
+            Val.Env env'map = env
+            new'env = Val.Env $ Map.insert name (expr, env) env'map
+            closed = (expr, new'env)
+          in
+            (new'env, (name, closed) : binds)
+        (_, closed) = foldl close'with (Val.Env Map.empty, []) binds
+        env' = Val.Env $ Map.fromList closed
+        -- env' = Val.Env $ Map.fromList $ map (second (, Val.Env Map.empty)) binds
       case infer'env binds empty'env of
         Left err -> do
           putStrLn $ "Type Error in Prelude: " ++ show err

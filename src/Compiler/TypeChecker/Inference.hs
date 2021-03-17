@@ -5,7 +5,10 @@ import Data.List (elem, foldl)
 import qualified Data.Set as Set
 import Control.Monad.State
 import Control.Monad.Except
+    ( ExceptT, MonadError(throwError), runExceptT )
 import Data.Bifunctor (second)
+
+import Debug.Trace
 
 import Compiler.Syntax
   ( Bind(..)
@@ -27,7 +30,7 @@ newtype TypeEnv = Env (Map.Map String Scheme)
 
 -- type substitution -- ordered mapping between name and type
 newtype Subst = Sub [(String, Type)]
-
+  deriving (Show)
 
 class Substitutable a where
   apply :: Subst -> a -> a
@@ -250,9 +253,19 @@ fresh = do
   return $ TyVar (letters !! counter)
 
 
+real'fresh :: [String] -> a -> Infer Type
+real'fresh vars var = do
+  counter <- get
+  put $ counter + 1
+  let name = letters !! counter
+  if name `elem` vars
+    then real'fresh vars var
+    else return $ TyVar name
+
+
 instantiate :: Scheme -> Infer Type
 instantiate (ForAll args type') = do
-  args' <- mapM (const fresh) args
+  args' <- mapM (real'fresh args) args
   let subst = zip args args'
   return $ apply (Sub subst) type'
 
