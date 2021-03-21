@@ -22,6 +22,9 @@ import Interpreter.Evaluate
 import qualified Interpreter.Value as Val
 import Interpreter.Command
 import Compiler.TypeChecker.TypeError
+import Compiler.TypeChecker.Type
+import Compiler.Syntax.Type
+import Compiler.Syntax.Expression
 
 
 main :: IO ()
@@ -31,7 +34,7 @@ main = do
   handle <- openFile "prelude.fr" ReadMode
   contents <- hGetContents handle
   case parse'expr contents of
-    Left (Assume binds) -> do
+    Left (Define binds) -> do
       let
         close'with (env, binds) (name, expr) =
           let
@@ -49,7 +52,7 @@ main = do
         Right (Env mp) -> do
           let (Env t'map) = empty'env
           let t'env' = Env $ mp `Map.union` t'map
-          repl env' t'env'
+          repl env' t'env' [t'Bool, t'Int, t'Double, t'Char, t'Unit]
       return ()
     _ -> do
       putStrLn "Error: Prelude is badly defined."
@@ -83,8 +86,8 @@ readExpression = do
             return $ line ++ ['\n'] ++ next'line
 
 
-repl :: Val.Env -> TypeEnv -> IO ()
-repl env@(Val.Env env'map) t'env@(Env t'map) = do
+repl :: Val.Env -> TypeEnv -> [Type] -> IO ()
+repl env@(Val.Env env'map) t'env@(Env t'map) type'ctx = do
   -- read
   line <- readExpression
 
@@ -94,7 +97,7 @@ repl env@(Val.Env env'map) t'env@(Env t'map) = do
       putStrLn ""
 
       -- loop
-      repl env t'env
+      repl env t'env type'ctx
     ":exit" -> do
       putStrLn "Bye!"
       return ()
@@ -106,11 +109,11 @@ repl env@(Val.Env env'map) t'env@(Env t'map) = do
       return ()
     ':' : 't' : line -> do
       case parse'expr line of
-        Left (Assume binds) -> do
+        Left _ -> do
           putStrLn "Incorrect Format! An expression must follow the :t command, not a declaration."
 
           -- loop
-          repl env t'env
+          repl env t'env type'ctx
         Right expression -> do
           let error'or'type = infer'expression t'env expression
           -- print
@@ -119,16 +122,16 @@ repl env@(Val.Env env'map) t'env@(Env t'map) = do
               putStrLn $ "Type Error: " ++ show err
 
               -- loop
-              repl env t'env
+              repl env t'env type'ctx
             Right type' -> do
-              putStrLn $ "frea λ > :: " ++ show type'
+              putStrLn $ "frea λ > " ++ show expression ++ " :: " ++ show type'
 
               -- loop
-              repl env t'env
+              repl env t'env type'ctx
           
     _ -> do
       case parse'expr line of
-        Left (Assume binds) -> do
+        Left (Define binds) -> do
           let
             -- :: (Env, [(String, (Expression, Env))]) -> (String, Expression) -> (Env, [(String, (Expression, Env))])
             close'with (env, binds) (name, expr) =
@@ -147,7 +150,15 @@ repl env@(Val.Env env'map) t'env@(Env t'map) = do
               let t'env' = Env $ mp `Map.union` t'map
 
               -- loop              
-              repl env' t'env'
+              repl env' t'env' type'ctx
+        Left (Data name constrs) ->
+          case check'constrs constrs (TyCon name : type'ctx) of
+            Left err -> putStrLn err
+            Right _ -> do
+              let t'env' = add'constrs (TyCon name) constrs t'env
+              let env' = add'constr'insts constrs env
+
+              repl env' t'env' type'ctx
               
         Right expression -> do
           let error'or'type = infer'expression t'env expression
@@ -156,7 +167,7 @@ repl env@(Val.Env env'map) t'env@(Env t'map) = do
               putStrLn $ "Type Error: " ++ show err
 
               -- loop
-              repl env t'env
+              repl env t'env type'ctx
             _ -> do
               let error'or'expr = evaluate expression env
               -- print
@@ -165,4 +176,47 @@ repl env@(Val.Env env'map) t'env@(Env t'map) = do
                 Right expr' -> putStrLn $ "         " ++ show expr'
 
               -- loop
-              repl env t'env
+              repl env t'env type'ctx
+
+
+check'constrs :: [Constr] -> [Type] -> Either String ()
+check'constrs [] _ = Right ()
+check'constrs (Con name types : cons) type'ctx = do
+  check types
+    where
+      check :: [Type] -> Either String ()
+      check [] = Right ()
+      check (t : ts) =
+        case t of
+          TyVar _ -> Right ()
+          TyCon n
+            | t `elem` type'ctx -> Right ()
+            | otherwise -> Left $ "Type error: Unknown type constructor " ++ n ++ "." 
+          TyTuple types -> do
+            check types
+          TyList t -> do
+            check [t]
+          TyArr from't to't -> do
+            check [from't]
+            check [to't]
+
+
+add'constrs :: Type -> [Constr] -> TypeEnv -> TypeEnv
+add'constrs _ [] t'env = t'env
+add'constrs result't (Con name types : cons) (Env t'env)
+  = add'constrs result't cons (Env $ Map.insert name scheme t'env)
+    where
+      type' = foldr TyArr result't types
+      scheme = ForAll [] type'
+
+
+add'constr'insts :: [Constr] -> Val.Env -> Val.Env
+add'constr'insts [] env = env
+add'constr'insts (Con name types : cons) (Val.Env env)
+  = add'constr'insts cons (Val.Env $ Map.insert name (con'lam, Val.Env Map.empty) env)
+    where
+      par'inds = [1 .. length types]
+      params = map (\ ind -> "p" ++ show ind ) par'inds
+      vars = map Var params
+      intro = Intro name vars
+      con'lam = foldr Lam intro params
