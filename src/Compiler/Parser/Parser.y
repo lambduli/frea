@@ -51,11 +51,12 @@ import Interpreter.Command
 
   '->'          { TokOperator "->" }
   '='           { TokOperator "=" }
-
+  '|'           { TokOperator "|" }
 
   varid         { TokVarId $$ }
   op            { TokOperator $$ }
   symid         { TokNativeSym $$ }
+  elim          { TokEliminator $$ }
 
 
   '('           { TokLeftParen }
@@ -79,10 +80,27 @@ import Interpreter.Command
 %%
 Program         ::  { Either Command Expression }
                 :   Exp                                             { Right $1 }
-                |   Assume                                          { Left $1 }
+                |   Declaration                                     { Left $1 }
 
-Assume          ::  { Command }
-                :   OneOrMany(Binding)                              { Assume $1 }
+-- TODO: Refactor!!!
+-- many declarations, many datas and so on
+-- ideally drop the Command type and use Declaration instead
+Declaration     ::  { Command }
+                :   OneOrMany(Binding)                              { Define $1 }
+                |   Data                                            { $1 }
+
+Data            ::  { Command }
+                :   data Ident Constructors                         { Data $2 $3 }
+
+Constructors    ::  { [Constr] }
+                :   {- empty -}                                     { [] }
+                |   '=' Constr NoneOrMany(ConstrOther)              { $2 : $3 }
+
+Constr          ::  { Constr }
+                :   Ident NoneOrMany(Type)                          { Con $1 $ $2 }
+
+ConstrOther     ::  { Constr }
+                :   '|' Constr                                      { $2 }
 
 -- Assumption      ::  { (String, Expression) }
 --                 :   Ident '=' Exp                                   { ($1, $3) }
@@ -104,11 +122,12 @@ Var             ::  { String }
 Op              ::  { String }
                 :   symid                                           { $1 }
                 |   op                                              { $1 }
+                |   '|'                                             { "|" }
 
 Oper            ::  { Expression }
                 :   symid                                           { Op $1 }
                 |   op                                              { Var $1 }
-
+                |   '|'                                             { Var "|" }
 
 Exp             ::  { Expression }
                 :   Var                                             { Var $1 }
@@ -161,6 +180,28 @@ Integer         ::  { Lit }
 
 Double          ::  { Lit }
                 :   double                                          { LitDouble $1 }
+
+Type            ::  { Type }
+                :   Ident                                           { TyCon $1 }
+                |   TyArr                                           { $1 }
+                |   TyTuple                                         { $1 }
+                |   TyList                                          { $1 }
+                |   '(' Type ')'                                    { $2 }
+
+TyArr           ::  { Type }
+                -- :   '(' TyArr ')' OneOrMany(TyArrRight)             { undefined }
+                :   Type '->' Type                                  { TyArr $1 $3 }
+                |   Type '->' TyArr                                 { TyArr $1 $3 }
+
+-- TyArrRight      ::  { Type }
+--                 :   Type '->'                                       { $1 }
+
+TyTuple         ::  { Type }
+                :   '(' Type CommaSeparated(Type) ')'               { TyTuple $ $2 : $3 }
+
+TyList          ::  { Type }
+                :   '[' Type ']'                                    { TyList $2 }
+
 
 NoneOrMany(tok)
                 :   {- empty -}                                     { [] }

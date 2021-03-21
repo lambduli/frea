@@ -20,6 +20,7 @@ data Value
   | Tuple [Value]
   | List [Value]
   | Thunk (() -> Either EvaluationError Value)
+  | Data String [Value] -- Name of the Constr and list of arguments
 
 
 instance Show Value where
@@ -32,6 +33,8 @@ instance Show Value where
     = case force'f () of
         Left err -> show err
         Right val -> show val
+  show (Data name values)
+    = "(" ++ name ++ " " ++ unwords (map show values) ++ ")"
 
 
 data EvaluationError
