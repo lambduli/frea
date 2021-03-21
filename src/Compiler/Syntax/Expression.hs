@@ -18,6 +18,8 @@ data Expression
   | If Expression Expression Expression -- OK
   | Let String Expression Expression -- OK
   | Fix Expression -- OK
+  | Intro String [Expression]
+  | Elim String [Expression] -- TODO: revisit
   -- | Typed Type Expression -- OK
   -- | MatchWith Expression MatchGroup -- OK
   deriving (Eq)
@@ -33,5 +35,7 @@ instance Show Expression where
   show (If cond' then' else') = "if " ++ show cond' ++ " then " ++ show then' ++ " else " ++ show else'
   show (Let name value expr) = "let " ++ name ++ " = " ++ show value ++ " in " ++ show expr
   show (Fix expr) = "fix " ++ show expr
+  show (Intro name exprs) = "(" ++ name ++ intercalate ", " (map show exprs) ++ ")"
+  show (Elim name exprs) = "<not implemented yet>"
   -- typed
   -- matchwith
