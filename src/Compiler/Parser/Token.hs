@@ -12,6 +12,7 @@ data Token
   = TokMatch
   | TokWith
   | TokData -- data
+  | TokEliminator String -- ~Foo
   | TokIf
   | TokThen
   | TokElse
