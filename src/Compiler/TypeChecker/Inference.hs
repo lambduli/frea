@@ -8,6 +8,8 @@ import Control.Monad.Except
     ( ExceptT, MonadError(throwError), runExceptT )
 import Data.Bifunctor (second)
 
+import Compiler.TypeChecker.Type 
+
 import Debug.Trace
 
 import Compiler.Syntax
@@ -147,30 +149,30 @@ empty'env = Env $ Map.fromList
   [ ("#fst",  ForAll ["a", "b"] (TyArr (TyTuple [TyVar "a", TyVar "b"]) (TyVar "a")))
   , ("#snd",  ForAll ["a", "b"] (TyArr (TyTuple [TyVar "a", TyVar "b"]) (TyVar "b")))
 
-  , ("#&&",   ForAll ["a"]      (TyTuple [TyCon "Bool", TyCon "Bool"] `TyArr` TyCon "Bool"))
-  , ("#||",   ForAll ["a"]      (TyTuple [TyCon "Bool", TyCon "Bool"] `TyArr` TyCon "Bool"))
+  , ("#&&",   ForAll ["a"]      (TyTuple [t'Bool, t'Bool] `TyArr` t'Bool))
+  , ("#||",   ForAll ["a"]      (TyTuple [t'Bool, t'Bool] `TyArr` t'Bool))
   
-  , ("#=",    ForAll ["a"]      (TyTuple [TyVar "a", TyVar "a"] `TyArr` TyCon "Bool"))
-  , ("#<",    ForAll ["a"]      (TyTuple [TyVar "a", TyVar "a"] `TyArr` TyCon "Bool"))
-  , ("#>",    ForAll ["a"]      (TyTuple [TyVar "a", TyVar "a"] `TyArr` TyCon "Bool"))
+  , ("#=",    ForAll ["a"]      (TyTuple [TyVar "a", TyVar "a"] `TyArr` t'Bool))
+  , ("#<",    ForAll ["a"]      (TyTuple [TyVar "a", TyVar "a"] `TyArr` t'Bool))
+  , ("#>",    ForAll ["a"]      (TyTuple [TyVar "a", TyVar "a"] `TyArr` t'Bool))
 
-  , ("#+",    ForAll []         (TyTuple [TyCon "Int", TyCon "Int"] `TyArr` TyCon "Int"))
-  , ("#+.",    ForAll []         (TyTuple [TyCon "Double", TyCon "Double"] `TyArr` TyCon "Double"))
+  , ("#+",    ForAll []         (TyTuple [t'Int, t'Int] `TyArr` t'Int))
+  , ("#+.",    ForAll []         (TyTuple [t'Double, t'Double] `TyArr` t'Double))
 
-  , ("#*",    ForAll []         (TyTuple [TyCon "Int", TyCon "Int"] `TyArr` TyCon "Int"))
-  , ("#*.",    ForAll []         (TyTuple [TyCon "Double", TyCon "Double"] `TyArr` TyCon "Double"))
+  , ("#*",    ForAll []         (TyTuple [t'Int, t'Int] `TyArr` t'Int))
+  , ("#*.",    ForAll []         (TyTuple [t'Double, t'Double] `TyArr` t'Double))
 
-  , ("#-",    ForAll []         (TyTuple [TyCon "Int", TyCon "Int"] `TyArr` TyCon "Int"))
-  , ("#-.",    ForAll []         (TyTuple [TyCon "Double", TyCon "Double"] `TyArr` TyCon "Double"))
+  , ("#-",    ForAll []         (TyTuple [t'Int, t'Int] `TyArr` t'Int))
+  , ("#-.",    ForAll []         (TyTuple [t'Double, t'Double] `TyArr` t'Double))
 
-  , ("#div",  ForAll []         (TyTuple [TyCon "Int", TyCon "Int"] `TyArr` TyCon "Int"))
-  , ("#/",    ForAll []         (TyTuple [TyCon "Double", TyCon "Double"] `TyArr` TyCon "Double"))
+  , ("#div",  ForAll []         (TyTuple [t'Int, t'Int] `TyArr` t'Int))
+  , ("#/",    ForAll []         (TyTuple [t'Double, t'Double] `TyArr` t'Double))
   , ("#++",   ForAll ["a"]      (TyTuple [TyList (TyVar "a"), TyList (TyVar "a")] `TyArr` TyList (TyVar "a")))
   -- prepend element to a list
   , ("#:",    ForAll ["a"]      (TyTuple [TyVar "a", TyList (TyVar "a")] `TyArr` TyList (TyVar "a")))
   , ("#head", ForAll ["a"]      (TyList (TyVar "a") `TyArr` TyVar "a"))
   , ("#tail", ForAll ["a"]      (TyList (TyVar "a") `TyArr` TyList (TyVar "a")))
-  , ("#nil?", ForAll ["a"]      (TyList (TyVar "a") `TyArr` TyCon "Bool"))
+  , ("#nil?", ForAll ["a"]      (TyList (TyVar "a") `TyArr` t'Bool))
   ]
 
 
@@ -360,12 +362,12 @@ infer (Env env) expr = case expr of
     sub' <- unify (t `TyArr` type'var') t'
     return (sub' `compose'subst` sub, apply sub' type'var')
 
-  Lit (LitInt i) -> return (empty'subst, TyCon "Int")
-  Lit (LitDouble d) -> return (empty'subst, TyCon "Double")
-  Lit (LitChar ch) -> return (empty'subst, TyCon "Char")
-  Lit (LitString s) -> return (empty'subst, TyList (TyCon "Char"))
-  Lit (LitBool b) -> return (empty'subst, TyCon "Bool")
-  Lit LitUnit -> return (empty'subst, TyCon "Unit")
+  Lit (LitInt i) -> return (empty'subst, t'Int)
+  Lit (LitDouble d) -> return (empty'subst, t'Double)
+  Lit (LitChar ch) -> return (empty'subst, t'Char)
+  Lit (LitString s) -> return (empty'subst, TyList t'Char)
+  Lit (LitBool b) -> return (empty'subst, t'Bool)
+  Lit LitUnit -> return (empty'subst, t'Unit)
 
 
 infer'expression :: TypeEnv -> Expression -> Either TypeError Scheme
