@@ -36,7 +36,7 @@ ___
 
 ## REPL commands:
 - `:t` *followed by an expression* does not evaluate the expression but rather tells you it's type
-- `:exit` or `:q` exits the REPL
+- `:exit` or `:q` / `:Q` exits the REPL
 - *expression* standing on it's own will be typechecked and possibly evaluated (it can span across multiple lines)
 
 ____
@@ -115,6 +115,24 @@ frea λ > let plus a b = (a + b) in (23 `plus` 42)
 65
 ```
 _____
+
+## Custom Data Types
+
+You can you a keyword `data` to define you own data types. Higher Kinded types are yet to be implemented, so you can only define nullary types. For example:
+
+```haskell
+data Boolean
+  = True
+  | False
+```
+
+or a monomorphic linked list:
+
+```haskell
+data IntList
+  = Nil
+  | Cons Int IntList
+```
 
 ## Expressions:
 
@@ -249,6 +267,7 @@ a > b   = ((#>) (a, b))
 a + b   = ((#+) (a, b))
 a +. b  = ((#+.) (a, b))
 ```
+
 
 ### Evaluation Strategy
 
