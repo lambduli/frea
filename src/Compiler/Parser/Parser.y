@@ -17,8 +17,6 @@ import Compiler.Syntax.MatchGroup
 import Compiler.Syntax.Pattern
 import Compiler.Syntax.Signature
 import Compiler.Syntax.Type
-
-import Interpreter.Command
 }
 
 
@@ -78,28 +76,28 @@ import Interpreter.Command
   rec           { TokRec }
 
 %%
-Program         ::  { Either Command Expression }
+Program         ::  { Either [Declaration] Expression }
                 :   Exp                                             { Right $1 }
-                |   Declaration                                     { Left $1 }
+                |   Declarations                                    { Left $1 }
 
--- TODO: Refactor!!!
--- many declarations, many datas and so on
--- ideally drop the Command type and use Declaration instead
-Declaration     ::  { Command }
-                :   OneOrMany(Binding)                              { Define $1 }
+Declarations    ::  { [Declaration] }
+                :   OneOrMany(Declaration)                          { $1 }
+
+Declaration     ::  { Declaration }
+                :   Decl                                            { $1 }
                 |   Data                                            { $1 }
 
-Data            ::  { Command }
-                :   data Ident Constructors                         { Data $2 $3 }
+Data            ::  { Declaration }
+                :   data Ident Constructors                         { DataDecl $2 [] $3 }
 
-Constructors    ::  { [Constr] }
+Constructors    ::  { [ConstrDecl] }
                 :   {- empty -}                                     { [] }
                 |   '=' Constr NoneOrMany(ConstrOther)              { $2 : $3 }
 
-Constr          ::  { Constr }
-                :   Ident NoneOrMany(Type)                          { Con $1 $ $2 }
+Constr          ::  { ConstrDecl }
+                :   Ident NoneOrMany(Type)                          { ConDecl $1 $ $2 }
 
-ConstrOther     ::  { Constr }
+ConstrOther     ::  { ConstrDecl }
                 :   '|' Constr                                      { $2 }
 
 -- Assumption      ::  { (String, Expression) }
@@ -167,6 +165,9 @@ Binding         ::  { (String, Expression) }
                 |   Var '`' Var '`' Var '=' Exp                     { ($3, Fix (Lam $3 (Lam $1 (Lam $5 $7)))) }
                 -- |   rec Var '`' Var '`' Var '=' Exp                 { ($4, Fix (Lam $4 (Lam $2 (Lam $6 $8)))) }
 
+Decl            ::  { Declaration }
+                :   Binding                                         { Binding (fst $1) (snd $1) }
+
 Lit             ::  { Lit }
                 :   Integer                                         { $1 }
                 |   Double                                          { $1 }
@@ -228,7 +229,7 @@ parseError _ = do
   error $ "Parse error on line " ++ show lno ++ ", column " ++ show colno ++ "." ++ "  " ++ show s
 
 
-parse'expr :: String -> Either Command Expression
+parse'expr :: String -> Either [Declaration] Expression
 parse'expr s =
   evalP parserAct s
 }

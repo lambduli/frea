@@ -1,4 +1,3 @@
-{-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE UndecidableInstances #-}
 module Compiler.Syntax.Declaration where
@@ -14,5 +13,5 @@ data Declaration
 
 
 data ConstrDecl
-  = ConstrDecl String [Type]
-  | ConstrFieldDecl String [(String, Type)] -- not using this one so far
+  = ConDecl String [Type]
+  | ConFieldDecl String [(String, Type)] -- not using this one so far
