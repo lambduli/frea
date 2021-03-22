@@ -95,7 +95,10 @@ Constructors    ::  { [ConstrDecl] }
                 |   '=' Constr NoneOrMany(ConstrOther)              { $2 : $3 }
 
 Constr          ::  { ConstrDecl }
-                :   Ident NoneOrMany(Type)                          { ConDecl $1 $ $2 }
+                :   Ident NoneOrMany(Type)                          { ConDecl $1 $2 }
+                |   '(' Op ')' NoneOrMany(Type)                     { ConDecl $2 $4 }
+                |   Type Op Type                                    { ConDecl $2 [$1, $3] }
+                |   Type '`' Ident '`' Type                         { ConDecl $3 [$1, $5] }
 
 ConstrOther     ::  { ConstrDecl }
                 :   '|' Constr                                      { $2 }
