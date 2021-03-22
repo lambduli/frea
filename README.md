@@ -131,7 +131,7 @@ or a monomorphic linked list:
 ```haskell
 data IntList
   = Nil
-  | Cons Int IntList
+  | Int : IntList
 ```
 
 ## Expressions:
