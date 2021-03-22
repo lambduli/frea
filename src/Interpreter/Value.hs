@@ -33,6 +33,8 @@ instance Show Value where
     = case force'f () of
         Left err -> show err
         Right val -> show val
+  show (Data name [])
+    = name 
   show (Data name values)
     = "(" ++ name ++ " " ++ unwords (map show values) ++ ")"
 
