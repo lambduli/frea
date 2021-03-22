@@ -9,8 +9,7 @@ import Control.Monad.Except
 import Data.Bifunctor (second)
 
 import Compiler.TypeChecker.Type 
-
-import Debug.Trace
+import Compiler.Syntax.Declaration
 
 import Compiler.Syntax
   ( Bind(..)
@@ -29,6 +28,7 @@ import Compiler.TypeChecker.TypeError
 type Infer a = ExceptT TypeError (State Int) a
 
 newtype TypeEnv = Env (Map.Map String Scheme)
+  deriving (Show)
 
 -- type substitution -- ordered mapping between name and type
 newtype Subst = Sub [(String, Type)]
@@ -378,22 +378,20 @@ typeof :: Expression -> Either TypeError Scheme
 typeof = infer'expression empty'env
 
 
-infer'env :: [(String, Expression)] -> TypeEnv -> Either TypeError TypeEnv
+infer'env :: [Declaration] -> TypeEnv -> Either TypeError TypeEnv
 infer'env binds t'env
   = case sequence eiths of
       Left t'err -> Left t'err
       Right pairs -> Right $ Env $ Map.fromList pairs
 
     where
-      infer'pair :: (TypeEnv, [Either TypeError (String, Scheme)]) -> (String, Expression) -> (TypeEnv, [Either TypeError (String, Scheme)])
-      infer'pair (t'env, eiths) (name, exp) = case infer'expression t'env exp of
+      infer'pair :: (TypeEnv, [Either TypeError (String, Scheme)]) -> Declaration -> (TypeEnv, [Either TypeError (String, Scheme)])
+      infer'pair (t'env, eiths) (Binding name exp) = case infer'expression t'env exp of
         Left t'err -> (t'env, Left t'err : eiths)
         Right scheme ->
           let Env env'map = t'env
           in (Env $ Map.insert name scheme env'map, Right (name, scheme) : eiths)
+      infer'pair acc DataDecl{} = acc
 
       eiths :: [Either TypeError (String, Scheme)]
       (t'env', eiths) = foldl infer'pair (t'env, []) binds
-      
-      -- eiths = map infer'pair binds
-
