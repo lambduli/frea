@@ -100,13 +100,6 @@ Constr          ::  { ConstrDecl }
 ConstrOther     ::  { ConstrDecl }
                 :   '|' Constr                                      { $2 }
 
--- Assumption      ::  { (String, Expression) }
---                 :   Ident '=' Exp                                   { ($1, $3) }
---                 |   Ident Params '=' Exp                            { ($1, foldr (\ arg body -> Lam arg body) $4 $2) }
---                 |   Var Op Var '=' Exp                              { ($2, (Lam $1 (Lam $3 $5))) }
---                 |   rec Ident Params '=' Exp                        { ($2, Fix $ foldr (\ arg body -> Lam arg body) $5 ($2 : $3)) }
---                 |   Var '`' Var '`' Var '=' Exp                     { ($3, (Lam $1 (Lam $5 $7))) }
-
 Params          ::  { [String] }
                 :   NoneOrMany(Var)                                 { $1 }
 
