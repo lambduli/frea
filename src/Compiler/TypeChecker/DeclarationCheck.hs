@@ -7,6 +7,7 @@ import Compiler.Syntax.Declaration
 import Compiler.Syntax.Type
 import Compiler.TypeChecker.Inference
 import qualified Interpreter.Value as Val
+import Compiler.TypeChecker.Utils
 
 
 check'constrs :: [ConstrDecl] -> [Type] -> Either String ()

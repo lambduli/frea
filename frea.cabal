@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 5ba7ef381d114e6cc4868229325b6ba877ca5d7e5fb7c5b0dfbe8a55fc7e3b9a
+-- hash: 0e444bc6f3a388034661609a6281f698633e6a21a479bcd92cce8a54ee840aad
 
 name:           frea
 version:        0.1.0.0
@@ -46,6 +46,8 @@ library
       Compiler.TypeChecker.Inference
       Compiler.TypeChecker.Type
       Compiler.TypeChecker.TypeError
+      Compiler.TypeChecker.TypeOf
+      Compiler.TypeChecker.Utils
       Interpreter.Evaluate
       Interpreter.Value
   other-modules:
@@ -60,6 +62,7 @@ library
     , filepath
     , hspec
     , mtl
+    , transformers
     , utf8-string
   default-language: Haskell2010
 
@@ -79,6 +82,7 @@ executable frea-exe
     , frea
     , hspec
     , mtl
+    , transformers
     , utf8-string
   default-language: Haskell2010
 
@@ -102,5 +106,6 @@ test-suite frea-test
     , frea
     , hspec
     , mtl
+    , transformers
     , utf8-string
   default-language: Haskell2010

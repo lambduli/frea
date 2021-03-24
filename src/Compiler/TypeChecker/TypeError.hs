@@ -8,7 +8,7 @@ data TypeError
   | UnifMismatch String String
   | UnboundVariable String
   | UnifShapeMismatch Type Type
-  | UnifShapeMismatch2 Type Type
+  | UnifCountMismatch [Type] [Type]
   deriving (Eq)
 
 instance Show TypeError where
@@ -21,5 +21,5 @@ instance Show TypeError where
     = "Unknown variable " ++ name
   show (UnifShapeMismatch type'l type'r)
     = "[Shape] Couldn't match type `" ++ show type'l ++ "` with `" ++ show type'r ++ "`"
-  show (UnifShapeMismatch2 left right)
-    = "Obecne neco neni ok " ++ show left ++ " =/=  " ++ show right
+  show (UnifCountMismatch left right)
+    = "[Count] Couldn't unify  " ++ show left ++ " ~/~  " ++ show right

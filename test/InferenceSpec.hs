@@ -9,7 +9,7 @@ import Compiler.Syntax.Type
 import Compiler.TypeChecker.TypeError
 import Compiler.Syntax.Literal
 
-import Compiler.TypeChecker.Inference (typeof)
+import Compiler.TypeChecker.TypeOf (typeof)
 import Compiler.TypeChecker.Type
 
 
@@ -42,7 +42,7 @@ spec = describe "Test the inference" $ do
   it "Infers the type of polymorphic equality check inside the lambda" $
     "(\\ x y -> ((#=) (x, y)))" <::> ForAll ["a"] (TyVar "a" `TyArr` (TyVar "a" `TyArr` t'Bool))
 
-  it "Infers the type of " $
+  it "Infers the type of a polymorphic tuple" $
     "(\\ x -> (1, x))" <::> ForAll ["a"] (TyVar "a" `TyArr` TyTuple [t'Int, TyVar "a"])
 
   it "Infers the type of a list of applications" $
