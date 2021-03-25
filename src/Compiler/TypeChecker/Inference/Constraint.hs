@@ -5,4 +5,3 @@ import Compiler.Syntax.Type
 
 
 type Constraint = (Type, Type)
-
