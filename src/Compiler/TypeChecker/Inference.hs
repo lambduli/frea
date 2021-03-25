@@ -12,8 +12,6 @@ import Data.Functor.Identity
 import Compiler.TypeChecker.Type 
 import Compiler.Syntax.Declaration
 import Compiler.TypeChecker.Inference.Utils
-
-
 import Compiler.Syntax
   ( Bind(..)
   , Declaration(..), ConstrDecl(..)
@@ -23,42 +21,34 @@ import Compiler.Syntax
   , Pattern(..)
   , Sig(..)
   , Type(..), Scheme(..))
-
 import Compiler.Syntax.Expression
 import Compiler.TypeChecker.TypeError
 
 
--- Extend type environment
-inEnv :: (String, Scheme) -> Infer a -> Infer a
-inEnv (var, scheme) m = do
+put'in'env :: (String, Scheme) -> Infer a -> Infer a
+put'in'env (var, scheme) m = do
   let scope e = remove e var `extend` (var, scheme)
   local scope m
 
 
--- Lookup type in the environment
-lookupEnv :: String -> Infer Type
-lookupEnv x = do
+lookup'env :: String -> Infer Type
+lookup'env var = do
   (Env env) <- ask
-  case Map.lookup x env of
-      Nothing   ->  throwError $ UnboundVariable x
-      Just s    ->  instantiate s
+  case Map.lookup var env of
+    Nothing   ->  throwError $ UnboundVariable var
+    Just s    ->  instantiate s
 
 
-
-
-
-
-
-
--- | Return the internal constraints used in solving for the type of an expression
+-- Return the internal constraints used in solving for the type of an expression
+-- for debugging ?
 constraintsExpr :: TypeEnv -> Expression -> Either TypeError ([Constraint], Subst, Type, Scheme)
 constraintsExpr env expr = case runInfer env (infer expr) of
   Left err -> Left err
-  Right (ty, cs) -> case runSolve cs of
+  Right (type', constraints) -> case runSolve constraints of
     Left err -> Left err
-    Right subst -> Right (cs, subst, ty, sc)
+    Right subst -> Right (constraints, subst, type', scheme)
       where
-        sc = closeOver $ apply subst ty
+        scheme = closeOver $ apply subst type'
 
 
 infer :: Expression -> Infer (Type, [Constraint])
@@ -71,16 +61,16 @@ infer expr = case expr of
   Lit LitUnit -> return (t'Unit, [])
 
   (Var x) -> do
-    type' <- lookupEnv x
+    type' <- lookup'env x
     return (type', [])
 
   Op x -> do
-    type' <- lookupEnv x
+    type' <- lookup'env x
     return (type', [])
 
   Lam x body -> do
     t'var <- fresh
-    (t, constrs) <- inEnv (x, ForAll [] t'var) (infer body)
+    (t, constrs) <- put'in'env (x, ForAll [] t'var) (infer body)
     return (t'var `TyArr` t, constrs)
 
   App left right -> do
@@ -102,7 +92,7 @@ infer expr = case expr of
         Left err -> throwError err
         Right sub -> do
             let sc = generalize (apply sub env) (apply sub t'val)
-            (t'body, cs'body) <- inEnv (x, sc) $ local (apply sub) (infer ex'body)
+            (t'body, cs'body) <- put'in'env (x, sc) $ local (apply sub) (infer ex'body)
             return (t'body, cs'val ++ cs'body)
 
   Fix expr -> do
