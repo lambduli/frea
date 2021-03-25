@@ -26,8 +26,8 @@ import Compiler.Syntax.Type
 import Compiler.Syntax.Expression
 import Compiler.Syntax.Declaration
 import Compiler.TypeChecker.DeclarationCheck
-import Compiler.TypeChecker.Utils
-import Compiler.TypeChecker.TypeOf
+import Compiler.TypeChecker.Inference.Utils
+import Compiler.TypeChecker.Inference.TypeOf
 
 
 main :: IO ()

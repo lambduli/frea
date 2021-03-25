@@ -9,7 +9,7 @@ import Compiler.Syntax.Type
 import Compiler.TypeChecker.TypeError
 import Compiler.Syntax.Literal
 
-import Compiler.TypeChecker.TypeOf (typeof)
+import Compiler.TypeChecker.Inference.TypeOf (typeof)
 import Compiler.TypeChecker.Type
 
 

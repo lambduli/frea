@@ -1,4 +1,4 @@
-module Compiler.TypeChecker.TypeOf where
+module Compiler.TypeChecker.Inference.TypeOf where
 
 
 import qualified Data.Map.Strict as Map
@@ -13,7 +13,7 @@ import Compiler.Syntax
   , Pattern(..)
   , Sig(..)
   , Type(..), Scheme(..))
-import Compiler.TypeChecker.Utils
+import Compiler.TypeChecker.Inference.Utils
 import Compiler.TypeChecker.TypeError
 import Compiler.TypeChecker.Inference
 

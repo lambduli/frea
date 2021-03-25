@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-module Compiler.TypeChecker.Utils where
+module Compiler.TypeChecker.Inference.Utils where
 
 
 import qualified Data.Map.Strict as Map
