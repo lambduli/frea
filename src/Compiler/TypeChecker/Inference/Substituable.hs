@@ -76,9 +76,5 @@ instance Substitutable TypeEnv where
         type'env
 
 
-
-
-
-
 empty'subst :: Subst
 empty'subst = Sub Map.empty
