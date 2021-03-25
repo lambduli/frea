@@ -27,7 +27,7 @@ import Compiler.TypeChecker.TypeError
 
 put'in'env :: (String, Scheme) -> Infer a -> Infer a
 put'in'env (var, scheme) m = do
-  let scope e = remove e var `extend` (var, scheme)
+  let scope env = remove env var `extend` (var, scheme)
   local scope m
 
 
