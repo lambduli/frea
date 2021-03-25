@@ -8,6 +8,8 @@ import Compiler.Syntax.Type
 import Compiler.TypeChecker.Inference
 import qualified Interpreter.Value as Val
 import Compiler.TypeChecker.Inference.Utils
+import Compiler.TypeChecker.Inference.Infer
+
 
 
 check'constrs :: [ConstrDecl] -> [Type] -> Either String ()

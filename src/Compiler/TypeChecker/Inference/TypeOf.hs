@@ -16,6 +16,8 @@ import Compiler.Syntax
 import Compiler.TypeChecker.Inference.Utils
 import Compiler.TypeChecker.TypeError
 import Compiler.TypeChecker.Inference
+import Compiler.TypeChecker.Inference.Infer
+
 
 
 -- TODO: this will be gone!

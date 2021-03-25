@@ -23,6 +23,7 @@ import Compiler.Syntax
   , Type(..), Scheme(..))
 import Compiler.Syntax.Expression
 import Compiler.TypeChecker.TypeError
+import Compiler.TypeChecker.Inference.Infer
 
 
 put'in'env :: (String, Scheme) -> Infer a -> Infer a

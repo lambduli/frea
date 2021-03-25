@@ -28,6 +28,8 @@ import Compiler.Syntax.Declaration
 import Compiler.TypeChecker.DeclarationCheck
 import Compiler.TypeChecker.Inference.Utils
 import Compiler.TypeChecker.Inference.TypeOf
+import Compiler.TypeChecker.Inference.Infer
+
 
 
 main :: IO ()
