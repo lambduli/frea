@@ -30,6 +30,7 @@ dependencies:
 - filepath
 - containers >= 0.6.2.1
 - hspec
+- transformers
 
 library:
   source-dirs: src
