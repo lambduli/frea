@@ -1,6 +1,7 @@
 module Compiler.TypeChecker.DeclarationCheck where
 
 import qualified Data.Map.Strict as Map
+import Data.Bifunctor
 
 import Compiler.Syntax.Expression
 import Compiler.Syntax.Declaration
@@ -9,7 +10,6 @@ import Compiler.TypeChecker.Inference
 import qualified Interpreter.Value as Val
 import Compiler.TypeChecker.Inference.Infer
 import Compiler.TypeChecker.Inference.TypeEnv
-
 
 
 check'constrs :: [ConstrDecl] -> [Type] -> Either String ()
@@ -57,10 +57,14 @@ add'constr'insts (ConDecl name types : cons) (Val.Env env)
 
 process'declarations :: [Declaration] -> Val.Env -> TypeEnv -> [Type] -> Either String (Val.Env, TypeEnv, [Type])
 process'declarations declarations env t'env type'ctx = do
-  foldl
-    close'with
-    (Right (env, t'env, type'ctx))
-    declarations
+  res <-
+    foldl
+      close'with
+      (Right (env, t'env, type'ctx))
+      declarations
+  let (Val.Env env', t'env', type'ctx) = res
+  let env'' = Val.Env $ Map.map (second (const $ Val.Env env')) env'
+  return (env'', t'env', type'ctx)
 
     where
       close'with :: Either String (Val.Env, TypeEnv, [Type]) -> Declaration -> Either String (Val.Env, TypeEnv, [Type])
