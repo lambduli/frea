@@ -4,16 +4,8 @@ module Compiler.TypeChecker.Inference.TypeOf where
 import qualified Data.Map.Strict as Map
 
 import Compiler.Syntax.Declaration
-import Compiler.Syntax
-  ( Bind(..)
-  , Declaration(..), ConstrDecl(..)
-  , Expression(..)
-  , Lit(..)
-  , MatchGroup(..), Match(..)
-  , Pattern(..)
-  , Sig(..)
-  , Type(..), Scheme(..))
--- import Compiler.TypeChecker.Inference.Utils
+import Compiler.Syntax.Type
+import Compiler.Syntax.Expression
 import Compiler.TypeChecker.TypeError
 import Compiler.TypeChecker.Inference
 import Compiler.TypeChecker.Inference.Infer
@@ -21,6 +13,7 @@ import Compiler.TypeChecker.Inference.Solver
 import Compiler.TypeChecker.Inference.Substituable
 import Compiler.TypeChecker.Inference.Constraint
 import Compiler.TypeChecker.Inference.TypeEnv
+import Compiler.TypeChecker.Inference.InferUtils
 
 
 -- TODO: this will be gone!
