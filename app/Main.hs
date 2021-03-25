@@ -42,7 +42,7 @@ main = do
     Left declarations -> do
       case process'declarations declarations (Val.Env Map.empty) empty'env [t'Bool, t'Int, t'Double, t'Char, t'Unit] of
         Left err -> do
-          putStrLn $ "Error in Prelude: " ++ err
+          putStrLn $ "Declaration Error in Prelude: " ++ err
           return ()
         Right (env', t'env, type'ctx) -> do
           case infer'env declarations t'env of
@@ -107,10 +107,12 @@ repl env@(Val.Env env'map) t'env@(Env t'map) type'ctx = do
     ":Q" -> do
       putStrLn "Bye!"
       return ()
+
+    -- COMMAND :T(ype)
     ':' : 't' : line -> do
       case parse'expr line of
         Left _ -> do
-          putStrLn "Incorrect Format! An expression must follow the :t command, not a declaration."
+          putStrLn "Incorrect Format! The :t command must be followed by an expression, not a declaration."
 
           -- loop
           repl env t'env type'ctx
@@ -128,7 +130,8 @@ repl env@(Val.Env env'map) t'env@(Env t'map) type'ctx = do
 
               -- loop
               repl env t'env type'ctx
-          
+
+    -- EXPRESSION to typecheck and evaluate
     _ -> do
       case parse'expr line of
         Left declarations -> do
