@@ -13,10 +13,12 @@ import Compiler.Syntax
   , Pattern(..)
   , Sig(..)
   , Type(..), Scheme(..))
-import Compiler.TypeChecker.Inference.Utils
+-- import Compiler.TypeChecker.Inference.Utils
 import Compiler.TypeChecker.TypeError
 import Compiler.TypeChecker.Inference
 import Compiler.TypeChecker.Inference.Infer
+import Compiler.TypeChecker.Inference.Solver
+import Compiler.TypeChecker.Inference.Substituable
 
 
 

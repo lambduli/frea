@@ -71,3 +71,6 @@ empty'env = Env $ Map.fromList
   , ("#tail", ForAll ["a"]      (TyList (TyVar "a") `TyArr` TyList (TyVar "a")))
   , ("#nil?", ForAll ["a"]      (TyList (TyVar "a") `TyArr` t'Bool))
   ]
+
+runInfer :: TypeEnv -> Infer (Type, [Constraint]) -> Either TypeError (Type, [Constraint])
+runInfer env m = runExcept $ evalStateT (runReaderT m env) init'infer
