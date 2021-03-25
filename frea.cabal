@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 8af51a9343246dc34ae5dd53c8033727a03cfa83e447485315d1aa854d749924
+-- hash: 99543d009151d7d38d1ff2b83de10aa39180dcc7136724443bcc8471c4bc3bfc
 
 name:           frea
 version:        0.1.0.0
@@ -47,6 +47,7 @@ library
       Compiler.TypeChecker.Inference.Constraint
       Compiler.TypeChecker.Inference.Infer
       Compiler.TypeChecker.Inference.InferState
+      Compiler.TypeChecker.Inference.InferUtils
       Compiler.TypeChecker.Inference.Solver
       Compiler.TypeChecker.Inference.Substituable
       Compiler.TypeChecker.Inference.TypeEnv
