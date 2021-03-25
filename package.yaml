@@ -31,6 +31,7 @@ dependencies:
 - containers >= 0.6.2.1
 - hspec
 - transformers
+- extra
 
 library:
   source-dirs: src

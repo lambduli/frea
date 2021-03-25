@@ -11,6 +11,7 @@ import qualified Data.Map.Strict as Map
 import Data.Bifunctor (second)
 
 import Data.List (intercalate, reverse)
+import Data.List.Extra
 
 import Compiler.Parser.Parser (parse'expr)
 import Compiler.Parser.Lexer (readToken)
@@ -36,26 +37,7 @@ main :: IO ()
 main = do
   putStrLn "Glamorous Frea REPL."
   putStrLn ""
-  handle <- openFile "prelude.fr" ReadMode
-  contents <- hGetContents handle
-  case parse'expr contents of
-    Left declarations -> do
-      case process'declarations declarations (Val.Env Map.empty) empty'env [t'Bool, t'Int, t'Double, t'Char, t'Unit] of
-        Left err -> do
-          putStrLn $ "Declaration Error in Prelude: " ++ err
-          return ()
-        Right (env', t'env, type'ctx) -> do
-          case infer'env declarations t'env of
-            Left err -> do
-              putStrLn $ "Type Error in Prelude: " ++ show err
-              return ()
-            Right (Env mp) -> do
-              let (Env t'map) = t'env
-              let t'env' = Env $ mp `Map.union` t'map
-              repl env' t'env' type'ctx
-
-    _ -> do
-      putStrLn "Error: Prelude must only contain declarations."
+  load "prelude.fr"
 
 
 readExpression :: IO String
@@ -66,6 +48,7 @@ readExpression = do
   case line of
     "" -> return line
     ':' : 'e' : 'x' : 'i' : 't' : _ -> return line
+    ':' : 'l' : 'o' : 'a' : 'd' : ' ' : _ -> return line
     ':' : 'q' : _ -> return line
     ':' : 'Q' : _ -> return line
     _ -> do
@@ -79,6 +62,7 @@ readExpression = do
         case line of
           "" -> return line
           ':' : 'e' : 'x' : 'i' : 't' : _ -> return line
+          ':' : 'l' : 'o' : 'a' : 'd' : ' ' : _ -> return line
           ':' : 'q' : _ -> return line
           ':' : 'Q' : _ -> return line
           _ -> do
@@ -101,6 +85,10 @@ repl env@(Val.Env env'map) t'env@(Env t'map) type'ctx = do
     ":exit" -> do
       putStrLn "Bye!"
       return ()
+    ':' : 'l' : 'o' : 'a' : 'd' : ' ' : file -> do
+      let trimmed = trim file
+      load trimmed
+
     ":q" -> do
       putStrLn "Bye!"
       return ()
@@ -166,3 +154,26 @@ repl env@(Val.Env env'map) t'env@(Env t'map) type'ctx = do
 
               -- loop
               repl env t'env type'ctx
+
+
+load :: String -> IO ()
+load file'name = do
+  handle <- openFile file'name ReadMode
+  contents <- hGetContents handle
+  case parse'expr contents of
+    Left declarations -> do
+      case process'declarations declarations (Val.Env Map.empty) empty'env [t'Bool, t'Int, t'Double, t'Char, t'Unit] of
+        Left err -> do
+          putStrLn $ "Declaration Error inside " ++ file'name ++ ": " ++ err
+          return ()
+        Right (env', t'env, type'ctx) -> do
+          case infer'env declarations t'env of
+            Left err -> do
+              putStrLn $ "Type Error inside " ++ file'name ++ ": " ++ show err
+              return ()
+            Right (Env mp) -> do
+              let (Env t'map) = t'env
+              let t'env' = Env $ mp `Map.union` t'map
+              repl env' t'env' type'ctx
+    _ -> do
+      putStrLn $ "Error: " ++ file'name ++ " must only contain declarations."
