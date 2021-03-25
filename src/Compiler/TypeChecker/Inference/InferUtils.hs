@@ -46,6 +46,12 @@ remove :: TypeEnv -> String -> TypeEnv
 remove (Env env) var = Env (Map.delete var env)
 
 
+merge'into'env :: [(String, Scheme)] -> Infer a -> Infer a
+merge'into'env bindings m = do
+  let scope (Env env) = Env $ Map.fromList bindings `Map.union` env
+  local scope m
+
+
 put'in'env :: (String, Scheme) -> Infer a -> Infer a
 put'in'env (var, scheme) m = do
   let scope env = remove env var `extend` (var, scheme)
@@ -56,8 +62,8 @@ lookup'env :: String -> Infer Type
 lookup'env var = do
   (Env env) <- ask
   case Map.lookup var env of
-    Nothing   ->  throwError $ UnboundVariable var
-    Just s    ->  instantiate s
+    Nothing     ->  throwError $ UnboundVariable var
+    Just scheme ->  instantiate scheme
 
 
 instantiate :: Scheme -> Infer Type

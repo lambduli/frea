@@ -61,3 +61,7 @@ empty'env = Env $ Map.fromList
 
 runInfer :: TypeEnv -> Infer (Type, [Constraint]) -> Either TypeError (Type, [Constraint])
 runInfer env m = runExcept $ evalStateT (runReaderT m env) init'infer
+
+
+run'infer'many :: TypeEnv -> Infer ([(String, Type)], [Constraint]) -> Either TypeError ([(String, Type)], [Constraint])
+run'infer'many env m = runExcept $ evalStateT (runReaderT m env) init'infer
