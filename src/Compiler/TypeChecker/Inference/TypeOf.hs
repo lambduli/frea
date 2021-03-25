@@ -18,6 +18,7 @@ import Compiler.TypeChecker.TypeError
 import Compiler.TypeChecker.Inference
 
 
+-- TODO: this will be gone!
 infer'env :: [Declaration] -> TypeEnv -> Either TypeError TypeEnv
 infer'env binds t'env
   = case sequence eiths of
@@ -38,27 +39,20 @@ infer'env binds t'env
 
 
 
--- tohle pouziju potom na inferenci listu deklaraci funkci
-inferTop :: TypeEnv -> [(String, Expression)] -> Either TypeError TypeEnv
-inferTop env [] = Right env
-inferTop env ((name, ex):xs) = case infer'expression env ex of
+-- TODO: This will replace infer'env
+infer'top :: TypeEnv -> [(String, Expression)] -> Either TypeError TypeEnv
+infer'top env [] = Right env
+infer'top env ((name, ex):xs) = case infer'expression env ex of
   Left err -> Left err
-  Right ty -> inferTop (extend env (name, ty)) xs
+  Right ty -> infer'top (extend env (name, ty)) xs
 
 
-
--- infer'expression :: TypeEnv -> Expression -> Either TypeError Scheme
--- infer'expression env = runInfer . infer env
-
--- Solve for the toplevel type of an expression in a given environment
 infer'expression :: TypeEnv -> Expression -> Either TypeError Scheme
 infer'expression env expr = case runInfer env (infer expr) of
   Left err -> Left err
   Right (ty, cs) -> case runSolve cs of
     Left err -> Left err
     Right subst -> Right $ closeOver $ apply subst ty
-
-
 
 
 typeof :: Expression -> Either TypeError Scheme
