@@ -1,0 +1,6 @@
+magic = "Hello From Another Module"
+
+
+data IList
+  = Nil
+  | Int ::: IList
