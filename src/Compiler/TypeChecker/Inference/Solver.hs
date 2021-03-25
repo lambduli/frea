@@ -13,9 +13,9 @@ import Compiler.TypeChecker.Inference.Constraint
 import Compiler.TypeChecker.Inference.TypeEnv
 
 
-
 -- Constraint solver monad
 type Solve a = ExceptT TypeError Identity a
+
 
 type Unifier = (Subst, [Constraint])
 
