@@ -12,6 +12,7 @@ import Compiler.Syntax.Type
 import Compiler.TypeChecker.Type
 import Compiler.TypeChecker.Inference.Constraint
 import Compiler.TypeChecker.Inference.TypeEnv
+import Compiler.TypeChecker.Inference.InferState
 
 
 -- Inference monad
@@ -23,16 +24,6 @@ type Infer a
         (Except         -- Inference errors
           TypeError))
       a                 -- Result
-
-
--- Inference state
-newtype InferState
-  = InferState { count :: Int }
-
-
--- initial inference state
-init'infer :: InferState
-init'infer = InferState { count = 0 }
 
 
 -- not really empty

@@ -28,7 +28,7 @@ import Compiler.TypeChecker.Inference.Solver
 import Compiler.TypeChecker.Inference.Substituable
 import Compiler.TypeChecker.Inference.TypeEnv
 import Compiler.TypeChecker.Inference.Constraint
-
+import Compiler.TypeChecker.Inference.InferState
 
 
 extend :: TypeEnv -> (String, Scheme) -> TypeEnv
