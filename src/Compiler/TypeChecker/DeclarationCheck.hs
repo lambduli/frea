@@ -56,29 +56,22 @@ add'constr'insts (ConDecl name types : cons) (Val.Env env)
 
 
 process'declarations :: [Declaration] -> Val.Env -> TypeEnv -> [Type] -> Either String (Val.Env, TypeEnv, [Type])
-process'declarations declarations env t'env type'ctx =
-  let
-    res = foldl
-      close'with
-      (Right (env, t'env, [], type'ctx))
-      declarations
-  in
-    case res of
-      Left err -> Left err
-      Right (env', t'env', closed, type'ctx') ->
-        Right (env', t'env', type'ctx')
+process'declarations declarations env t'env type'ctx = do
+  foldl
+    close'with
+    (Right (env, t'env, type'ctx))
+    declarations
 
     where
-      close'with :: Either String (Val.Env, TypeEnv, [(String, Val.Closed)], [Type]) -> Declaration -> Either String (Val.Env, TypeEnv, [(String, Val.Closed)], [Type])
-      close'with (Right (env, t'env, binds, type'ctx)) declaration =
+      close'with :: Either String (Val.Env, TypeEnv, [Type]) -> Declaration -> Either String (Val.Env, TypeEnv, [Type])
+      close'with (Right (env, t'env, type'ctx)) declaration =
         case declaration of
           Binding name expr ->
             let
               Val.Env env'map = env
               new'env = Val.Env $ Map.insert name (expr, env) env'map
-              closed = (expr, new'env)
             in
-              Right (new'env, t'env, (name, closed) : binds, type'ctx)
+              Right (new'env, t'env, type'ctx)
 
           DataDecl name _ constrs ->
             case check'constrs constrs (TyCon name : type'ctx) of
@@ -88,5 +81,5 @@ process'declarations declarations env t'env type'ctx =
                 let
                   t'env' = add'constrs (TyCon name) constrs t'env
                   env' = add'constr'insts constrs env
-                in Right (env', t'env', binds, TyCon name : type'ctx)
+                in Right (env', t'env', TyCon name : type'ctx)
       close'with (Left err) _ = Left err
