@@ -21,7 +21,6 @@ import Compiler.TypeChecker.Inference.Solver
 import Compiler.TypeChecker.Inference.Substituable
 
 
-
 -- TODO: this will be gone!
 infer'env :: [Declaration] -> TypeEnv -> Either TypeError TypeEnv
 infer'env binds t'env

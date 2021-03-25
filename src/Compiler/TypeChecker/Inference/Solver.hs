@@ -21,10 +21,6 @@ type Solve a = ExceptT TypeError Identity a
 type Unifier = (Subst, [Constraint])
 
 
--- type substitution -- ordered mapping between name and type
-
-
-
 instance Substitutable Type where
   apply (Sub s) var@(TyVar varname)
     = Map.findWithDefault var varname s

@@ -6,6 +6,7 @@ import qualified Data.Set as Set
 import Compiler.Syntax.Type
 
 
+-- type substitution -- ordered mapping between name and type
 newtype Subst = Sub (Map.Map String Type)
   deriving (Eq, Show)
 
