@@ -81,8 +81,6 @@ occurs name (TyArr left right)
   = occurs name left || occurs name right
 
 
--- myslim ze tohle musim zmenit na :: ... -> Solve Unifier
--- return Unifier taky funguje
 bind :: String -> Type -> Solve Subst
 bind varname type'
   | type' == TyVar varname  = return empty'subst
