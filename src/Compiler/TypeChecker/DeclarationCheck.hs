@@ -7,7 +7,6 @@ import Compiler.Syntax.Declaration
 import Compiler.Syntax.Type
 import Compiler.TypeChecker.Inference
 import qualified Interpreter.Value as Val
--- import Compiler.TypeChecker.Inference.Utils
 import Compiler.TypeChecker.Inference.Infer
 import Compiler.TypeChecker.Inference.TypeEnv
 
