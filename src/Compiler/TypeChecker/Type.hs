@@ -1,7 +1,7 @@
 module Compiler.TypeChecker.Type where
 
 
-import Compiler.Syntax ( Type(..), Scheme(..))
+import Compiler.Syntax (Type(..))
 
 
 t'Bool = TyCon "Bool"
