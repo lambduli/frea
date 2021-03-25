@@ -26,6 +26,8 @@ import Compiler.TypeChecker.TypeError
 import Compiler.TypeChecker.Inference.Infer
 import Compiler.TypeChecker.Inference.Solver
 import Compiler.TypeChecker.Inference.Substituable
+import Compiler.TypeChecker.Inference.TypeEnv
+import Compiler.TypeChecker.Inference.Constraint
 
 
 

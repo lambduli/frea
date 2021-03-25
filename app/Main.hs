@@ -29,6 +29,7 @@ import Compiler.TypeChecker.DeclarationCheck
 -- import Compiler.TypeChecker.Inference.Utils
 import Compiler.TypeChecker.Inference.TypeOf
 import Compiler.TypeChecker.Inference.Infer
+import Compiler.TypeChecker.Inference.TypeEnv
 
 
 

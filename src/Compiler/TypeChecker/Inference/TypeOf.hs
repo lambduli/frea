@@ -19,6 +19,8 @@ import Compiler.TypeChecker.Inference
 import Compiler.TypeChecker.Inference.Infer
 import Compiler.TypeChecker.Inference.Solver
 import Compiler.TypeChecker.Inference.Substituable
+import Compiler.TypeChecker.Inference.Constraint
+import Compiler.TypeChecker.Inference.TypeEnv
 
 
 -- TODO: this will be gone!

@@ -10,6 +10,8 @@ import Control.Monad.Except
 import Compiler.TypeChecker.TypeError
 import Compiler.Syntax.Type
 import Compiler.TypeChecker.Type
+import Compiler.TypeChecker.Inference.Constraint
+import Compiler.TypeChecker.Inference.TypeEnv
 
 
 -- Inference monad
@@ -21,13 +23,6 @@ type Infer a
         (Except         -- Inference errors
           TypeError))
       a                 -- Result
-
-
-newtype TypeEnv = Env (Map.Map String Scheme)
-  deriving (Show)
-
-
-type Constraint = (Type, Type)
 
 
 -- Inference state
