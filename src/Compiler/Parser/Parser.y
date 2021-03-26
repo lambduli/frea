@@ -193,7 +193,6 @@ GlobalBinding   ::  { (String, Expression) }
 
 Decl            ::  { Declaration }
                 :   GlobalBinding                                   { Binding (fst $1) (snd $1) }
-                |   Binding                                         { Binding (fst $1) (snd $1) }
                 |   Annotation Binding                              { Annotated (fst $2) (snd $1) (snd $2) }
 
 Lit             ::  { Expression }
