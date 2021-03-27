@@ -67,7 +67,7 @@ add'elim name constructors (Val.Env env) (Env t'env) =
     val'var = Var "value"
     destr'vars = map Var params
     elim = Elim constructors val'var destr'vars
-    which'elim = foldr Lam elim params
+    which'elim = Lam "value" $ foldr Lam elim params
     env' = Val.Env $ Map.insert elim'name (which'elim, Val.Env env) env
     -- again - I am closing the which-elim in the environment, which doesn't contain the which-elim
     -- itself --> it won't be able to call it inside I am afraid
