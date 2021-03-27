@@ -81,9 +81,7 @@ evaluate expr env@(Env e'map) = case expr of
       evaluate (App expr $ Fix expr) env)
 
   Intro name exprs ->
-    Right $ Val.Thunk (\ _ ->
-      Right $ Val.Data name $ map (\ exp -> Val.Thunk (\_ -> evaluate exp env)) exprs)
-      -- NOTE: abusing a Thunk a little bit, I need list of Values not Eithers
+    Right $ Val.Thunk (\ _ -> Right $ Val.Data name exprs)
 
 
 apply'operator :: String -> Val.Value -> Env -> Either EvaluationError Val.Value
