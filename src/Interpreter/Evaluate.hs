@@ -31,13 +31,14 @@ force expr env
 evaluate :: Expression -> Env -> Either EvaluationError Val.Value
 evaluate expr env@(Env e'map) = case expr of
   Var name
-    | Just (expr, env') <- e'map !? name -> evaluate expr env'
+    | Just val <- e'map !? name -> Right val
 
-    | otherwise -> Left $ UnboundVar name
+    | otherwise -> Left $ UnboundVar name -- can't really happen thanks to the type system
 
-  Op name
-    | Just (expr, env') <- e'map !? name -> evaluate expr env' -- TODO: future -> no lookup for primitive operations
-    | otherwise -> Right $ Val.Op name
+  Op name ->
+    Right $ Val.Op name
+  -- | Just (expr, env') <- e'map !? name -> evaluate expr env' -- TODO: future -> no lookup for primitive operations
+  -- | otherwise -> Right $ Val.Op name
 
   Lit lit ->
     Right $ Val.Lit lit
@@ -56,7 +57,8 @@ evaluate expr env@(Env e'map) = case expr of
 
 
   App (Lam par body) right ->
-    Right $ Val.Thunk (\ _ -> evaluate body (Val.Env$ Map.insert par (right, env) e'map))
+    let right'val = Val.Thunk (\ _ -> force right env)
+    in Right $ Val.Thunk (\ _ -> evaluate body (Val.Env$ Map.insert par right'val e'map))
 
   App (Op op) right ->
     case force right env of
@@ -68,7 +70,10 @@ evaluate expr env@(Env e'map) = case expr of
       case force left env of
         Left err -> Left err
         Right (Val.Lam par body (Env bs')) ->
-          force body $ Val.Env $ Map.insert par (right, env) bs')
+          let right'val = Val.Thunk (\ _ -> force right env)
+          in force body $ Val.Env $ Map.insert par right'val bs'
+        Right (Val.Op name) ->
+          force (App (Op name) right) env)
 
   If cond' then' else' ->
     Right $ Val.Thunk (\ _ ->
@@ -82,28 +87,38 @@ evaluate expr env@(Env e'map) = case expr of
       evaluate (App expr $ Fix expr) env)
 
   Intro name exprs ->
-    Right $ Val.Thunk (\ _ -> Right $ Val.Data name exprs)
+    let values = map (\ expr -> Val.Thunk (\ _ -> evaluate expr env)) exprs
+    in Right $ Val.Thunk (\ _ -> Right $ Val.Data name values)
 
-  -- Elim constructors value'to'elim destructors -> do
-  --   val <- force value'to'elim env
-  --   case val of
-  --     Val.Data tag arguments env' ->
-  --       let
-  --         [(_, destr)] = filter (\ (ConDecl name _, _) -> tag == name) (zip constructors destructors)
-  --         app = foldl App destr arguments
-  --       in evaluate app env
-  --       -- TODO: refactor
-  --       -- Data nebude obsahovat Exprs ale Values - closure, nebo unevaluated, nebo literals - na tom nezalezi
-  --       -- proto, az se bude eliminovat
-  --       -- tak arguments budou mit vlastni env pro pripad, ze ho budou potrebovat
-  --       -- az se pak bude potrebovat forcovat nejakej argument --> bude mit vlastni env -- obstara to normalni funkce force'val
-  --       -- a az se bude muset forcnout destructor
-  --       -- opet bude mit vlastni env
-  --       -- protoze destr bude normalne expression (ona to bude ta lokalni promenna)
-  --       -- ja to samozrejme kdykoliv muzu evaluovat, - tim vytahnu z envu value
-  --       -- ktery odpovida tomu destructoru -- primitive | closure | thunk ...nezalezi na tom
-  --       -- tim je mi umozneno, evalnout destr v envu, kterej mu prislusi - pokud je to closure treba nebo thunk a podobne
-  --       -- a zaroven evalnout hodnoty ulozeny v Data v JEJICH vlastnich envechs
+  Elim constructors value'to'elim destructors ->
+    Right $ Val.Thunk (\ _ -> do
+      val <- force value'to'elim env
+      case val of
+        Val.Data tag arguments ->
+          let
+            [(_, destr)] = filter (\ (ConDecl name _, _) -> tag == name) (zip constructors destructors)
+            -- app = foldl App destr arguments
+          in case force destr env of
+            Left err -> Left err
+
+            Right val | [] <- arguments ->
+              Right val
+
+            Right lam@(Val.Lam par body (Env env')) ->
+              apply'closure arguments lam
+
+            Right (Val.Op op) | [right] <- arguments ->
+              case force'val $ Right right of
+                Left err -> Left err
+                Right r'val -> apply'operator op r'val env)
+
+
+apply'closure :: [Val.Value] -> Val.Value -> Either EvaluationError Val.Value
+apply'closure [] val = Right val
+apply'closure (val : vals) (Val.Lam par body (Env env))
+  = case force body $ Val.Env $ Map.insert par val env of
+    Left err -> Left err
+    Right body'val -> apply'closure vals body'val
 
 
 apply'operator :: String -> Val.Value -> Env -> Either EvaluationError Val.Value

@@ -7,10 +7,10 @@ import Compiler.Syntax.Expression (Expression)
 import Compiler.Syntax.Literal
 
 
-newtype Env = Env (Map.Map String Closed) -- [(String, Closed)]
+newtype Env = Env (Map.Map String Value) -- [(String, Closed)]
   deriving (Show)
 
-type Closed = (Expression, Env)
+-- type Closed = (Expression, Env)
 
 
 data Value
@@ -20,7 +20,7 @@ data Value
   | Tuple [Value]
   | List [Value]
   | Thunk (() -> Either EvaluationError Value)
-  | Data String [Expression] -- Name of the Constr and list of arguments
+  | Data String [Value] -- Name of the Constr and list of arguments
 
 
 instance Show Value where
