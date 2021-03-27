@@ -1,6 +1,34 @@
 magic = "Hello From Another Module"
 
 
+data IMaybe
+  = Nothing
+  | Just Int
+
+
 data IList
   = Nil
   | Int ::: IList
+
+
+list = (1 ::: (2 ::: (3 ::: (4 ::: (5 ::: Nil)))))
+
+double n = (n * 2)
+
+ihead lst =  (which-IList lst
+              Nothing
+              (\ h t -> (Just h)))
+
+
+imap fn lst =  (which-IList lst
+                Nil
+                (\ h t -> ((fn h) ::: (imap fn t))))
+
+
+If bool thenn elsee = (which-Boolean bool
+                        thenn
+                        elsee)
+
+sum ilist = (which-IList ilist
+              0
+              (\ head tail -> (head + (sum tail))))

@@ -11,6 +11,8 @@ import qualified Interpreter.Value as Val
 import Compiler.TypeChecker.Inference.Infer
 import Compiler.TypeChecker.Inference.TypeEnv
 
+import Interpreter.Evaluate
+
 
 check'constrs :: [ConstrDecl] -> [Type] -> Either String ()
 check'constrs [] _ = Right ()
@@ -46,8 +48,9 @@ add'constrs result't (ConDecl name types : cons) (Env t'env)
 add'constr'insts :: [ConstrDecl] -> Val.Env -> Val.Env
 add'constr'insts [] env = env
 add'constr'insts (ConDecl name types : cons) (Val.Env env)
-  = add'constr'insts cons (Val.Env $ Map.insert name (con'lam, Val.Env Map.empty) env)
+  = add'constr'insts cons (Val.Env $ Map.insert name value env)
     where
+      value = Val.Thunk (\ _ -> force con'lam $ Val.Env Map.empty)
       par'inds = [1 .. length types]
       params = map (\ ind -> "p" ++ show ind ) par'inds
       vars = map Var params
@@ -68,7 +71,8 @@ add'elim name constructors (Val.Env env) (Env t'env) =
     destr'vars = map Var params
     elim = Elim constructors val'var destr'vars
     which'elim = Lam "value" $ foldr Lam elim params
-    env' = Val.Env $ Map.insert elim'name (which'elim, Val.Env env) env
+    value = Val.Thunk (\ _ -> force which'elim $ Val.Env env)
+    env' = Val.Env $ Map.insert elim'name value env
     -- again - I am closing the which-elim in the environment, which doesn't contain the which-elim
     -- itself --> it won't be able to call it inside I am afraid
     -- I will have to fix that!!!
@@ -92,13 +96,14 @@ process'declarations declarations env t'env type'ctx = do
       close'with
       (Right (env, t'env, type'ctx))
       declarations
-  let (Val.Env env', t'env', type'ctx) = res
-  let env'' = Val.Env $ Map.map (second (const $ Val.Env env')) env'
+  let (env', t'env', type'ctx) = res
+  -- let env'' = Val.Env $ Map.map (second (const $ Val.Env env')) env'
+  -- NOTE2: I had to comment it out - now when the Env contains Values it's not really easy to re-close them you know
   -- NOTE: this doesn't really help anything that much
   -- so don't worry about removing it later
   -- or fixing it, for that matter
 
-  return (env'', t'env', type'ctx)
+  return (env', t'env', type'ctx)
 
     where
       close'with :: Either String (Val.Env, TypeEnv, [Type]) -> Declaration -> Either String (Val.Env, TypeEnv, [Type])
@@ -107,7 +112,8 @@ process'declarations declarations env t'env type'ctx = do
           Binding name expr ->
             let
               Val.Env env'map = env
-              new'env = Val.Env $ Map.insert name (expr, env) env'map
+              value = Val.Thunk (\ _ -> force expr env)
+              new'env = Val.Env $ Map.insert name value env'map
             in
               Right (new'env, t'env, type'ctx)
 
