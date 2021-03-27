@@ -55,6 +55,36 @@ add'constr'insts (ConDecl name types : cons) (Val.Env env)
       con'lam = foldr Lam intro params
 
 
+-- TODO: this function is really ugly -- it has a high priority for a refactor 
+add'elim :: String -> [ConstrDecl] -> Val.Env -> TypeEnv -> (Val.Env, TypeEnv)
+add'elim name constructors (Val.Env env) (Env t'env) =
+  let
+    cons'count = length constructors
+    elim'name = "which-" ++ name
+
+    par'inds = [1 .. length constructors]
+    params = map (\ ind -> "destr" ++ show ind ) par'inds
+    val'var = Var "value"
+    destr'vars = map Var params
+    elim = Elim constructors val'var destr'vars
+    which'elim = Lam "value" $ foldr Lam elim params
+    env' = Val.Env $ Map.insert elim'name (which'elim, Val.Env env) env
+    -- again - I am closing the which-elim in the environment, which doesn't contain the which-elim
+    -- itself --> it won't be able to call it inside I am afraid
+    -- I will have to fix that!!!
+
+    res = TyVar "a"
+    destr'type (ConDecl name types) = foldr TyArr res types
+    destrs'types = map destr'type constructors
+    which'type = (TyCon name) `TyArr` (foldr TyArr res destrs'types)
+    scheme = ForAll ["a"] which'type
+    -- TODO: it would be much better to not create the scheme HERE
+    -- it would also be much better to use already implemented functions like generalize and so
+    -- TODO: once I implement higher kinded types, list of the free type variables needs to reflect that
+    t'env' = Env $ Map.insert elim'name scheme t'env
+  in (env', t'env')
+
+
 process'declarations :: [Declaration] -> Val.Env -> TypeEnv -> [Type] -> Either String (Val.Env, TypeEnv, [Type])
 process'declarations declarations env t'env type'ctx = do
   res <-
@@ -64,6 +94,10 @@ process'declarations declarations env t'env type'ctx = do
       declarations
   let (Val.Env env', t'env', type'ctx) = res
   let env'' = Val.Env $ Map.map (second (const $ Val.Env env')) env'
+  -- NOTE: this doesn't really help anything that much
+  -- so don't worry about removing it later
+  -- or fixing it, for that matter
+
   return (env'', t'env', type'ctx)
 
     where
@@ -85,5 +119,6 @@ process'declarations declarations env t'env type'ctx = do
                 let
                   t'env' = add'constrs (TyCon name) constrs t'env
                   env' = add'constr'insts constrs env
-                in Right (env', t'env', TyCon name : type'ctx)
+                  (env'', t'env'') = add'elim name constrs env' t'env'
+                in Right (env'', t'env'', TyCon name : type'ctx)
       close'with (Left err) _ = Left err

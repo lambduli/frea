@@ -20,7 +20,7 @@ data Value
   | Tuple [Value]
   | List [Value]
   | Thunk (() -> Either EvaluationError Value)
-  | Data String [Value] -- Name of the Constr and list of arguments
+  | Data String [Expression] -- Name of the Constr and list of arguments
 
 
 instance Show Value where
@@ -35,8 +35,8 @@ instance Show Value where
         Right val -> show val
   show (Data name [])
     = name 
-  show (Data name values)
-    = "(" ++ name ++ " " ++ unwords (map show values) ++ ")"
+  show (Data name exprs)
+    = "(" ++ name ++ " " ++ unwords (map show exprs) ++ ")"
 
 
 data EvaluationError

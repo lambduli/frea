@@ -6,6 +6,7 @@ import Data.Map.Strict ((!?))
 import qualified Data.Map.Strict as Map
 
 import Compiler.Syntax.Expression
+import Compiler.Syntax.Declaration
 import Compiler.Syntax.Literal
 import Interpreter.Value (EvaluationError(..), Env(..))
 import qualified Interpreter.Value as Val
@@ -81,9 +82,28 @@ evaluate expr env@(Env e'map) = case expr of
       evaluate (App expr $ Fix expr) env)
 
   Intro name exprs ->
-    Right $ Val.Thunk (\ _ ->
-      Right $ Val.Data name $ map (\ exp -> Val.Thunk (\_ -> evaluate exp env)) exprs)
-      -- NOTE: abusing a Thunk a little bit, I need list of Values not Eithers
+    Right $ Val.Thunk (\ _ -> Right $ Val.Data name exprs)
+
+  -- Elim constructors value'to'elim destructors -> do
+  --   val <- force value'to'elim env
+  --   case val of
+  --     Val.Data tag arguments env' ->
+  --       let
+  --         [(_, destr)] = filter (\ (ConDecl name _, _) -> tag == name) (zip constructors destructors)
+  --         app = foldl App destr arguments
+  --       in evaluate app env
+  --       -- TODO: refactor
+  --       -- Data nebude obsahovat Exprs ale Values - closure, nebo unevaluated, nebo literals - na tom nezalezi
+  --       -- proto, az se bude eliminovat
+  --       -- tak arguments budou mit vlastni env pro pripad, ze ho budou potrebovat
+  --       -- az se pak bude potrebovat forcovat nejakej argument --> bude mit vlastni env -- obstara to normalni funkce force'val
+  --       -- a az se bude muset forcnout destructor
+  --       -- opet bude mit vlastni env
+  --       -- protoze destr bude normalne expression (ona to bude ta lokalni promenna)
+  --       -- ja to samozrejme kdykoliv muzu evaluovat, - tim vytahnu z envu value
+  --       -- ktery odpovida tomu destructoru -- primitive | closure | thunk ...nezalezi na tom
+  --       -- tim je mi umozneno, evalnout destr v envu, kterej mu prislusi - pokud je to closure treba nebo thunk a podobne
+  --       -- a zaroven evalnout hodnoty ulozeny v Data v JEJICH vlastnich envechs
 
 
 apply'operator :: String -> Val.Value -> Env -> Either EvaluationError Val.Value

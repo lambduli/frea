@@ -3,7 +3,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 module Compiler.Syntax.Expression where
 
-import Compiler.Syntax (Lit, Type, MatchGroup)
+import Compiler.Syntax (Lit, Type, MatchGroup, Declaration, ConstrDecl)
 import Data.List
 
 
@@ -19,10 +19,11 @@ data Expression
   | Let String Expression Expression -- OK
   | Fix Expression -- OK
   | Intro String [Expression]
-  | Elim String [Expression] -- TODO: revisit
+  | Elim [ConstrDecl] Expression [Expression]
+  --     for matching elim what? destructors
+
   -- | Typed Type Expression -- OK
   -- | MatchWith Expression MatchGroup -- OK
-  deriving (Eq)
   
 instance Show Expression where
   show (Var name) = name
@@ -36,6 +37,6 @@ instance Show Expression where
   show (Let name value expr) = "let " ++ name ++ " = " ++ show value ++ " in " ++ show expr
   show (Fix expr) = "fix " ++ show expr
   show (Intro name exprs) = "(" ++ name ++ intercalate ", " (map show exprs) ++ ")"
-  show (Elim name exprs) = "<not implemented yet>"
+  show (Elim constrs val'to'elim destrs) = "<eliminator>"
   -- typed
   -- matchwith

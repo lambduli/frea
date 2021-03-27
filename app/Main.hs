@@ -37,7 +37,7 @@ main :: IO ()
 main = do
   putStrLn "Glamorous Frea REPL."
   putStrLn ""
-  load "prelude.fr"
+  load "prelude.fr" (Val.Env Map.empty) empty'env [t'Bool, t'Int, t'Double, t'Char, t'Unit]
 
 
 readExpression :: IO String
@@ -87,7 +87,7 @@ repl env@(Val.Env env'map) t'env@(Env t'map) type'ctx = do
       return ()
     ':' : 'l' : 'o' : 'a' : 'd' : ' ' : file -> do
       let trimmed = trim file
-      load trimmed
+      load trimmed env t'env type'ctx
 
     ":q" -> do
       putStrLn "Bye!"
@@ -156,13 +156,13 @@ repl env@(Val.Env env'map) t'env@(Env t'map) type'ctx = do
               repl env t'env type'ctx
 
 
-load :: String -> IO ()
-load file'name = do
+load :: String -> Val.Env -> TypeEnv -> [Type] -> IO ()
+load file'name env@(Val.Env env'map) t'env@(Env t'map) type'ctx = do
   handle <- openFile file'name ReadMode
   contents <- hGetContents handle
   case parse'expr contents of
     Left declarations -> do
-      case process'declarations declarations (Val.Env Map.empty) empty'env [t'Bool, t'Int, t'Double, t'Char, t'Unit] of
+      case process'declarations declarations env t'env type'ctx of
         Left err -> do
           putStrLn $ "Declaration Error inside " ++ file'name ++ ": " ++ err
           return ()
