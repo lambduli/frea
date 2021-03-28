@@ -2,6 +2,7 @@ module Interpreter.Value where
 
 import Data.List
 import qualified Data.Map.Strict as Map
+import Control.Monad.State.Lazy
 
 import Compiler.Syntax.Expression (Expression)
 import Compiler.Syntax.Literal
@@ -22,7 +23,7 @@ data Value
   | Lam String Expression Env
   | Tuple [Value]
   | List [Value]
-  | Thunk (Env -> Memory -> Either EvaluationError Value) Env
+  | Thunk (Env -> State Memory (Either EvaluationError Value)) Env
   | Data String [Value] -- Name of the Constr and list of arguments
 
 
@@ -33,17 +34,17 @@ class Present a where
 instance Present Value where
   present _ (Op name) = name
   present _ (Lit lit) = show lit
-  present mem (Lam par body env) = "< \\ " ++ par ++ " -> " ++ show body ++ " >"
+  present mem (Lam par body env) = "<lambda>"
   present mem (Tuple values) = "(" ++ intercalate ", " (map (present mem) values) ++ ")"
   present mem (List values) = "[" ++ intercalate ", " (map (present mem) values) ++ "]"
   present mem (Thunk force'f env)
-    = case force'f env mem of
+    = case evalState (force'f env) mem of
         Left err -> show err
         Right val -> present mem val
   present mem (Data name [])
-    = "Data: " ++ name
+    = name
   present mem (Data name exprs)
-    = "Data: (" ++ name ++ " " ++ unwords (map (present mem) exprs) ++ ")"
+    = "(" ++ name ++ " " ++ unwords (map (present mem) exprs) ++ ")"
 
 
 data EvaluationError

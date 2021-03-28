@@ -36,7 +36,7 @@ instance Show Expression where
   show (If cond' then' else') = "if " ++ show cond' ++ " then " ++ show then' ++ " else " ++ show else'
   show (Let name value expr) = "let " ++ name ++ " = " ++ show value ++ " in " ++ show expr
   show (Fix expr) = "fix " ++ show expr
-  show (Intro name exprs) = "(" ++ name ++ intercalate ", " (map show exprs) ++ ")"
+  show (Intro name exprs) = "(" ++ name ++ " " ++ intercalate " " (map show exprs) ++ ")"
   show (Elim constrs val'to'elim destrs) = "<eliminator>"
   -- typed
   -- matchwith

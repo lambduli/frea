@@ -76,7 +76,7 @@ generate'constr'insts (ConDecl name types : cons) (Val.Env env) mem =
       vars      = map Var params
       intro     = Intro name vars
       con'lam   = foldr Lam intro params
-      value     = Val.Thunk (\ env mem -> force con'lam env mem) (Val.Env Map.empty)
+      value     = Val.Thunk (\ env -> force con'lam env) (Val.Env Map.empty)
       mem'      = Map.insert addr value mem
   in  generate'constr'insts cons (Val.Env env) mem'
 
@@ -93,7 +93,7 @@ generate'elim'insts name constructors (Val.Env env) mem =
       destr'vars  = map Var params
       elim        = Elim constructors val'var destr'vars
       which'elim  = Lam "value" $ foldr Lam elim params
-      value       = Val.Thunk (\ env mem -> force which'elim env mem) (Val.Env env)
+      value       = Val.Thunk (\ env -> force which'elim env) (Val.Env env)
       mem'        = Map.insert addr value mem
   in  mem'
 
@@ -162,14 +162,14 @@ process'declarations declarations env t'env mem type'ctx = do
   
   -- nejdriv musim vyrobit Env
   -- ten obsahuje jenom identifikatory a adresy
-  let env' = foldl register'declarations (Val.Env Map.empty) declarations
+  let env' = foldl register'declarations env declarations
   -- ted mam kompletni Env a ten obsahuje bindingy pro vsechny identifikatory
   -- ted muzu timhle envem closovat libovolny Values a pokud pri evaluaci bude v memory
   -- na spravne adrese implementace, bude to v poradku
 
   -- ted musim projit vsechny deklarace znova a tentokrat skutecne vyrobit Values
   -- a pri tom foldovani musim vyrobit i Memory
-  let mem = foldl (construct'declarations env') Map.empty declarations
+  let mem' = foldl (construct'declarations env') mem declarations
 
 
   let t'env' = foldl add'types t'env declarations
@@ -188,7 +188,7 @@ process'declarations declarations env t'env mem type'ctx = do
   -- so don't worry about removing it later
   -- or fixing it, for that matter
 
-  return (env', t'env', type'ctx, mem)
+  return (env', t'env', type'ctx, mem')
 
     where
       collect'types :: [Type] -> Declaration -> [Type]
@@ -229,7 +229,7 @@ process'declarations declarations env t'env mem type'ctx = do
         case decl of
           Binding name expr ->
             let addr = e'map Map.! name
-                val  = Val.Thunk (\ env mem -> force expr env mem) env
+                val  = Val.Thunk (\ env -> force expr env) env
                 mem' = Map.insert addr val mem
             in  mem'
 

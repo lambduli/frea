@@ -9,6 +9,7 @@ import System.FilePath.Posix ((</>))
 import Control.Monad (forM_)
 import qualified Data.Map.Strict as Map
 import Data.Bifunctor (second)
+import Control.Monad.State.Lazy
 
 import Data.List (intercalate, reverse)
 import Data.List.Extra
@@ -146,7 +147,7 @@ repl env@(Val.Env env'map) t'env@(Env t'map) mem type'ctx = do
               -- loop
               repl env t'env mem type'ctx
             _ -> do
-              let error'or'expr = evaluate expression env mem
+              let error'or'expr = evalState (evaluate expression env) mem
               -- print
               case error'or'expr of
                 Left err -> putStrLn $ "Evaluation Error: " ++ show err
