@@ -39,24 +39,24 @@ instance Show Value where
     = "(" ++ name ++ " " ++ unwords (map show exprs) ++ ")"
 
 
-class Present a where
-  present :: Memory -> a -> String
+-- class Present a where
+--   present :: Memory -> a -> String
 
 
-instance Present Value where
-  present _ (Op name) = name
-  present _ (Lit lit) = show lit
-  present mem (Lam par body env) = "<lambda>"
-  present mem (Tuple values) = "(" ++ intercalate ", " (map (present mem) values) ++ ")"
-  present mem (List values) = "[" ++ intercalate ", " (map (present mem) values) ++ "]"
-  present mem (Thunk force'f env)
-    = case evalState (force'f env) mem of
-        Left err -> show err
-        Right val -> present mem val
-  present mem (Data name [])
-    = name
-  present mem (Data name exprs)
-    = "(" ++ name ++ " " ++ unwords (map (present mem) exprs) ++ ")"
+-- instance Present Value where
+--   present _ (Op name) = name
+--   present _ (Lit lit) = show lit
+--   present mem (Lam par body env) = "<lambda>"
+--   present mem (Tuple values) = "(" ++ intercalate ", " (map (present mem) values) ++ ")"
+--   present mem (List values) = "[" ++ intercalate ", " (map (present mem) values) ++ "]"
+--   present mem (Thunk force'f env)
+--     = case evalState (force'f env) mem of
+--         Left err -> show err
+--         Right val -> present mem val
+--   present mem (Data name [])
+--     = name
+--   present mem (Data name exprs)
+--     = "(" ++ name ++ " " ++ unwords (map (present mem) exprs) ++ ")"
 
 
 data EvaluationError
