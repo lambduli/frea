@@ -26,6 +26,19 @@ data Value
   | Data String [Value] -- Name of the Constr and list of arguments
 
 
+instance Show Value where
+  show (Op name) = name
+  show (Lit lit) = show lit
+  show (Lam par body env) = "<lambda>"
+  show (Tuple values) = "(" ++ intercalate ", " (map show values) ++ ")"
+  show (List values) = "[" ++ intercalate ", " (map show values) ++ "]"
+  show (Thunk force'f env) = "<thunk>"
+  show (Data name [])
+    = name
+  show (Data name exprs)
+    = "(" ++ name ++ " " ++ unwords (map show exprs) ++ ")"
+
+
 class Present a where
   present :: Memory -> a -> String
 

@@ -339,5 +339,11 @@ apply'operator "#fst" (Val.Tuple [f, s]) env
 apply'operator "#snd" (Val.Tuple [f, s]) env
   = return $ Right $ Val.Thunk (\ _ -> return $ Right s) env
 
+apply'operator "#show" val env = do
+  res <- force'val val
+  case res of
+    Left err -> return $ Left err
+    Right val -> return $ Right $ Val.Lit $ LitString $ show val
+
 apply'operator name expr env
   = return $ Left $ BadOperatorApplication name expr
