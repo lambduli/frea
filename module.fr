@@ -11,9 +11,15 @@ data IList
   | Int ::: IList
 
 
-list = (1 ::: (2 ::: (3 ::: (4 ::: (5 ::: Nil)))))
+showIList list = (which-IList list
+                    "Nil"
+                    ( \ head tail -> ( ((show head) ++ " ::: ") ++ (showIList tail) ) ))
 
-double n = (n * 2)
+
+showMaybe maybe = (which-IMaybe maybe
+                    "Nothing"
+                    (\ v -> ("Just " ++ ((#show) v)) ))
+
 
 ihead lst =  (which-IList lst
               Nothing
@@ -25,12 +31,35 @@ imap fn lst =  (which-IList lst
                 (\ h t -> ((fn h) ::: (imap fn t))))
 
 
-If bool thenn elsee = (which-Boolean bool
-                        thenn
-                        elsee)
-
 sum ilist = (which-IList ilist
               0
               (\ head tail -> (head + (sum tail))))
 
+
+itake n lst = if (n == 0) then Nil else 
+                                    (which-IList lst
+                                      Nil
+                                      (\ h t -> (h ::: (itake (n - 1) t)))
+                                    )
+
+
+-- some examples
+
+ones = (1 ::: ones)
+
+list = (1 ::: (2 ::: (3 ::: (4 ::: (5 ::: Nil)))))
+
+double n = (n * 2)
+
+
+If bool thenn elsee = (which-Boolean bool
+                        thenn
+                        elsee)
+
+
 fact n = if (n == 0) then 1 else (n * (fact (n - 1)))
+
+
+mayAdd n maybe = (which-IMaybe maybe
+                  Nothing
+                  (\ v -> (Just (v + n))))
