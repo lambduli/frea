@@ -146,7 +146,7 @@ repl env t'env mem type'ctx = do
               -- loop
               repl env t'env mem type'ctx
             _ -> do
-              let error'or'expr'n'state = runState (evaluate expression env) mem
+              let error'or'expr'n'state = runState (force expression env) mem
               -- print
               case error'or'expr'n'state of
                 (Left err, mem') -> do
