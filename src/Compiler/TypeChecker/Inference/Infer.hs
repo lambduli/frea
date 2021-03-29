@@ -27,8 +27,8 @@ type Infer a
 
 
 -- not really empty
-empty'env :: TypeEnv
-empty'env = Env $ Map.fromList
+empty't'env :: TypeEnv
+empty't'env = Env $ Map.fromList
   [ ("#fst",  ForAll ["a", "b"] (TyArr (TyTuple [TyVar "a", TyVar "b"]) (TyVar "a")))
   , ("#snd",  ForAll ["a", "b"] (TyArr (TyTuple [TyVar "a", TyVar "b"]) (TyVar "b")))
 

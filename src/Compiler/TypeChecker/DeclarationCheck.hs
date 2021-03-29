@@ -76,7 +76,7 @@ generate'constr'insts (ConDecl name types : cons) env mem =
       vars      = map Var params
       intro     = Intro name vars
       con'lam   = foldr Lam intro params
-      value     = Val.Thunk (\ env -> force con'lam env) Map.empty -- I don't need anything from the Env
+      value     = Val.Thunk (\ env -> force con'lam env) Val.empty'env -- I don't need anything from the Env
       mem'      = Map.insert addr value mem
   in  generate'constr'insts cons env mem'
 

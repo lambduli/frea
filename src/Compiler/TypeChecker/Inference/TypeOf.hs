@@ -113,4 +113,4 @@ infer'many' ((name, expr) : exprs) = do
 
 
 typeof :: Expression -> Either TypeError Scheme
-typeof = infer'expression empty'env
+typeof = infer'expression empty't'env

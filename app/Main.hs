@@ -38,7 +38,7 @@ main :: IO ()
 main = do
   putStrLn "Glamorous Frea REPL."
   putStrLn ""
-  load "prelude.fr" Map.empty empty'env Map.empty [t'Bool, t'Int, t'Double, t'Char, t'Unit]
+  load "prelude.fr" Val.empty'env empty't'env Map.empty [t'Bool, t'Int, t'Double, t'Char, t'Unit]
 
 
 readExpression :: IO String
