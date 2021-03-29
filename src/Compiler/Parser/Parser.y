@@ -51,6 +51,7 @@ import Compiler.Syntax.Type
   '->'          { TokOperator "->" }
   '='           { TokOperator "=" }
   '|'           { TokOperator "|" }
+  '::'          { TokOperator "::" }
 
   varid         { TokVarLower $$ }
   conid         { TokVarUpper $$ }
@@ -192,6 +193,8 @@ GlobalBinding   ::  { (String, Expression) }
 
 Decl            ::  { Declaration }
                 :   GlobalBinding                                   { Binding (fst $1) (snd $1) }
+                |   Binding                                         { Binding (fst $1) (snd $1) }
+                |   Annotation Binding                              { Annotated (fst $2) (snd $1) (snd $2) }
 
 Lit             ::  { Expression }
                 :   Integer                                         { Lit $1 }
@@ -204,6 +207,10 @@ Integer         ::  { Lit }
 
 Double          ::  { Lit }
                 :   double                                          { LitDouble $1 }
+
+Annotation      ::  { (String, Type) }
+                :   Ident '::' Type                                 { ($1, $3) }
+                |   '(' Op ')' '::' Type                            { ($2, $5) }
 
 Type            ::  { Type }
                 :   TyAppLeft                                       { $1 }
