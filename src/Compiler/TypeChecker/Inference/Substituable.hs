@@ -64,12 +64,12 @@ instance Substitutable a => Substitutable [a] where
 
 
 instance Substitutable TypeEnv where
-  apply subst (Env type'env)
-    = Env $ Map.map
+  apply subst type'env
+    = Map.map
         (apply subst)
         type'env
 
-  ftv (Env type'env)
+  ftv type'env
     = Map.foldr
         (\ scheme free'set -> free'set `Set.union` ftv scheme)
         Set.empty

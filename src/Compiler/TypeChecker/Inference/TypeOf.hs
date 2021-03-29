@@ -60,9 +60,8 @@ infer'top environment bindings =
         case runSolve constraints of
           Left err -> Left err
           Right subst -> do
-            let (Env env) = environment
-                scheme'bindings = map (second (closeOver . apply subst)) type'bindings
-                env' = apply subst $ Env $ env `Map.union` Map.fromList scheme'bindings
+            let scheme'bindings = map (second (closeOver . apply subst)) type'bindings
+                env' = apply subst $ environment `Map.union` Map.fromList scheme'bindings
             return env'
 
 

@@ -72,7 +72,7 @@ readExpression = do
 
 
 repl :: Env -> TypeEnv -> Memory -> [Type] -> IO ()
-repl env t'env@(Env t'map) mem type'ctx = do
+repl env t'env mem type'ctx = do
   -- read
   line <- readExpression
 
@@ -133,9 +133,8 @@ repl env t'env@(Env t'map) mem type'ctx = do
                 Left err -> do
                   putStrLn $ "Type Error in Prelude: " ++ show err
                   return ()
-                Right (Env mp) -> do
-                  let (Env t'map) = t'env'
-                  let t'env' = Env $ mp `Map.union` t'map
+                Right mp -> do
+                  let t'env' = mp `Map.union` t'env
                   repl env' t'env' mem' type'ctx'
 
         Right expression -> do
@@ -158,7 +157,7 @@ repl env t'env@(Env t'map) mem type'ctx = do
 
 
 load :: String -> Env -> TypeEnv -> Memory -> [Type] -> IO ()
-load file'name env t'env@(Env t'map) mem type'ctx = do
+load file'name env t'env mem type'ctx = do
   handle <- openFile file'name ReadMode
   contents <- hGetContents handle
   case parse'expr contents of
@@ -172,9 +171,8 @@ load file'name env t'env@(Env t'map) mem type'ctx = do
             Left err -> do
               putStrLn $ "Type Error inside " ++ file'name ++ ": " ++ show err
               return ()
-            Right (Env mp) -> do
-              let (Env t'map) = t'env
-              let t'env' = Env $ mp `Map.union` t'map
+            Right mp -> do
+              let t'env' = mp `Map.union` t'env
               repl env' t'env' mem' type'ctx
     _ -> do
       putStrLn $ "Error: " ++ file'name ++ " must only contain declarations."

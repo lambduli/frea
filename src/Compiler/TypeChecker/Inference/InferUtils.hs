@@ -39,16 +39,16 @@ real'fresh vars var = do
 
 
 extend :: TypeEnv -> (String, Scheme) -> TypeEnv
-extend (Env env) (ty'var, scheme) = Env $ Map.insert ty'var scheme env
+extend env (ty'var, scheme) = Map.insert ty'var scheme env
 
 
 remove :: TypeEnv -> String -> TypeEnv
-remove (Env env) var = Env (Map.delete var env)
+remove env var = Map.delete var env
 
 
 merge'into'env :: [(String, Scheme)] -> Infer a -> Infer a
 merge'into'env bindings m = do
-  let scope (Env env) = Env $ Map.fromList bindings `Map.union` env
+  let scope env = Map.fromList bindings `Map.union` env
   local scope m
 
 
@@ -60,7 +60,7 @@ put'in'env (var, scheme) m = do
 
 lookup'env :: String -> Infer Type
 lookup'env var = do
-  (Env env) <- ask
+  env <- ask
   case Map.lookup var env of
     Nothing     ->  throwError $ UnboundVariable var
     Just scheme ->  instantiate scheme
@@ -74,7 +74,7 @@ instantiate (ForAll args type') = do
 
 
 closeOver :: Type -> Scheme
-closeOver = normalize . generalize (Env Map.empty)
+closeOver = normalize . generalize Map.empty
 
 
 normalize :: Scheme -> Scheme
