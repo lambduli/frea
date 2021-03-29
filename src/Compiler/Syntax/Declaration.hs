@@ -6,8 +6,9 @@ import Compiler.Syntax (Sig, Type, Expression)
 
 
 data Declaration
-  = Binding String Expression       -- (define ...)
-  | Signature Sig                   -- Type signature
+  = Binding String Expression         -- (define ...)
+  | Annotated String Type Expression  -- annotated function declaration
+  | Signature Sig                     -- Type signature
   | DataDecl String [String] [ConstrDecl] -- Data type declaration -- name type'params list'of'consturctors'with'params
   | TypeDecl String [String] Type        -- Type declaration -- only single constructor -- basically alias
 
