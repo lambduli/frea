@@ -156,6 +156,9 @@ repl env t'env mem type'ctx = do
                   repl env t'env mem type'ctx
 
                 (Right expr', mem') -> do
+                  -- TODO: this is WRONG! present for whatever reason doesn't work well
+                  -- so when you try to force the value for printing it doesn't update the memory or smth
+                  -- so it breaks
                   putStrLn $ "         " ++ present mem' expr'
 
                   -- loop
