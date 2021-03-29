@@ -15,3 +15,4 @@ data Declaration
 data ConstrDecl
   = ConDecl String [Type]
   | ConFieldDecl String [(String, Type)] -- not using this one so far
+  deriving (Eq)

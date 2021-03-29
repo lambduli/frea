@@ -116,12 +116,14 @@ evaluate expr env =
       return $ Right $ Val.Thunk (\ env -> evaluate (App expr $ Fix expr) env) env
 
     Intro name exprs -> do
-      -- let values = map (\ expr -> Val.Thunk (\ env -> evaluate expr env) env) exprs
-      -- in return $ Right $ Val.Thunk (\ env -> return . Right $ Val.Data name values) env
-      values <- mapM (\ expr -> force expr env) exprs
-      case sequence values of
-        Left wrong -> return $ Left wrong
-        Right vals -> return $ Right $ Val.Thunk (\ env -> return . Right $ Val.Data name vals) env
+      mem <- get
+      let values = map (\ expr -> Val.Thunk (\ env -> evaluate expr env) env) exprs
+      return $ Right $ Val.Thunk (\ env -> return . Right $ Val.Data name values) env
+      
+      -- values <- mapM (\ expr -> force expr env) exprs
+      -- case sequence values of
+      --   Left wrong -> return $ Left wrong
+      --   Right vals -> return $ Right $ Val.Thunk (\ env -> return . Right $ Val.Data name vals) env
 
     Elim constructors value'to'elim destructors ->
       return $ Right $ Val.Thunk (\ env -> do

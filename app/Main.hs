@@ -146,14 +146,20 @@ repl env t'env mem type'ctx = do
               -- loop
               repl env t'env mem type'ctx
             _ -> do
-              let error'or'expr = evalState (evaluate expression env) mem
+              let error'or'expr'n'state = runState (evaluate expression env) mem
               -- print
-              case error'or'expr of
-                Left err -> putStrLn $ "Evaluation Error: " ++ show err
-                Right expr' -> putStrLn $ "         " ++ present mem expr'
+              case error'or'expr'n'state of
+                (Left err, mem') -> do
+                  putStrLn $ "Evaluation Error: " ++ show err
 
-              -- loop
-              repl env t'env mem type'ctx
+                  -- loop
+                  repl env t'env mem type'ctx
+
+                (Right expr', mem') -> do
+                  putStrLn $ "         " ++ present mem' expr'
+
+                  -- loop
+                  repl env t'env mem' type'ctx   
 
 
 load :: String -> Env -> TypeEnv -> Memory -> [Type] -> IO ()

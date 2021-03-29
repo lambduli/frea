@@ -161,8 +161,19 @@ Binding         ::  { (String, Expression) }
                 |   Var '`' Var '`' Var '=' Exp                     { ($3, Fix (Lam $3 (Lam $1 (Lam $5 $7)))) }
                 -- |   rec Var '`' Var '`' Var '=' Exp                 { ($4, Fix (Lam $4 (Lam $2 (Lam $6 $8)))) }
 
+GlobalBinding   ::  { (String, Expression) }
+                :   Ident '=' Exp                                   { ($1, $3) }
+                |   Ident Params '=' Exp                            { ($1, foldr (\ arg body -> Lam arg body) $4 $2) }
+                |   '(' Op ')' Params '=' Exp                       { ($2, foldr (\ arg body -> Lam arg body) $6 $4) }
+                |   Var Op Var '=' Exp                              { ($2, Lam $1 (Lam $3 $5)) }
+                |   Var '`' Var '`' Var '=' Exp                     { ($3, Lam $1 (Lam $5 $7)) }
+                -- |   rec '(' Op ')' Params '=' Exp                   { ($3, Fix $ foldr (\ arg body -> Lam arg body) $7 ($3 : $5)) }
+                -- |   rec Ident Params '=' Exp                        { ($2, Fix $ foldr (\ arg body -> Lam arg body) $5 ($2 : $3)) }
+                -- |   rec Var Op Var '=' Exp                          { ($3, Fix $ Lam $3 (Lam $2 (Lam $4 $6))) }
+                -- |   rec Var '`' Var '`' Var '=' Exp                 { ($4, Fix $ Lam $4 (Lam $2 (Lam $6 $8))) }
+
 Decl            ::  { Declaration }
-                :   Binding                                         { Binding (fst $1) (snd $1) }
+                :   GlobalBinding                                   { Binding (fst $1) (snd $1) }
 
 Lit             ::  { Lit }
                 :   Integer                                         { $1 }

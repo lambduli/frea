@@ -3,7 +3,8 @@
 {-# LANGUAGE UndecidableInstances #-}
 module Compiler.Syntax.Expression where
 
-import Compiler.Syntax (Lit, Type, MatchGroup, Declaration, ConstrDecl)
+import Compiler.Syntax (Lit, Type, MatchGroup)
+import Compiler.Syntax.Declaration
 import Data.List
 
 
@@ -21,6 +22,7 @@ data Expression
   | Intro String [Expression]
   | Elim [ConstrDecl] Expression [Expression]
   --     for matching elim what? destructors
+  deriving (Eq)
 
   -- | Typed Type Expression -- OK
   -- | MatchWith Expression MatchGroup -- OK
