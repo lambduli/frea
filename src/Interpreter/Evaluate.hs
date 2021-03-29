@@ -39,11 +39,11 @@ force expr env = do
 
 
 evaluate :: Expression -> Env -> State Val.Memory (Either EvaluationError Val.Value)
-evaluate expr env@(Env e'map) =
+evaluate expr env =
   case expr of
     Var name -> do
       mem <- get
-      case e'map !? name of
+      case env !? name of
         Just addr ->
           case mem !? addr of
             Just val -> return $ Right val
@@ -72,10 +72,10 @@ evaluate expr env@(Env e'map) =
     App (Lam par body) right ->
       let right'val = Val.Thunk (\ env -> force right env) env
       in return $ Right $ Val.Thunk
-        (\ (Val.Env e'map) -> do
+        (\ e'map -> do
           mem <- get
           let addr = Addr $ Map.size mem
-              env' = Val.Env $ Map.insert par addr e'map
+              env' = Map.insert par addr e'map
               mem' = Map.insert addr right'val mem
           put mem'
           evaluate body env') env
@@ -92,10 +92,10 @@ evaluate expr env@(Env e'map) =
         case res of
           Left err -> return $ Left err
 
-          Right (Val.Lam par body env'@(Val.Env bs')) -> do
+          Right (Val.Lam par body env') -> do
             mem <- get
             let addr = Addr $ Map.size mem
-                env'' = Val.Env $ Map.insert par addr bs'
+                env'' = Map.insert par addr env'
                 right'val = Val.Thunk (\ env -> force right env) env
                 mem' = Map.insert addr right'val mem
             put mem'
@@ -115,17 +115,16 @@ evaluate expr env@(Env e'map) =
     Fix expr ->
       return $ Right $ Val.Thunk (\ env -> evaluate (App expr $ Fix expr) env) env
 
-    Intro name exprs ->
-      let values = map (\ expr -> Val.Thunk (\ env -> evaluate expr env) env) exprs
-      in return $ Right $ Val.Thunk (\ env -> return . Right $ Val.Data name values) env
-      -- values <- mapM (\ expr -> force expr env) exprs
-      -- case sequence values of
-        -- Left wrong -> return $ Left wrong
-        -- Right vals -> return $ Right $ Val.Thunk (\ env -> return . Right $ Val.Data name vals) env
+    Intro name exprs -> do
+      -- let values = map (\ expr -> Val.Thunk (\ env -> evaluate expr env) env) exprs
+      -- in return $ Right $ Val.Thunk (\ env -> return . Right $ Val.Data name values) env
+      values <- mapM (\ expr -> force expr env) exprs
+      case sequence values of
+        Left wrong -> return $ Left wrong
+        Right vals -> return $ Right $ Val.Thunk (\ env -> return . Right $ Val.Data name vals) env
 
     Elim constructors value'to'elim destructors ->
       return $ Right $ Val.Thunk (\ env -> do
-        let (Val.Env env') = env
         res <- force value'to'elim env
         case res of
           Right (Val.Data tag arguments) -> do
@@ -139,7 +138,7 @@ evaluate expr env@(Env e'map) =
               Right val | [] <- arguments ->
                 return $ Right val
 
-              Right lam@(Val.Lam par body (Env env')) ->
+              Right lam@(Val.Lam par body _) ->
                 apply'closure arguments lam
 
               Right (Val.Op op) | [right] <- arguments -> do
@@ -153,13 +152,12 @@ evaluate expr env@(Env e'map) =
       ) env
         
 
-
 apply'closure :: [Val.Value] -> Val.Value -> State Val.Memory (Either EvaluationError Val.Value)
 apply'closure [] val = return $ Right val
-apply'closure (val : vals) (Val.Lam par body (Env env)) = do
+apply'closure (val : vals) (Val.Lam par body env) = do
   mem <- get
   let addr = Addr $ Map.size mem
-      env' = Val.Env $ Map.insert par addr env
+      env' = Map.insert par addr env
       mem' = Map.insert addr val mem
   put mem'
   res <- force body env'
@@ -198,9 +196,6 @@ apply'operator "#<" (Val.Tuple [val'l, val'r]) env = do
     (Right (Val.Lit lit'l), Right (Val.Lit lit'r)) -> return $ Right $ Val.Lit (LitBool (lit'l < lit'r))
     (Right _, Left err) -> return $ Left err
     (Left err, _) -> return $ Left err
-  -- | (Right (Val.Lit lit'l), Right (Val.Lit lit'r))
-  --     <- (force'val val'l mem, force'val val'r mem)
-  --       = Right $ Val.Lit (LitBool (lit'l < lit'r))
 
 apply'operator "#>" (Val.Tuple [val'l, val'r]) env = do
   res'l <- force'val val'l
@@ -209,10 +204,6 @@ apply'operator "#>" (Val.Tuple [val'l, val'r]) env = do
     (Right (Val.Lit lit'l), Right (Val.Lit lit'r)) -> return $ Right $ Val.Lit (LitBool (lit'l > lit'r))
     (Right _, Left err) -> return $ Left err
     (Left err, _) -> return $ Left err
-
-  -- | (Right (Val.Lit lit'l), Right (Val.Lit lit'r))
-  --     <- (force'val val'l mem, force'val val'r mem)
-  --       = Right $ Val.Lit (LitBool (lit'l > lit'r))
 
 apply'operator "#+" (Val.Tuple [val'l, val'r]) env = do
   res'l <- force'val val'l
@@ -265,13 +256,6 @@ apply'operator "#div" (Val.Tuple [val'l, val'r]) env = do
     (Right (Val.Lit (LitInt i'l)), Right (Val.Lit (LitInt i'r))) ->
       return $ Right $ Val.Lit (LitInt (i'l `div` i'r))
 
-  -- | (Right (Val.Lit (LitInt i'l)), Right (Val.Lit (LitInt i'r)))
-  --     <- (force'val val'l mem, force'val val'r mem)
-  --       = Right $ Val.Lit (LitInt (i'l `div` i'r))
-  -- | (Right (Val.Lit (LitInt i'l)), Right (Val.Lit (LitInt 0)))
-  --     <- (force'val val'l mem, force'val val'r mem)
-  --       = Left $ DivisionByZero i'l
-
 apply'operator "#/" (Val.Tuple [val'l, val'r]) env = do
   res'l <- force'val val'l
   res'r <- force'val val'r
@@ -280,13 +264,6 @@ apply'operator "#/" (Val.Tuple [val'l, val'r]) env = do
       return $ Left $ DivisionByZero 0
     (Right (Val.Lit (LitDouble d'l)), Right (Val.Lit (LitDouble d'r))) ->
       return $ Right $ Val.Lit (LitDouble (d'l / d'r))
-
-  -- | (Right (Val.Lit (LitDouble d'l)), Right (Val.Lit (LitDouble d'r)))
-  --     <- (force'val val'l mem, force'val val'r mem)
-  --       = Right $ Val.Lit (LitDouble (d'l / d'r))
-  -- | (Right (Val.Lit (LitDouble d'l)), Right (Val.Lit (LitDouble 0)))
-  --     <- (force'val val'l mem, force'val val'r mem)
-  --       = Left $ DivisionByZero 0
 
 apply'operator "#++" (Val.Tuple [val'l, val'r]) env =
     return $ Right $ Val.Thunk (\ env -> do

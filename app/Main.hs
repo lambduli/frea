@@ -38,7 +38,7 @@ main :: IO ()
 main = do
   putStrLn "Glamorous Frea REPL."
   putStrLn ""
-  load "prelude.fr" (Val.Env Map.empty) empty'env Map.empty [t'Bool, t'Int, t'Double, t'Char, t'Unit]
+  load "prelude.fr" Map.empty empty'env Map.empty [t'Bool, t'Int, t'Double, t'Char, t'Unit]
 
 
 readExpression :: IO String
@@ -72,7 +72,7 @@ readExpression = do
 
 
 repl :: Val.Env -> TypeEnv -> Val.Memory -> [Type] -> IO ()
-repl env@(Val.Env env'map) t'env@(Env t'map) mem type'ctx = do
+repl env t'env@(Env t'map) mem type'ctx = do
   -- read
   line <- readExpression
 
@@ -158,7 +158,7 @@ repl env@(Val.Env env'map) t'env@(Env t'map) mem type'ctx = do
 
 
 load :: String -> Val.Env -> TypeEnv -> Val.Memory -> [Type] -> IO ()
-load file'name env@(Val.Env env'map) t'env@(Env t'map) mem type'ctx = do
+load file'name env t'env@(Env t'map) mem type'ctx = do
   handle <- openFile file'name ReadMode
   contents <- hGetContents handle
   case parse'expr contents of
