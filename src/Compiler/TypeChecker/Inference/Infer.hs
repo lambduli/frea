@@ -56,6 +56,13 @@ empty't'env = Map.fromList
   , ("#head", ForAll ["a"]      (TyList (TyVar "a") `TyArr` TyVar "a"))
   , ("#tail", ForAll ["a"]      (TyList (TyVar "a") `TyArr` TyList (TyVar "a")))
   , ("#nil?", ForAll ["a"]      (TyList (TyVar "a") `TyArr` t'Bool))
+  , ("#show", ForAll ["a"]      (TyVar "a" `TyArr` (TyList (TyCon "Char"))))
+  -- , ("#showint", ForAll []      ((TyCon "Int") `TyArr` (TyList (TyCon "Char"))))
+  -- , ("#showbool", ForAll []     ((TyCon "Bool") `TyArr` (TyList (TyCon "Char"))))
+  -- , ("#showdouble", ForAll []   ((TyCon "Double") `TyArr` (TyList (TyCon "Char"))))
+  -- , ("#showchar", ForAll []     ((TyCon "Char") `TyArr` (TyList (TyCon "Char"))))
+  -- , ("#showstring", ForAll []   ((TyList $ TyCon "Char") `TyArr` (TyList (TyCon "Char"))))
+  -- , ("#showunit", ForAll []     ((TyCon "Unit") `TyArr` (TyList (TyCon "Char"))))
   ]
 
 
