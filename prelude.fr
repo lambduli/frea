@@ -24,6 +24,10 @@ head a  = ((#head) a)
 tail a  = ((#tail) a)
 nil? a  = ((#nil?) a)
 
+show a = ((#show) a)
+
+undefined = undefined
+
 a !! b  = if (b == 0) then (head a) else ((tail a) !! (b - 1))
 
 fst a  = ((#fst) a)
