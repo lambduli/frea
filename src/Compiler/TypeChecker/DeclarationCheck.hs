@@ -52,37 +52,37 @@ check'constrs (ConDecl name types : cons) type'ctx = do
 
 register'constr'insts :: [ConstrDecl] -> Val.Env -> Val.Env
 register'constr'insts [] env = env
-register'constr'insts (ConDecl name types : cons) (Val.Env env) =
+register'constr'insts (ConDecl name types : cons) env =
   let addr = Addr $ Map.size env
-      env' = Val.Env $ Map.insert name addr env
+      env' = Map.insert name addr env
   in register'constr'insts cons env'
 
 
 register'elim'insts :: String -> [ConstrDecl] -> Val.Env -> Val.Env
-register'elim'insts name constrs (Val.Env env) =
+register'elim'insts name constrs env =
   let addr        = Addr $ Map.size env
       cons'count  = length constrs
       elim'name   = "which-" ++ name
-      env'        = Val.Env $ Map.insert elim'name addr env
+      env'        = Map.insert elim'name addr env
   in  env'
 
 
 generate'constr'insts :: [ConstrDecl] -> Val.Env -> Val.Memory -> Val.Memory
 generate'constr'insts [] _ mem = mem
-generate'constr'insts (ConDecl name types : cons) (Val.Env env) mem =
+generate'constr'insts (ConDecl name types : cons) env mem =
   let addr      = env Map.! name
       par'inds  = [1 .. length types]
       params    = map (\ ind -> "p" ++ show ind ) par'inds
       vars      = map Var params
       intro     = Intro name vars
       con'lam   = foldr Lam intro params
-      value     = Val.Thunk (\ env -> force con'lam env) (Val.Env Map.empty)
+      value     = Val.Thunk (\ env -> force con'lam env) Val.empty'env -- I don't need anything from the Env
       mem'      = Map.insert addr value mem
-  in  generate'constr'insts cons (Val.Env env) mem'
+  in  generate'constr'insts cons env mem'
 
 
 generate'elim'insts :: String -> [ConstrDecl] -> Val.Env -> Val.Memory -> Val.Memory
-generate'elim'insts name constructors (Val.Env env) mem =
+generate'elim'insts name constructors env mem =
   let 
       cons'count  = length constructors
       elim'name   = "which-" ++ name
@@ -93,7 +93,7 @@ generate'elim'insts name constructors (Val.Env env) mem =
       destr'vars  = map Var params
       elim        = Elim constructors val'var destr'vars
       which'elim  = Lam "value" $ foldr Lam elim params
-      value       = Val.Thunk (\ env -> force which'elim env) (Val.Env env)
+      value       = Val.Thunk (\ env -> force which'elim env) env
       mem'        = Map.insert addr value mem
   in  mem'
 
@@ -101,15 +101,15 @@ generate'elim'insts name constructors (Val.Env env) mem =
 -- tohle prida constructory pro data do TypeEnv - explicitne otypovane
 add'constrs'types :: Type -> [ConstrDecl] -> TypeEnv -> TypeEnv
 add'constrs'types _ [] t'env = t'env
-add'constrs'types result't (ConDecl name types : cons) (Env t'env)
-  = add'constrs'types result't cons (Env $ Map.insert name scheme t'env)
+add'constrs'types result't (ConDecl name types : cons) t'env
+  = add'constrs'types result't cons (Map.insert name scheme t'env)
     where
       type' = foldr TyArr result't types
       scheme = ForAll [] type'
 
 
 add'elim'type :: String -> [ConstrDecl] -> TypeEnv -> TypeEnv
-add'elim'type name constructors (Env t'env) =
+add'elim'type name constructors t'env =
   let elim'name     = "which-" ++ name
       res           = TyVar "a"
       destr'type (ConDecl name types) = foldr TyArr res types
@@ -119,7 +119,7 @@ add'elim'type name constructors (Env t'env) =
       -- TODO: it would be much better to not create the scheme HERE
       -- it would also be much better to use already implemented functions like generalize and so
       -- TODO: once I implement higher kinded types, list of the free type variables needs to reflect that
-      t'env'        = Env $ Map.insert elim'name scheme t'env
+      t'env'        = Map.insert elim'name scheme t'env
   in  t'env'
 
 
@@ -210,25 +210,25 @@ process'declarations declarations env t'env mem type'ctx = do
 
 
       register'declarations :: Val.Env -> Declaration -> Val.Env
-      register'declarations env@(Val.Env e'map) decl =
+      register'declarations env decl =
         case decl of
           Binding name expr ->
-            let addr = Addr $ Map.size e'map
-            in Val.Env $ Map.insert name addr e'map
+            let addr = Addr $ Map.size env
+            in Map.insert name addr env
 
           DataDecl name _ constrs ->
             let env'  = register'constr'insts constrs env
                 env'' = register'elim'insts name constrs env'
             in  env''
 
-          _ -> (Val.Env e'map)
+          _ -> env
 
 
       construct'declarations :: Val.Env -> Val.Memory -> Declaration -> Val.Memory
-      construct'declarations env@(Val.Env e'map) mem decl =
+      construct'declarations env mem decl =
         case decl of
           Binding name expr ->
-            let addr = e'map Map.! name
+            let addr = env Map.! name
                 val  = Val.Thunk (\ env -> force expr env) env
                 mem' = Map.insert addr val mem
             in  mem'

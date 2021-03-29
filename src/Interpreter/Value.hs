@@ -10,8 +10,7 @@ import Compiler.Syntax.Literal
 import Interpreter.Address
 
 
-newtype Env = Env (Map.Map String Address)
-  deriving (Show)
+type Env = Map.Map String Address
 
 
 type Memory = Map.Map Address Value
@@ -74,3 +73,7 @@ instance Show EvaluationError where
     "Division by zero error. (" ++ show left ++ " / 0)"
   show (Unexpected message) =
     "Unexpected: " ++ message
+
+
+empty'env :: Env
+empty'env = Map.empty

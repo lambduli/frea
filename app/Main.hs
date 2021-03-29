@@ -21,7 +21,7 @@ import Compiler.Parser.Token (Token (..))
 import Compiler.Parser.Utils
 import Compiler.TypeChecker.Inference
 import Interpreter.Evaluate
-import qualified Interpreter.Value as Val
+import Interpreter.Value
 import Compiler.TypeChecker.TypeError
 import Compiler.TypeChecker.Type
 import Compiler.Syntax.Type
@@ -38,7 +38,7 @@ main :: IO ()
 main = do
   putStrLn "Glamorous Frea REPL."
   putStrLn ""
-  load "prelude.fr" (Val.Env Map.empty) empty'env Map.empty [t'Bool, t'Int, t'Double, t'Char, t'Unit]
+  load "prelude.fr" empty'env empty't'env Map.empty [t'Bool, t'Int, t'Double, t'Char, t'Unit]
 
 
 readExpression :: IO String
@@ -71,8 +71,8 @@ readExpression = do
             return $ line ++ ['\n'] ++ next'line
 
 
-repl :: Val.Env -> TypeEnv -> Val.Memory -> [Type] -> IO ()
-repl env@(Val.Env env'map) t'env@(Env t'map) mem type'ctx = do
+repl :: Env -> TypeEnv -> Memory -> [Type] -> IO ()
+repl env t'env mem type'ctx = do
   -- read
   line <- readExpression
 
@@ -133,9 +133,8 @@ repl env@(Val.Env env'map) t'env@(Env t'map) mem type'ctx = do
                 Left err -> do
                   putStrLn $ "Type Error in Prelude: " ++ show err
                   return ()
-                Right (Env mp) -> do
-                  let (Env t'map) = t'env'
-                  let t'env' = Env $ mp `Map.union` t'map
+                Right mp -> do
+                  let t'env' = mp `Map.union` t'env
                   repl env' t'env' mem' type'ctx'
 
         Right expression -> do
@@ -151,14 +150,14 @@ repl env@(Val.Env env'map) t'env@(Env t'map) mem type'ctx = do
               -- print
               case error'or'expr of
                 Left err -> putStrLn $ "Evaluation Error: " ++ show err
-                Right expr' -> putStrLn $ "         " ++ Val.present mem expr'
+                Right expr' -> putStrLn $ "         " ++ present mem expr'
 
               -- loop
               repl env t'env mem type'ctx
 
 
-load :: String -> Val.Env -> TypeEnv -> Val.Memory -> [Type] -> IO ()
-load file'name env@(Val.Env env'map) t'env@(Env t'map) mem type'ctx = do
+load :: String -> Env -> TypeEnv -> Memory -> [Type] -> IO ()
+load file'name env t'env mem type'ctx = do
   handle <- openFile file'name ReadMode
   contents <- hGetContents handle
   case parse'expr contents of
@@ -172,9 +171,8 @@ load file'name env@(Val.Env env'map) t'env@(Env t'map) mem type'ctx = do
             Left err -> do
               putStrLn $ "Type Error inside " ++ file'name ++ ": " ++ show err
               return ()
-            Right (Env mp) -> do
-              let (Env t'map) = t'env
-              let t'env' = Env $ mp `Map.union` t'map
+            Right mp -> do
+              let t'env' = mp `Map.union` t'env
               repl env' t'env' mem' type'ctx
     _ -> do
       putStrLn $ "Error: " ++ file'name ++ " must only contain declarations."

@@ -5,5 +5,4 @@ import qualified Data.Map.Strict as Map
 import Compiler.Syntax.Type
 
 
-newtype TypeEnv = Env (Map.Map String Scheme)
-  deriving (Show)
+type TypeEnv = Map.Map String Scheme
