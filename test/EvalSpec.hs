@@ -15,6 +15,8 @@ spec :: Spec
 spec = describe "Test evaluation of expressions" $ do
   it "Evaluates simple constant" $ do
     "1" `evals'to` Lit (LitInt 1)
+  it "Evaluates simple lambda application" $ do
+    "((lambda x -> x) 23)" `evals'to` Lit (LitInt 23)
 
 
 
