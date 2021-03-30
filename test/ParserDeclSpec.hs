@@ -20,6 +20,8 @@ spec = describe "Test parsing of the declarations" $ do
   --   "(:) a b = a" <~> "a : b = a"
   -- it "Parses an operator declaration II" $ do
   --   "(:) = (lambda a b -> a)" <~> "a : b = a"
+  it "Parses a data declaration" $ do
+    "data Bool = True | False" <=> DataDecl "Bool" [] [ConDecl "True" [], ConDecl "False" []]
 
 
 infix 4 <=>
