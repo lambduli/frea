@@ -90,3 +90,7 @@ instance Show EvaluationError where
 
 empty'env :: Env
 empty'env = Map.empty
+
+
+empty'memory :: Memory
+empty'memory = Map.empty
