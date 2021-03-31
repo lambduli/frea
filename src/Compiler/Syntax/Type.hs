@@ -9,7 +9,9 @@ data Type
   | TyTuple [Type]
   | TyList Type
   | TyArr Type Type
+  | TyApp Type Type
   deriving (Eq)
+
 
 instance Show Type where
   show (TyVar name)
@@ -24,6 +26,8 @@ instance Show Type where
     = "(" ++ show left ++ ") -> " ++ show res'type
   show (TyArr arg'type res'type)
     = show arg'type ++ " -> " ++ show res'type
+  show (TyApp t'left t'right)
+    = "(" ++ show t'left ++ " " ++ show t'right ++ ")"
 
 
 data Scheme
