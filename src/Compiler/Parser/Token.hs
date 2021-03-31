@@ -30,7 +30,8 @@ data Token
   
 
   -- variables
-  | TokVarId String
+  | TokVarUpper String
+  | TokVarLower String
   -- | TokConstrId String
   | TokNativeSym String
   | TokOperator String

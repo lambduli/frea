@@ -23,7 +23,9 @@ $symbol  = [ \! \$ \# \% \& \* \+ \. \/ \< \= \> \? \@ \\ \^ \| \- \~ \: \; ]
 
 $identchar    = [$lower $upper $digit $symbol]
 
-@variableident      = [$lower $upper] $identchar*
+@variableident      = $lower $identchar*
+
+@constrident        = $upper $identchar*
 
 @operator     = $symbol [$lower $upper $symbol]*
 
@@ -104,7 +106,8 @@ token :-
 -- <0>         "#showunit"     { plainTok $ TokNativeSym "#showunit" }
 
 -- variables and constructors - qualified and un-qualified
-<0>         @variableident  { parametrizedTok TokVarId id }
+<0>         @variableident  { parametrizedTok TokVarLower id }
+<0>         @constrident    { parametrizedTok TokVarUpper id }
 <0>         @operator       { parametrizedTok TokOperator id }
 
 <0>         \n              ;

@@ -51,7 +51,8 @@ import Compiler.Syntax.Type
   '='           { TokOperator "=" }
   '|'           { TokOperator "|" }
 
-  varid         { TokVarId $$ }
+  varid         { TokVarLower $$ }
+  conid         { TokVarUpper $$ }
   op            { TokOperator $$ }
   symid         { TokNativeSym $$ }
   elim          { TokEliminator $$ }
@@ -88,17 +89,17 @@ Declaration     ::  { Declaration }
                 |   Data                                            { $1 }
 
 Data            ::  { Declaration }
-                :   data Ident Constructors                         { DataDecl $2 [] $3 }
+                :   data UpIdent Params Constructors                { DataDecl $2 $3 $4 }
 
 Constructors    ::  { [ConstrDecl] }
                 :   {- empty -}                                     { [] }
                 |   '=' Constr NoneOrMany(ConstrOther)              { $2 : $3 }
 
 Constr          ::  { ConstrDecl }
-                :   Ident NoneOrMany(Type)                          { ConDecl $1 $2 }
+                :   UpIdent NoneOrMany(Type)                        { ConDecl $1 $2 }
                 |   '(' Op ')' NoneOrMany(Type)                     { ConDecl $2 $4 }
                 |   Type Op Type                                    { ConDecl $2 [$1, $3] }
-                |   Type '`' Ident '`' Type                         { ConDecl $3 [$1, $5] }
+                |   Type '`' LowIdent '`' Type                      { ConDecl $3 [$1, $5] }
 
 ConstrOther     ::  { ConstrDecl }
                 :   '|' Constr                                      { $2 }
@@ -106,12 +107,18 @@ ConstrOther     ::  { ConstrDecl }
 Params          ::  { [String] }
                 :   NoneOrMany(Var)                                 { $1 }
 
-Ident           ::  { String }
+LowIdent        ::  { String }
                 :   Var                                             { $1 }
                 |   '(' Op ')'                                      { $2 }
 
+UpIdent         ::  { String }
+                :   Con                                             { $1 }
+
 Var             ::  { String }
                 :   varid                                           { $1 }
+
+Con             ::  { String }
+                :   conid                                           { $1 }
 
 Op              ::  { String }
                 :   symid                                           { $1 }
@@ -125,6 +132,8 @@ Oper            ::  { Expression }
 
 Exp             ::  { Expression }
                 :   Var                                             { Var $1 }
+                |   Con                                             { Var $1 }
+                --  Note: Consider adding Constructor Expression for this ^^^
                 -- |   '(' Oper ')'                                    { $2 }
                 |   '(' op ')'                                      { Var $2 }
                 |   '(' symid ')'                                   { Op $2 }
@@ -145,30 +154,30 @@ Exp             ::  { Expression }
                                                                         (\ (name, expr) body -> Let name expr body)
                                                                         $4
                                                                         $2 }
-                |   letrec Ident Params '=' Exp in Exp              { Let $2 (Fix $ foldr (\ arg body -> Lam arg body) $5 ($2 : $3)) $7 }
+                |   letrec LowIdent Params '=' Exp in Exp           { Let $2 (Fix $ foldr (\ arg body -> Lam arg body) $5 ($2 : $3)) $7 }
                 -- TODO: do the same for letrec
                 |   '(' Exp CommaSeparated(Exp) ')'                 { Tuple $ $2 : $3 }
                 |   '[' NoneOrManySeparated(Exp) ']'                { List $2 }
 
 Binding         ::  { (String, Expression) }
-                :   Ident '=' Exp                                   { ($1, Fix (Lam $1 $3)) }
-                |   Ident Params '=' Exp                            { ($1, Fix $ foldr (\ arg body -> Lam arg body) $4 ($1 : $2)) }
+                :   LowIdent '=' Exp                                { ($1, Fix (Lam $1 $3)) }
+                |   LowIdent Params '=' Exp                         { ($1, Fix $ foldr (\ arg body -> Lam arg body) $4 ($1 : $2)) }
                 |   '(' Op ')' Params '=' Exp                       { ($2, Fix $ foldr (\ arg body -> Lam arg body) $6 ($2 : $4)) }
                 -- |   rec '(' Op ')' Params '=' Exp                   { ($3, Fix $ foldr (\ arg body -> Lam arg body) $7 ($3 : $5)) }
-                -- |   rec Ident Params '=' Exp                        { ($2, Fix $ foldr (\ arg body -> Lam arg body) $5 ($2 : $3)) }
+                -- |   rec LowIdent Params '=' Exp                        { ($2, Fix $ foldr (\ arg body -> Lam arg body) $5 ($2 : $3)) }
                 |   Var Op Var '=' Exp                              { ($2, Fix (Lam $2 (Lam $1 (Lam $3 $5)))) }
                 -- |   rec Var Op Var '=' Exp                          { ($3, Fix (Lam $3 (Lam $2 (Lam $4 $6)))) }
                 |   Var '`' Var '`' Var '=' Exp                     { ($3, Fix (Lam $3 (Lam $1 (Lam $5 $7)))) }
                 -- |   rec Var '`' Var '`' Var '=' Exp                 { ($4, Fix (Lam $4 (Lam $2 (Lam $6 $8)))) }
 
 GlobalBinding   ::  { (String, Expression) }
-                :   Ident '=' Exp                                   { ($1, $3) }
-                |   Ident Params '=' Exp                            { ($1, foldr (\ arg body -> Lam arg body) $4 $2) }
+                :   LowIdent '=' Exp                                { ($1, $3) }
+                |   LowIdent Params '=' Exp                         { ($1, foldr (\ arg body -> Lam arg body) $4 $2) }
                 |   '(' Op ')' Params '=' Exp                       { ($2, foldr (\ arg body -> Lam arg body) $6 $4) }
                 |   Var Op Var '=' Exp                              { ($2, Lam $1 (Lam $3 $5)) }
                 |   Var '`' Var '`' Var '=' Exp                     { ($3, Lam $1 (Lam $5 $7)) }
                 -- |   rec '(' Op ')' Params '=' Exp                   { ($3, Fix $ foldr (\ arg body -> Lam arg body) $7 ($3 : $5)) }
-                -- |   rec Ident Params '=' Exp                        { ($2, Fix $ foldr (\ arg body -> Lam arg body) $5 ($2 : $3)) }
+                -- |   rec LowIdent Params '=' Exp                     { ($2, Fix $ foldr (\ arg body -> Lam arg body) $5 ($2 : $3)) }
                 -- |   rec Var Op Var '=' Exp                          { ($3, Fix $ Lam $3 (Lam $2 (Lam $4 $6))) }
                 -- |   rec Var '`' Var '`' Var '=' Exp                 { ($4, Fix $ Lam $4 (Lam $2 (Lam $6 $8))) }
 
@@ -190,7 +199,8 @@ Double          ::  { Lit }
                 :   double                                          { LitDouble $1 }
 
 Type            ::  { Type }
-                :   Ident                                           { TyCon $1 }
+                :   LowIdent                                        { TyVar $1 }
+                |   UpIdent                                         { TyCon $1 }
                 |   TyArr                                           { $1 }
                 |   TyTuple                                         { $1 }
                 |   TyList                                          { $1 }
