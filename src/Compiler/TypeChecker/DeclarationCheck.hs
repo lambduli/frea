@@ -1,6 +1,7 @@
 module Compiler.TypeChecker.DeclarationCheck where
 
 import qualified Data.Map.Strict as Map
+import qualified Data.Set as Set
 import Data.Bifunctor
 
 import Compiler.Syntax.Expression
@@ -11,8 +12,11 @@ import qualified Interpreter.Value as Val
 import Interpreter.Address
 import Compiler.TypeChecker.Inference.Infer
 import Compiler.TypeChecker.Inference.TypeEnv
+import Compiler.TypeChecker.Inference.Substituable
 
 import Interpreter.Evaluate
+
+import Debug.Trace
 
 
 check'constrs :: [ConstrDecl] -> [Type] -> Either String ()
@@ -105,7 +109,8 @@ add'constrs'types result't (ConDecl name types : cons) t'env
   = add'constrs'types result't cons (Map.insert name scheme t'env)
     where
       type' = foldr TyArr result't types
-      scheme = ForAll [] type'
+      ty'params = Set.toList $ ftv type'
+      scheme = ForAll ty'params type'
 
 
 add'elim'type :: String -> [ConstrDecl] -> TypeEnv -> TypeEnv
