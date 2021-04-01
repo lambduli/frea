@@ -32,6 +32,8 @@ instance Substitutable Type where
     = TyTuple $ map (apply s) types
   apply s (TyList type')
     = TyList $ apply s type'
+  apply s (TyApp t'left t'right)
+    = TyApp (apply s t'left) (apply s t'right)
 
   ftv type' = case type' of
     TyVar name -> Set.singleton name
@@ -39,6 +41,7 @@ instance Substitutable Type where
     TyTuple ts -> foldl (\ set' t' -> Set.union set' (ftv t')) Set.empty ts
     TyList t -> ftv t
     TyArr left right -> ftv left `Set.union` ftv right
+    TyApp left right -> ftv left `Set.union` ftv right
 
 
 instance Substitutable Scheme where
