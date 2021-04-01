@@ -26,8 +26,10 @@ instance Show Type where
     = "(" ++ show left ++ ") -> " ++ show res'type
   show (TyArr arg'type res'type)
     = show arg'type ++ " -> " ++ show res'type
+  show (TyApp t'left t'right@(TyApp _ _))
+    = show t'left ++ " (" ++ show t'right ++ ")"
   show (TyApp t'left t'right)
-    = "(" ++ show t'left ++ " " ++ show t'right ++ ")"
+    = show t'left ++ " " ++ show t'right
 
 
 data Scheme
