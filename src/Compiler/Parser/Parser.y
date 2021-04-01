@@ -204,6 +204,7 @@ Type            ::  { Type }
                 |   TyArr                                           { $1 }
                 |   TyTuple                                         { $1 }
                 |   TyList                                          { $1 }
+                |   '(' TyApp ')'                                   { $2 }
                 |   '(' Type ')'                                    { $2 }
 
 TyArr           ::  { Type }
@@ -220,6 +221,8 @@ TyTuple         ::  { Type }
 TyList          ::  { Type }
                 :   '[' Type ']'                                    { TyList $2 }
 
+TyApp           ::  { Type }
+                :   Type OneOrMany(Type)                            { foldl TyApp $1 $2 }
 
 NoneOrMany(tok)
                 :   {- empty -}                                     { [] }
