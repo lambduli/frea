@@ -250,8 +250,9 @@ process'declarations declarations env t'env mem type'ctx = do
       add'types :: TypeEnv -> Declaration -> TypeEnv
       add'types t'env decl =
         case decl of
-          DataDecl name _ constrs ->
-            let t'env'  = add'constrs'types (TyCon name) constrs t'env
+          DataDecl name ty'params constrs ->
+            let res'type = foldl (\ t var -> TyApp t (TyVar var)) (TyCon name) ty'params
+                t'env'  = add'constrs'types res'type constrs t'env
                 t'env'' = add'elim'type name constrs t'env'
             in  t'env''
           _ -> t'env
