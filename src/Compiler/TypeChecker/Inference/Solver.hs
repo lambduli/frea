@@ -40,6 +40,7 @@ unify t1 t2 | t1 == t2 = return empty'subst
 unify (TyVar v) t = v `bind` t
 unify t (TyVar v) = v `bind` t
 unify (TyArr t1 t2) (TyArr t3 t4) = unifyMany [t1, t2] [t3, t4]
+unify (TyApp t1 t2) (TyApp t3 t4) = unifyMany [t1, t2] [t3, t4]
 unify (TyCon name'l) (TyCon name'r)
   | name'l == name'r = return empty'subst
   | otherwise = throwError $ UnifMismatch name'l name'r
@@ -76,6 +77,8 @@ name `occurs'in` (TyTuple ts)
 name `occurs'in` (TyList t)
   = name `occurs'in` t
 name `occurs'in` (TyArr left right)
+  = name `occurs'in` left || name `occurs'in` right
+name `occurs'in` (TyApp left right)
   = name `occurs'in` left || name `occurs'in` right
 
 

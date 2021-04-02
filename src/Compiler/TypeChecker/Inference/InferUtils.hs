@@ -82,6 +82,7 @@ normalize (ForAll type'args body) = ForAll (fmap snd ord) (normtype body)
   where
     ord = zip (Set.toList . ftv $ body) letters
 
+    normtype (TyApp a b) = TyApp (normtype a) (normtype b)
     normtype (TyArr a b) = TyArr (normtype a) (normtype b)
     normtype (TyCon a) = TyCon a
     normtype (TyTuple ts) = TyTuple $ map normtype ts

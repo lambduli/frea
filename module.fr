@@ -1,9 +1,52 @@
 magic = "Hello From Another Module"
 
+data Maybe a
+  = Nothing
+  | Just a
+
 
 data IMaybe
-  = Nothing
-  | Just Int
+  = INothing
+  | IJust Int
+
+
+data Either a b
+  = Left a
+  | Right b
+
+data Oneof a b c
+  = A a
+  | B b
+  | C c
+
+
+data Wrong a b -- (a :: * -> *) (b :: *)
+  = One (a b)
+  | Two b
+
+data Worse a -- (a :: * -> *)
+  = First (a Int)
+
+-- (First (Left 23)) :: forall a . Worse (Either Int) a
+-- tohle nedava smysl
+-- Either Int neni type, chybi tam dalsi parametr
+-- absolutne nechapu kam se jako ztratil
+-- 
+-- ale podle GHC je to spravne
+
+data Bad a -- (a :: * -> * -> *)
+  = Ba (a Int Char)
+
+data Boo a b c = Bo (a b c)
+
+data Coo a = Co a
+
+
+data Malformed b = Con (Either b)
+
+
+data Experiment
+  = Try [Int]
 
 
 data IList
@@ -22,8 +65,8 @@ showMaybe maybe = (which-IMaybe maybe
 
 
 ihead lst =  (which-IList lst
-              Nothing
-              (\ h t -> (Just h)))
+              INothing
+              (\ h t -> (IJust h)))
 
 
 imap fn lst =  (which-IList lst
@@ -52,7 +95,7 @@ list = (1 ::: (2 ::: (3 ::: (4 ::: (5 ::: Nil)))))
 double n = (n * 2)
 
 
-If bool thenn elsee = (which-Boolean bool
+iif bool thenn elsee = (which-Boolean bool
                         thenn
                         elsee)
 
@@ -61,5 +104,5 @@ fact n = if (n == 0) then 1 else (n * (fact (n - 1)))
 
 
 mayAdd n maybe = (which-IMaybe maybe
-                  Nothing
-                  (\ v -> (Just (v + n))))
+                  INothing
+                  (\ v -> (IJust (v + n))))
