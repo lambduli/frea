@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 472a0b5a3911d1fb1bff0bc017fe35871eab96faeaf22cb61f0b6c9fa3fcca17
+-- hash: eeb0bacf014fc663203103598b998114624067b74c18efa36ec8e4f985f041b0
 
 name:           frea
 version:        0.1.0.0
@@ -29,6 +29,15 @@ source-repository head
 
 library
   exposed-modules:
+      Compiler.KindChecker.Constraint
+      Compiler.KindChecker.Infer
+      Compiler.KindChecker.Inference
+      Compiler.KindChecker.InferState
+      Compiler.KindChecker.InferUtils
+      Compiler.KindChecker.KindEnv
+      Compiler.KindChecker.KindError
+      Compiler.KindChecker.Solver
+      Compiler.KindChecker.Substituable
       Compiler.Parser.Lexer
       Compiler.Parser.Parser
       Compiler.Parser.Token
