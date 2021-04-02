@@ -36,3 +36,15 @@ snd a  = ((#snd) a)
 data Boolean
   = True
   | False
+
+data Either a b
+  = Left a
+  | Right b
+
+-- data Aoo x y z = Bo (x y) z
+
+data Boo x y z = Bo (x y z) -- | Bu y z
+
+-- data Malformed x = Malformed (Either x)
+
+-- data Coo a = Co a
