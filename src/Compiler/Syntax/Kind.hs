@@ -10,5 +10,6 @@ data Kind
 
 instance Show Kind where
   show Star = "*"
+  show (KArr k'dom@(KArr _ _) k'codom) = "(" ++ show k'dom ++ ") -> " ++ show k'codom
   show (KArr k'dom k'codom) = show k'dom ++ " -> " ++ show k'codom
   show (KVar name) = name ++ "?"
