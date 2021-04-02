@@ -121,7 +121,17 @@ infer'data environment bindings =
         Left err -> Left err
         Right subst -> do
           let env' = apply subst $ environment `Map.union` Map.fromList kind'bindings
-          return env'
+          let env'' = assume'star env'
+          return env''
+
+
+assume'star :: KindEnv -> KindEnv
+assume'star env = Map.map assume'star' env
+  where
+    assume'star' :: Kind -> Kind
+    assume'star' Star = Star
+    assume'star' (KVar _) = Star
+    assume'star' (KArr left right) = KArr (assume'star' left) (assume'star' right)
 
 
 run'infer :: KindEnv -> Infer ([(String, Kind)], [Constraint]) -> Either KindError ([(String, Kind)], [Constraint])
