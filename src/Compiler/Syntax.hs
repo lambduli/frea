@@ -7,6 +7,7 @@ module Compiler.Syntax
   , Pattern(..)
   , Sig(..)
   , Type(..), Scheme(..)
+  , Kind(..)
   ) where
 
 import {-# SOURCE #-} Compiler.Syntax.Bind (Bind(..))
@@ -17,3 +18,4 @@ import {-# SOURCE #-} Compiler.Syntax.MatchGroup (MatchGroup(..), Match(..))
 import {-# SOURCE #-} Compiler.Syntax.Pattern (Pattern(..))
 import Compiler.Syntax.Signature (Sig(..))
 import Compiler.Syntax.Type (Type(..), Scheme(..))
+import Compiler.Syntax.Kind
