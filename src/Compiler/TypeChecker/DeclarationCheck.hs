@@ -16,6 +16,9 @@ import Compiler.TypeChecker.Inference.Substituable
 
 import Interpreter.Evaluate
 
+import Compiler.KindChecker.KindEnv
+import Compiler.TypeChecker.Inference.TypeOf
+
 import Debug.Trace
 
 
@@ -113,14 +116,14 @@ add'constrs'types result't (ConDecl name types : cons) t'env
       scheme = ForAll ty'params type'
 
 
-add'elim'type :: String -> [ConstrDecl] -> TypeEnv -> TypeEnv
-add'elim'type name constructors t'env =
+add'elim'type :: String -> Type -> [ConstrDecl] -> TypeEnv -> TypeEnv
+add'elim'type name result't constructors t'env =
   let elim'name     = "which-" ++ name
-      res           = TyVar "a"
+      res           = TyVar "@:z" -- TODO: this needs to be fresh variable!!! -- for now making it somehow hard to mix up with anything
       destr'type (ConDecl name types) = foldr TyArr res types
       destrs'types  = map destr'type constructors
-      which'type    = (TyCon name) `TyArr` (foldr TyArr res destrs'types)
-      scheme        = ForAll ["a"] which'type
+      which'type    = result't `TyArr` (foldr TyArr res destrs'types)
+      scheme        = ForAll (Set.toList $ ftv which'type) which'type
       -- TODO: it would be much better to not create the scheme HERE
       -- it would also be much better to use already implemented functions like generalize and so
       -- TODO: once I implement higher kinded types, list of the free type variables needs to reflect that
@@ -159,12 +162,16 @@ add'elim'type name constructors t'env =
 --   in (env', t'env')
 
 
-process'declarations :: [Declaration] -> Val.Env -> TypeEnv -> Val.Memory -> [Type] -> Either String (Val.Env, TypeEnv, [Type], Val.Memory)
-process'declarations declarations env t'env mem type'ctx = do
+process'declarations :: [Declaration] -> Val.Env -> TypeEnv -> KindEnv -> Val.Memory -> [Type] -> Either String (Val.Env, TypeEnv, KindEnv, [Type], Val.Memory)
+process'declarations declarations env t'env k'env mem type'ctx = do
   -- ze vseho nejdriv type checknu data deklarace
-  let type'ctx' = foldl collect'types type'ctx declarations
-  type'check'data'types type'ctx declarations
-  
+  -- let type'ctx' = foldl collect'types type'ctx declarations
+  -- type'check'data'types type'ctx declarations
+
+  k'env' <- case infer'decls declarations k'env of
+    Left k'err -> Left $ show k'err
+    Right k'env' -> Right k'env'
+
   -- nejdriv musim vyrobit Env
   -- ten obsahuje jenom identifikatory a adresy
   let env' = foldl register'declarations env declarations
@@ -193,7 +200,7 @@ process'declarations declarations env t'env mem type'ctx = do
   -- so don't worry about removing it later
   -- or fixing it, for that matter
 
-  return (env', t'env', type'ctx, mem')
+  return (env', t'env', k'env', type'ctx, mem')
 
     where
       collect'types :: [Type] -> Declaration -> [Type]
@@ -253,7 +260,7 @@ process'declarations declarations env t'env mem type'ctx = do
           DataDecl name ty'params constrs ->
             let res'type = foldl (\ t var -> TyApp t (TyVar var)) (TyCon name) ty'params
                 t'env'  = add'constrs'types res'type constrs t'env
-                t'env'' = add'elim'type name constrs t'env'
+                t'env'' = add'elim'type name res'type constrs t'env'
             in  t'env''
           _ -> t'env
 

@@ -17,6 +17,11 @@ import Compiler.TypeChecker.Inference.Constraint
 import Compiler.TypeChecker.Inference.TypeEnv
 import Compiler.TypeChecker.Inference.InferUtils
 
+import Compiler.KindChecker.KindEnv
+import Compiler.KindChecker.Inference hiding (infer)
+import Compiler.KindChecker.KindError
+
+
 
 -- TODO: this will be gone!
 -- infer'env :: [Declaration] -> TypeEnv -> Either TypeError TypeEnv
@@ -50,6 +55,22 @@ infer'env binds t'env = do
 
       to'pair :: Declaration -> (String, Expression)
       to'pair (Binding name expr) = (name, expr)
+
+
+infer'decls :: [Declaration]  -> KindEnv -> Either KindError KindEnv
+infer'decls binds k'env = do
+  let only'data = filter is'data binds
+      data'pairs = map to'pair only'data
+
+  infer'data k'env data'pairs
+  
+    where
+      is'data :: Declaration -> Bool
+      is'data (DataDecl _ _ _) = True
+      is'data _ = False
+
+      to'pair :: Declaration -> (String, Declaration)
+      to'pair d@(DataDecl name _ _) = (name, d)
 
 
 infer'top :: TypeEnv -> [(String, Expression)] -> Either TypeError TypeEnv
