@@ -118,7 +118,7 @@ _____
 
 ## Custom Data Types
 
-You can you a keyword `data` to define you own data types. Higher Kinded types are yet to be implemented, so you can only define nullary types. For example:
+You can use a keyword `data` to define you own data types. For example:
 
 ```haskell
 data Boolean
@@ -126,20 +126,27 @@ data Boolean
   | False
 ```
 
-or a monomorphic linked list:
+or a polymorphic linked list:
 
 ```haskell
-data IntList
+data List a
   = Nil
-  | Int : IntList
+  | a : List
 ```
+
+> The type parameters in the data declaration must be a lower-case-starting identifiers - true variables. 
+
 _____
 
 ## Expressions:
 
-> Operator names can start with these symbols `!` `$` `#` `%` `&` `*` `+` `.` `/` `<` `=` `>` `?` `@` `\` `^` `|` `-` `~` `:` `;`, they can also contain ordinary alphabetical characters.
+> Operator names can start with these symbols `!` `$` `#` `%` `&` `*` `+` `.` `/` `<` `=` `>` `?` `@` `\` `^` `|` `-` `~` `;`, they can also contain ordinary alphabetical characters.
 
-> Variable names can start with lower and upper case letters and can contain those and symbols and numbers.
+> Constructor operator's names start with `:` and can contain other symbols and alphabetical characters.
+
+> Variable names must start with lower case letter and can contain those, upper case letters and symbols and numbers.
+
+> Constructor names must start with upper case letter and can contain those, lower case letters and symbols and numbers.
 
 ### Conditionals
 ```haskell
@@ -279,7 +286,7 @@ forever n = (forever n)
 
 result = (forever 0)
 
-lst = (result : [1, 2, 3])
+lst = (result .: [1, 2, 3])
 
 (lst !! 1)
 ```
