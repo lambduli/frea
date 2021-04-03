@@ -54,6 +54,7 @@ import Compiler.Syntax.Type
   varid         { TokVarLower $$ }
   conid         { TokVarUpper $$ }
   op            { TokOperator $$ }
+  opcon         { TokOpConstr $$ }
   symid         { TokNativeSym $$ }
   elim          { TokEliminator $$ }
 
@@ -97,9 +98,9 @@ Constructors    ::  { [ConstrDecl] }
 
 Constr          ::  { ConstrDecl }
                 :   UpIdent NoneOrMany(Type)                        { ConDecl $1 $2 }
-                |   '(' Op ')' NoneOrMany(Type)                     { ConDecl $2 $4 }
-                |   Type Op Type                                    { ConDecl $2 [$1, $3] }
-                |   Type '`' LowIdent '`' Type                      { ConDecl $3 [$1, $5] }
+                -- |   '(' Op ')' NoneOrMany(Type)                     { ConDecl $2 $4 }
+                |   Type OpCon Type                                 { ConDecl $2 [$1, $3] }
+                |   Type '`' Con '`' Type                           { ConDecl $3 [$1, $5] }
 
 ConstrOther     ::  { ConstrDecl }
                 :   '|' Constr                                      { $2 }
@@ -113,6 +114,7 @@ LowIdent        ::  { String }
 
 UpIdent         ::  { String }
                 :   Con                                             { $1 }
+                |   '(' opcon ')'                                   { $2 }
 
 Var             ::  { String }
                 :   varid                                           { $1 }
@@ -125,10 +127,14 @@ Op              ::  { String }
                 |   op                                              { $1 }
                 |   '|'                                             { "|" }
 
+OpCon           ::  { String }
+                :   opcon                                           { $1 }
+
 Oper            ::  { Expression }
                 :   symid                                           { Op $1 }
                 |   op                                              { Var $1 }
                 |   '|'                                             { Var "|" }
+                |   opcon                                           { Var $1 }
 
 Exp             ::  { Expression }
                 :   Var                                             { Var $1 }
@@ -136,12 +142,16 @@ Exp             ::  { Expression }
                 --  Note: Consider adding Constructor Expression for this ^^^
                 -- |   '(' Oper ')'                                    { $2 }
                 |   '(' op ')'                                      { Var $2 }
+                |   '(' opcon ')'                                   { Var $2 }
+                --  Note: Consider adding Constructor Expression for this ^^^
                 |   '(' symid ')'                                   { Op $2 }
                 -- NOTE: To resolve 2 R/R conflicts
                 |   Lit                                             { Lit $1 }
                 |   lambda Params '->' Exp                          { foldr (\ arg body -> Lam arg body) $4 $2 }
 
                 |   Exp '`' Var '`' Exp                             { App (App (Var $3) $1) $5 }
+                |   Exp '`' Con '`' Exp                             { App (App (Var $3) $1) $5 }
+                --  Note: Consider adding Constructor Expression for this ^^^
                 |   Exp Oper Exp                                    { App (App $2 $1) $3 }
                 |   '(' Exp OneOrMany(Exp) ')'                      { foldl App $2 $3 }
                 --  NOTE: what about (fn) ? you can't call a function without arguments!
