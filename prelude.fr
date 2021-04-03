@@ -18,7 +18,7 @@ a `div` b = ((#div) (a, b))
 a / b  = ((#/) (a, b))
 
 a ++ b  = ((#++) (a, b))
-a : b  = ((#:) (a, b))
+a .: b  = ((#:) (a, b))
 
 head a  = ((#head) a)
 tail a  = ((#tail) a)
@@ -40,6 +40,14 @@ data Boolean
 data Either a b
   = Left a
   | Right b
+
+data Maybe a
+  = Nothing
+  | Just a
+
+data List a
+  = Nil
+  | a : (List a)
 
 -- data Aoo x y z = Bo (x y) z
 
