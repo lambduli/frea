@@ -35,6 +35,7 @@ data Token
   -- | TokConstrId String
   | TokNativeSym String
   | TokOperator String
+  | TokOpConstr String
   
 
   -- special symbols

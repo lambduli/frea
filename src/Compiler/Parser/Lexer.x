@@ -19,7 +19,7 @@ $hexit      = [a-f A-F $digit]
 $lower  = [a-z]
 $upper  = [A-Z]
 
-$symbol  = [ \! \$ \# \% \& \* \+ \. \/ \< \= \> \? \@ \\ \^ \| \- \~ \: \; ]
+$symbol  = [ \! \$ \# \% \& \* \+ \. \/ \< \= \> \? \@ \\ \^ \| \- \~ \; ]
 
 $identchar    = [$lower $upper $digit $symbol]
 
@@ -27,7 +27,9 @@ $identchar    = [$lower $upper $digit $symbol]
 
 @constrident        = $upper $identchar*
 
-@operator     = $symbol [$lower $upper $symbol]*
+@operator     = $symbol [$lower $upper $symbol \:]*
+
+@opconstr     = [\:] [$symbol $lower $upper \:]*
 
 $space  = [\ \t\f\v]
 
@@ -109,6 +111,7 @@ token :-
 <0>         @variableident  { parametrizedTok TokVarLower id }
 <0>         @constrident    { parametrizedTok TokVarUpper id }
 <0>         @operator       { parametrizedTok TokOperator id }
+<0>         @opconstr       { parametrizedTok TokOpConstr id }
 
 <0>         \n              ;
 <0>         $space+         ;
