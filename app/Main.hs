@@ -39,7 +39,7 @@ main :: IO ()
 main = do
   putStrLn "Glamorous Frea REPL."
   putStrLn ""
-  load "prelude.fr" empty'env empty't'env empty'k'env empty'memory
+  load "prelude.frea" empty'env empty't'env empty'k'env empty'memory
 
 
 readExpression :: IO String
