@@ -131,7 +131,7 @@ or a polymorphic linked list:
 ```haskell
 data List a
   = Nil
-  | a : List
+  | a : (List a)
 ```
 
 > The type parameters in the data declaration must be a lower-case-starting identifiers - true variables. 
