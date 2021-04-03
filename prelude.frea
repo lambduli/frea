@@ -18,7 +18,7 @@ a `div` b = ((#div) (a, b))
 a / b  = ((#/) (a, b))
 
 a ++ b  = ((#++) (a, b))
-a .: b  = ((#:) (a, b))
+a `cons` b  = ((#:) (a, b))
 
 head a  = ((#head) a)
 tail a  = ((#tail) a)

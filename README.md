@@ -16,7 +16,7 @@ let
   double x = (2 * x)
   map lst fn = if (nil? lst)
                 then []
-                else ((fn (head lst)) : (map (tail lst) fn))
+                else ((fn (head lst)) `cons` (map (tail lst) fn))
 in (map list double)
 ```
 ### Factorial of 5
@@ -286,7 +286,7 @@ forever n = (forever n)
 
 result = (forever 0)
 
-lst = (result .: [1, 2, 3])
+lst = (result `cons` [1, 2, 3])
 
 (lst !! 1)
 ```
