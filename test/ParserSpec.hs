@@ -21,9 +21,9 @@ spec = describe "Test the parser" $ do
   it "Parses a single string" $ do
     "\"hello\"" <=> Lit (LitString "hello")
   it "Parses a single boolean (True)" $ do
-    "#t" <=> Lit (LitBool True)
+    "True" <=> Var "True"
   it "Parses a single boolean (False)" $ do
-    "#f" <=> Lit (LitBool False)
+    "False" <=> Var "False"
   it "Parses a single unit" $ do
     "()" <=> Lit LitUnit
   it "Parses a single empty list" $ do
@@ -31,15 +31,15 @@ spec = describe "Test the parser" $ do
   it "Parses a single short list" $ do
     "[1, 2]" <=> List [Lit (LitInt 1), Lit (LitInt 2)]
   it "Parses a single tuple (Pair) of values" $ do
-    "(23, #t)" <=> Tuple [Lit (LitInt 23), Lit (LitBool True)]
+    "(23, True)" <=> Tuple [Lit (LitInt 23), Var "True"]
   
   it "Parses a lambda function" $ do
     "\\ a b -> a" <=>
       Lam "a" (Lam "b" (Var "a"))
 
   it "Parses an if expression" $ do
-    "if #t then 23 else 42" <=>
-      If (Lit (LitBool True)) (Lit (LitInt 23)) (Lit (LitInt 42))
+    "if True then 23 else 42" <=>
+      If (Var "True") (Lit (LitInt 23)) (Lit (LitInt 42))
 
   it "Parses a simple let expression" $ do
     "let a = 23 in a" <=>
