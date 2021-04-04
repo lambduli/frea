@@ -33,7 +33,7 @@ a !! b  = if (b == 0) then (head a) else ((tail a) !! (b - 1))
 fst a  = ((#fst) a)
 snd a  = ((#snd) a)
 
-data Boolean
+data Bool
   = True
   | False
 

@@ -94,8 +94,8 @@ token :-
 <0>         "#head"         { plainTok $ TokNativeSym "#head" }
 <0>         "#tail"         { plainTok $ TokNativeSym "#tail" }
 <0>         "#nil?"         { plainTok $ TokNativeSym "#nil?" }
-<0>         "#t"            { plainTok $ TokBool True }
-<0>         "#f"            { plainTok $ TokBool False }
+-- <0>         "#t"            { plainTok $ TokBool True }
+-- <0>         "#f"            { plainTok $ TokBool False }
 <0>         "#show"         { plainTok $ TokNativeSym "#show" }
 
 -- <0>         "#showint"      { plainTok $ TokNativeSym "#showint" }

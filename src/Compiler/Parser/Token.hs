@@ -52,7 +52,7 @@ data Token
   | TokChar Char -- 'a'
   | TokDouble Double -- 0.23
   | TokString String -- "string"
-  | TokBool Bool -- #t / #f
+  -- | TokBool Bool -- #t / #f
   | TokUnit -- ()
 
 

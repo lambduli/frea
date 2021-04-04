@@ -72,7 +72,7 @@ import Compiler.Syntax.Type
   char          { TokChar $$ }
   double        { TokDouble $$ }
   string        { TokString $$ }
-  bool          { TokBool $$ }
+  -- bool          { TokBool $$ }
 
   assume        { TokAssume }
   rec           { TokRec }
@@ -199,7 +199,7 @@ Lit             ::  { Lit }
                 |   Double                                          { $1 }
                 |   char                                            { LitChar $1 }
                 |   string                                          { LitString $1 }
-                |   bool                                            { LitBool $1 }
+                -- |   bool                                            { LitBool $1 }
                 |   unit                                            { LitUnit }
 
 Integer         ::  { Lit }
