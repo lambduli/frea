@@ -2,6 +2,7 @@ module InferenceSpec where
 
 import Test.Hspec
 import System.Exit
+import qualified Data.Map.Strict as Map
 
 import Compiler.Parser.Parser (parse'expr)
 import Compiler.Syntax.Expression
@@ -9,8 +10,15 @@ import Compiler.Syntax.Type
 import Compiler.TypeChecker.TypeError
 import Compiler.Syntax.Literal
 
-import Compiler.TypeChecker.Inference.TypeOf (typeof)
+import Compiler.TypeChecker.Inference.TypeOf (typeof, infer'expression)
 import Compiler.TypeChecker.Type
+import Compiler.TypeChecker.Inference.TypeEnv
+
+
+env :: TypeEnv
+env = empty't'env `Map.union` Map.fromList
+  [ ("True", ForAll [] (TyCon "Bool"))
+  , ("False", ForAll [] (TyCon "Bool")) ]
 
 
 spec :: Spec
@@ -23,7 +31,7 @@ spec = describe "Test the inference" $ do
     typeof (List []) `shouldBe` Right (ForAll ["a"] $ TyList (TyVar "a"))
 
   it "Infers the type of a tuple" $
-    typeof (Tuple [Lit (LitInt 23), Lit (LitBool True), Lit (LitChar 'a')])
+    infer'expression env (Tuple [Lit (LitInt 23), Var "True", Lit (LitChar 'a')])
     `shouldBe`
     Right (ForAll [] $ TyTuple [t'Int, t'Bool, t'Char])
 
@@ -37,7 +45,7 @@ spec = describe "Test the inference" $ do
     "\\ x -> let (+) = (\\ a b -> ((#+) (a, b))) y = (x + 1) in y" <::> ForAll [] (TyArr t'Int t'Int)
 
   it "Infers the type of an equality check (on Int) inside the lambda" $
-    "(\\ x -> if ((#=) (x, 23)) then #t else #f)" <::> ForAll [] (TyArr t'Int t'Bool)
+    "(\\ x -> if ((#=) (x, 23)) then True else False)" <::> ForAll [] (TyArr t'Int t'Bool)
 
   it "Infers the type of polymorphic equality check inside the lambda" $
     "(\\ x y -> ((#=) (x, y)))" <::> ForAll ["a"] (TyVar "a" `TyArr` (TyVar "a" `TyArr` t'Bool))
@@ -60,5 +68,5 @@ infix 4 <::>
   case parse'expr expr of
     Left cmd -> exitFailure
     Right ast ->
-      typeof ast
+      infer'expression env ast
         `shouldBe` Right scheme

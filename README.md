@@ -47,31 +47,31 @@ Language supports:
 ```haskell
 frea λ > :t -23
 
-:: Int
+-23 :: Int
 ```
 ```haskell
 frea λ > :t 23.23
 
-:: Double
+23.23 :: Double
 ```
 ```haskell
-frea λ > :t #t
+frea λ > :t True
 
-:: Bool
+True :: Bool
 
-frea λ > :t #f
+frea λ > :t False
 
-:: Bool
+False :: Bool
 ```
 ```haskell
 frea λ > :t 'c'
 
-:: Char
+'c' :: Char
 ```
 ```haskell
 frea λ > :t "hello world"
 
-:: String
+"hello world" :: String
 ```
 
 ## Some More Interesting Ones
@@ -79,31 +79,31 @@ frea λ > :t "hello world"
 ```haskell
 frea λ > :t [1, 2, 3]
 
-:: [Int]
+[1, 2, 3] :: [Int]
 ```
 ### Tuples of arbitrary size
 ```haskell
 frea λ > :t (1, "string", 'c')
 
-:: (Int, String, Char)
+(1, "string", 'c') :: (Int, String, Char)
 ```
 ### Unit
 ```haskell
 frea λ > :t ()
 
-:: Unit
+() :: Unit
 ```
 ### Functions of course
 ```haskell
 frea λ > :t (\ int -> (int + 1))
 
-:: Int -> Int
+(\ int -> (int + 1)) :: Int -> Int
 ```
 ### Operators
 ```haskell
 frea λ > :t (+)
 
-:: Int -> Int -> Int
+(+) :: Int -> Int -> Int
 ```
 > The built-in "binary" operators (those starting with #) accept a single tuple and can not be used in infix. Therefore they must be wrapped in parenteses to work in the prefix notation.
 
@@ -118,10 +118,12 @@ _____
 
 ## Custom Data Types
 
-You can use a keyword `data` to define you own data types. For example:
+You can use a keyword `data` to define you own data types.
+
+For example this is how the `Bool` type is defined in the `prelude.frea`:
 
 ```haskell
-data Boolean
+data Bool
   = True
   | False
 ```
@@ -150,14 +152,14 @@ _____
 
 ### Conditionals
 ```haskell
-frea λ > if #t then 23 else 42
+frea λ > if True then 23 else 42
 
 23
 ```
 
 ### Let in expression
 ```haskell
-frea λ > let name = "Frea" in (name . " is awesome!")
+frea λ > let name = "Frea" in (name  ++ " is awesome!")
 
 "Frea is awesome!"
 ```

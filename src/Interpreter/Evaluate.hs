@@ -109,8 +109,8 @@ evaluate expr env =
         res <- force cond' env
         case res of
           Left err -> return $ Left err
-          Right (Val.Lit (LitBool b)) ->
-            if b then evaluate then' env else evaluate else' env) env
+          Right (Val.Data con'name []) -> -- wiring the Bool into the type checker
+            if con'name == "True" then evaluate then' env else evaluate else' env) env
 
     Fix expr ->
       return $ Right $ Val.Thunk (\ env -> evaluate (App expr $ Fix expr) env) env
@@ -173,29 +173,31 @@ apply'operator "#=" (Val.Tuple [val'l, val'r]) env = do
   res'l <- force'val val'l
   res'r <- force'val val'r
   case (res'l, res'r) of
-    (Right (Val.Lit lit'l), Right (Val.Lit lit'r)) -> return $ Right $ Val.Lit (LitBool (lit'l == lit'r))
+    (Right (Val.Lit lit'l), Right (Val.Lit lit'r)) ->
+      return $ Right $ Val.to'val'bool (lit'l == lit'r) -- wiring the Bool into the typechecker
     (Right _, Left err) -> return $ Left err
     (Left err, _) -> return $ Left err
 
 apply'operator "#&&" (Val.Tuple [val'l, val'r]) env = do
   res'l <- force'val val'l
   case res'l of
-    Right (Val.Lit (LitBool b))
-        | b -> return $ Right val'r
-        | otherwise  -> return $ Right $ Val.Lit $ LitBool False
+    Right b -- wiring the Bool into the typechecker
+        | Val.from'val'bool b -> return $ Right val'r
+        | otherwise  -> return $ Right $ Val.to'val'bool False
 
 apply'operator "#||" (Val.Tuple [val'l, val'r]) env = do
   res'l <- force'val val'l
   case res'l of
-    Right (Val.Lit (LitBool b))
-      | not b -> return $ Right val'r
-      | otherwise  -> return $ Right $ Val.Lit $ LitBool True
+    Right b -- wiring the Bool into the typechecker
+      | Val.from'val'bool b -> return $ Right val'r
+      | otherwise  -> return $ Right $ Val.to'val'bool True
 
 apply'operator "#<" (Val.Tuple [val'l, val'r]) env = do
   res'l <- force'val val'l
   res'r <- force'val val'r
   case (res'l, res'r) of
-    (Right (Val.Lit lit'l), Right (Val.Lit lit'r)) -> return $ Right $ Val.Lit (LitBool (lit'l < lit'r))
+    (Right (Val.Lit lit'l), Right (Val.Lit lit'r)) -> -- wiring the Bool into the typechecker
+      return $ Right $ Val.to'val'bool (lit'l < lit'r)
     (Right _, Left err) -> return $ Left err
     (Left err, _) -> return $ Left err
 
@@ -203,7 +205,8 @@ apply'operator "#>" (Val.Tuple [val'l, val'r]) env = do
   res'l <- force'val val'l
   res'r <- force'val val'r
   case (res'l, res'r) of
-    (Right (Val.Lit lit'l), Right (Val.Lit lit'r)) -> return $ Right $ Val.Lit (LitBool (lit'l > lit'r))
+    (Right (Val.Lit lit'l), Right (Val.Lit lit'r)) -> -- wiring the Bool into the typechecker
+      return $ Right $ Val.to'val'bool (lit'l > lit'r)
     (Right _, Left err) -> return $ Left err
     (Left err, _) -> return $ Left err
 
@@ -322,16 +325,16 @@ apply'operator "#tail" (Val.Lit (LitString (e : es))) env
   = return $ Right $ Val.Thunk (\ _ -> return $ Right $ Val.Lit $ LitString es) env
 
 apply'operator "#nil?" (Val.List []) env
-  = return $ Right $ Val.Thunk (\ _ -> return $ Right $ Val.Lit $ LitBool True) env
+  = return $ Right $ Val.Thunk (\ _ -> return $ Right $ Val.to'val'bool True) env -- wiring the Bool into the typechecker
 
 apply'operator "#nil?" (Val.Lit (LitString "")) env
-  = return $ Right $ Val.Thunk (\ _ -> return $ Right $ Val.Lit $ LitBool True) env
+  = return $ Right $ Val.Thunk (\ _ -> return $ Right $ Val.to'val'bool True) env -- wiring the Bool into the typechecker
 
 apply'operator "#nil?" (Val.List (e : es)) env
-  = return $ Right $ Val.Thunk (\ _ -> return $ Right $ Val.Lit $ LitBool False) env
+  = return $ Right $ Val.Thunk (\ _ -> return $ Right $ Val.to'val'bool False) env -- wiring the Bool into the typechecker
 
 apply'operator "#nil?" (Val.Lit (LitString (e : es))) env
-  = return $ Right $ Val.Thunk (\ _ -> return $ Right $ Val.Lit $ LitBool False) env
+  = return $ Right $ Val.Thunk (\ _ -> return $ Right $ Val.to'val'bool False) env -- wiring the Bool into the typechecker
 
 apply'operator "#fst" (Val.Tuple [f, s]) env
   = return $ Right $ Val.Thunk (\ _ -> return $ Right f) env

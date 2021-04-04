@@ -30,7 +30,6 @@ infer expr = case expr of
   Lit (LitDouble d) -> return (t'Double, [])
   Lit (LitChar ch) -> return (t'Char, [])
   Lit (LitString s) -> return (TyList t'Char, [])
-  Lit (LitBool b) -> return (t'Bool, [])
   Lit LitUnit -> return (t'Unit, [])
 
   (Var x) -> do
