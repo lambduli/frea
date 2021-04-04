@@ -55,11 +55,11 @@ frea λ > :t 23.23
 :: Double
 ```
 ```haskell
-frea λ > :t #t
+frea λ > :t True
 
 :: Bool
 
-frea λ > :t #f
+frea λ > :t False
 
 :: Bool
 ```
