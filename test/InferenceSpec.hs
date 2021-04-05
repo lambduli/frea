@@ -56,8 +56,9 @@ spec = describe "Test the inference" $ do
     "(\\ x -> (1, x))" <::> ForAll ["a"] (TyVar "a" `TyArr` TyTuple [t'Int, TyVar "a"])
 
   -- it "Infers the type of a list of applications" $
-  --   "let fn = (\\ i -> i) in [(fn 23), (fn ((#+) (23, 1))), (fn 42)]" <::> ForAll [] (TyApp (TyCon "List") t'Int)
+  --  "let fn = (\\ i -> i) in [(fn 23), (fn ((#+) (23, 1))), (fn 42)]" <::> ForAll [] (TyApp (TyCon "List") t'Int)
   -- TODO: uncomment once you get rid of the FIX expression in the let declarations
+  -- NOTE: I am not sure what's going in, in the REPL it works just fine.
 
   -- TODO: add more test with infix operators and functions 
   it "Infers the type of a let with infix function expression" $
