@@ -76,7 +76,10 @@ infer'expression env expr = case runInfer env (infer expr) of
 infer'many :: [(String, Expression)] -> Infer ([(String, Type)], [Constraint])
 infer'many bindings = do
   let names = map fst bindings
-      gener name = do ForAll [] <$> fresh
+      gener name = do
+        var <- fresh
+        let (TyVar var'name) = var
+        return $ ForAll [var'name] (TyVar var'name)
   fresh'vars <- mapM gener names
   merge'into'env (zip names fresh'vars) $ infer'many' bindings
   
