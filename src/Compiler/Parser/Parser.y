@@ -166,7 +166,7 @@ Exp             ::  { Expression }
                 |   letrec LowIdent Params '=' Exp in Exp           { Let $2 (Fix $ foldr (\ arg body -> Lam arg body) $5 ($2 : $3)) $7 }
                 -- TODO: do the same for letrec
                 |   '(' Exp CommaSeparated(Exp) ')'                 { Tuple $ $2 : $3 }
-                |   '[' OneOrManySeparated(Exp) ']'                 { foldr (\ item acc -> App (App (Var ":") item) acc ) (Var "[]") $2 }
+                |   '[' NoneOrManySeparated(Exp) ']'                 { foldr (\ item acc -> App (App (Var ":") item) acc ) (Var "[]") $2 }
                 -- wiring the List type into the compiler
 
 Binding         ::  { (String, Expression) }
@@ -246,12 +246,9 @@ CommaSeparated(tok)
                 :   ',' tok                                         { [$2] }
                 |   ',' tok CommaSeparated(tok)                     { $2 : $3 }
 
-OneOrManySeparated(tok)
-                :   tok                                             { [$1] }
-                |   tok ',' NoneOrManySeparated(tok)                { $1 : $3 }
-
 NoneOrManySeparated(tok)
                 :   {- empty -}                                     { [] }
+                |   tok                                             { [$1] }
                 |   tok ',' NoneOrManySeparated(tok)                { $1 : $3 }
 
 {
