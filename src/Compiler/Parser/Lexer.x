@@ -68,6 +68,7 @@ token :-
 <0>         "()"            { plainTok TokUnit }
 <0>         "("             { plainTok TokLeftParen }
 <0>         ")"             { plainTok TokRightParen }
+<0>         "[" $space* "]" { parametrizedTok TokVarUpper (const "[]") }
 <0>         "["             { plainTok TokLeftBracket }
 <0>         "]"             { plainTok TokRightBracket }
 <0>         ","             { plainTok TokComma }
@@ -87,13 +88,8 @@ token :-
 <0>         "#*."           { plainTok $ TokNativeSym "#*." }
 <0>         "#div"          { plainTok $ TokNativeSym "#div" }
 <0>         "#/"            { plainTok $ TokNativeSym "#/" }
-<0>         "#++"           { plainTok $ TokNativeSym "#++" }
-<0>         "#:"            { plainTok $ TokNativeSym "#:" }
 <0>         "#fst"          { plainTok $ TokNativeSym "#fst" }
 <0>         "#snd"          { plainTok $ TokNativeSym "#snd" }
-<0>         "#head"         { plainTok $ TokNativeSym "#head" }
-<0>         "#tail"         { plainTok $ TokNativeSym "#tail" }
-<0>         "#nil?"         { plainTok $ TokNativeSym "#nil?" }
 <0>         "#show"         { plainTok $ TokNativeSym "#show" }
 
 -- <0>         "#showint"      { plainTok $ TokNativeSym "#showint" }

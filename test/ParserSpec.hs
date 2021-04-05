@@ -27,9 +27,9 @@ spec = describe "Test the parser" $ do
   it "Parses a single unit" $ do
     "()" <=> Lit LitUnit
   it "Parses a single empty list" $ do
-    "[]" <=> List []
+    "[]" <=> Var "[]"
   it "Parses a single short list" $ do
-    "[1, 2]" <=> List [Lit (LitInt 1), Lit (LitInt 2)]
+    "[1, 2]" <=> App (App (Var ":") (Lit (LitInt 1))) (App (App (Var ":") (Lit (LitInt 2))) (Var "[]"))
   it "Parses a single tuple (Pair) of values" $ do
     "(23, True)" <=> Tuple [Lit (LitInt 23), Var "True"]
   

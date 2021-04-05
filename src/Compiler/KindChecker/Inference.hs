@@ -86,10 +86,6 @@ infer (DataDecl t'name t'params constructors) = do
             let constraints = zip (replicate len Star) kinds
 
             return (Star, constraints)
-          TyList type' -> do
-            -- tady musim to co u tuplu udelat u jedinyho typu
-            (k, cs) <- infer'type type'
-            return (Star, (Star, k) : cs)
           TyArr left right -> do
             -- tady prijde na radu rekurze
             -- tohle by zrovna melo bejt jednoduchy

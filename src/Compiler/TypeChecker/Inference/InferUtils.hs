@@ -17,6 +17,9 @@ import Compiler.TypeChecker.Inference.InferState
 import Compiler.TypeChecker.TypeError
 
 
+import Debug.Trace
+
+
 letters :: [String]
 letters = [1..] >>= flip replicateM ['a'..'z']
 
@@ -86,7 +89,6 @@ normalize (ForAll type'args body) = ForAll (fmap snd ord) (normtype body)
     normtype (TyArr a b) = TyArr (normtype a) (normtype b)
     normtype (TyCon a) = TyCon a
     normtype (TyTuple ts) = TyTuple $ map normtype ts
-    normtype (TyList t) = TyList $ normtype t
     normtype (TyVar a) =
       case lookup a ord of
         Just x -> TyVar x

@@ -166,7 +166,8 @@ Exp             ::  { Expression }
                 |   letrec LowIdent Params '=' Exp in Exp           { Let $2 (Fix $ foldr (\ arg body -> Lam arg body) $5 ($2 : $3)) $7 }
                 -- TODO: do the same for letrec
                 |   '(' Exp CommaSeparated(Exp) ')'                 { Tuple $ $2 : $3 }
-                |   '[' NoneOrManySeparated(Exp) ']'                { List $2 }
+                |   '[' NoneOrManySeparated(Exp) ']'                 { foldr (\ item acc -> App (App (Var ":") item) acc ) (Var "[]") $2 }
+                -- wiring the List type into the compiler
 
 Binding         ::  { (String, Expression) }
                 :   LowIdent '=' Exp                                { ($1, $3) }
@@ -213,7 +214,7 @@ Type            ::  { Type }
                 |   UpIdent                                         { TyCon $1 }
                 |   TyArr                                           { $1 }
                 |   TyTuple                                         { $1 }
-                |   TyList                                          { $1 }
+                -- |   TyList                                          { $1 }
                 |   '(' TyApp ')'                                   { $2 }
                 |   '(' Type ')'                                    { $2 }
 
@@ -228,8 +229,8 @@ TyArr           ::  { Type }
 TyTuple         ::  { Type }
                 :   '(' Type CommaSeparated(Type) ')'               { TyTuple $ $2 : $3 }
 
-TyList          ::  { Type }
-                :   '[' Type ']'                                    { TyList $2 }
+-- TyList          ::  { Type }
+--                 :   '[' Type ']'                                    { TyList $2 }
 
 TyApp           ::  { Type }
                 :   Type OneOrMany(Type)                            { foldl TyApp $1 $2 }

@@ -15,7 +15,6 @@ data Expression
   | Lam String Expression -- OK
   | App Expression Expression -- OK
   | Tuple [Expression] -- OK
-  | List [Expression] -- OK
   | If Expression Expression Expression -- OK
   | Let String Expression Expression -- OK
   | Fix Expression -- OK
@@ -34,7 +33,6 @@ instance Show Expression where
   show (Lam arg body) = "(\\ " ++ arg ++ " -> " ++ show body ++ ")"
   show (App left right) = "(" ++ show left ++ " " ++ show right ++ ")"
   show (Tuple exprs) = "(" ++ intercalate ", " (map show exprs) ++ ")"
-  show (List exprs) = "[" ++ intercalate ", " (map show exprs) ++ "]"
   show (If cond' then' else') = "if " ++ show cond' ++ " then " ++ show then' ++ " else " ++ show else'
   show (Let name value expr) = "let " ++ name ++ " = " ++ show value ++ " in " ++ show expr
   show (Fix expr) = "fix " ++ show expr

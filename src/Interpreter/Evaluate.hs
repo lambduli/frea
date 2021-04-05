@@ -59,9 +59,6 @@ evaluate expr env =
     Tuple exprs ->
       return $ Right $ Val.Tuple $ map (\ expr -> Val.Thunk (\ env -> evaluate expr env) env) exprs
 
-    List exprs ->
-      return $ Right $ Val.List $ map (\ expr -> Val.Thunk (\ env -> evaluate expr env) env) exprs
-
     Let name val expr ->
       return $ Right $ Val.Thunk (\ env -> evaluate (App (Lam name expr) val) env) env
 
@@ -269,72 +266,6 @@ apply'operator "#/" (Val.Tuple [val'l, val'r]) env = do
       return $ Left $ DivisionByZero 0
     (Right (Val.Lit (LitDouble d'l)), Right (Val.Lit (LitDouble d'r))) ->
       return $ Right $ Val.Lit (LitDouble (d'l / d'r))
-
-apply'operator "#++" (Val.Tuple [val'l, val'r]) env =
-    return $ Right $ Val.Thunk (\ env -> do
-      res'l <- force'val val'l
-      res'r <- force'val val'r
-      case (res'l, res'r) of
-        (Right (Val.List exprs'left), Right (Val.List exprs'right)) ->
-          return $ Right $ Val.List $ exprs'left ++ exprs'right
-        (Right (Val.Lit (LitString str'left)), Right (Val.Lit (LitString str'right))) ->
-          return $ Right $ Val.Lit $ LitString $ str'left ++ str'right
-        (Left err, _) -> return $ Left err
-        (_, Left err) -> return $ Left err
-    ) env
-
--- when the val'r is not a List, but an infinite expression instead
--- forcing the val'r makes the program to run forever 
-apply'operator "#:" (Val.Tuple [val'l, val'r]) env = do
-    return $ Right $ Val.Thunk (\ env -> do
-      res'r <- force'val val'r
-      case res'r of
-        Right (Val.Lit (LitString str)) -> do
-          res'l <- force'val val'l
-          case res'l of
-            Right (Val.Lit (LitChar ch)) ->
-              return $ Right $ Val.Lit $ LitString $ ch : str
-            Left err -> return $ Left err
-          
-        Right (Val.List exprs) -> return $ Right $ Val.List $ val'l : exprs
-        
-        _ -> return $ Left $ BadOperatorApplication "#:" val'l) env
-
-apply'operator "#head" (Val.List []) env
-  = return $ Right $ Val.Thunk (\ _ -> return $ Left NilHeadException) env
-
-apply'operator "#head" (Val.Lit (LitString "")) env
-  = return $ Right $ Val.Thunk (\ _ -> return $ Left EmptyStringException) env
-
-apply'operator "#head" (Val.List (e : es)) env
-  = return $ Right $ Val.Thunk (\ _ -> return $ Right e) env
-
-apply'operator "#head" (Val.Lit (LitString (e : es))) env
-  = return $ Right $ Val.Thunk (\ _ -> return $ Right $ Val.Lit $ LitChar e) env
-
-apply'operator "#tail" (Val.List []) env
-  = return $ Right $ Val.Thunk (\ _ -> return $ Left NilTailException) env
-
-apply'operator "#tail" (Val.Lit (LitString "")) env
-  = return $ Right $ Val.Thunk (\ _ -> return $ Left EmptyStringException) env
-
-apply'operator "#tail" (Val.List (e : es)) env
-  = return $ Right $ Val.Thunk (\ _ -> return $ Right $ Val.List es) env
-
-apply'operator "#tail" (Val.Lit (LitString (e : es))) env
-  = return $ Right $ Val.Thunk (\ _ -> return $ Right $ Val.Lit $ LitString es) env
-
-apply'operator "#nil?" (Val.List []) env
-  = return $ Right $ Val.Thunk (\ _ -> return $ Right $ Val.to'val'bool True) env -- wiring the Bool into the typechecker
-
-apply'operator "#nil?" (Val.Lit (LitString "")) env
-  = return $ Right $ Val.Thunk (\ _ -> return $ Right $ Val.to'val'bool True) env -- wiring the Bool into the typechecker
-
-apply'operator "#nil?" (Val.List (e : es)) env
-  = return $ Right $ Val.Thunk (\ _ -> return $ Right $ Val.to'val'bool False) env -- wiring the Bool into the typechecker
-
-apply'operator "#nil?" (Val.Lit (LitString (e : es))) env
-  = return $ Right $ Val.Thunk (\ _ -> return $ Right $ Val.to'val'bool False) env -- wiring the Bool into the typechecker
 
 apply'operator "#fst" (Val.Tuple [f, s]) env
   = return $ Right $ Val.Thunk (\ _ -> return $ Right f) env
