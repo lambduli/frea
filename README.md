@@ -132,11 +132,39 @@ or a polymorphic linked list:
 
 ```haskell
 data List a
-  = Nil
+  = []
   | a : (List a)
 ```
 
 > The type parameters in the data declaration must be a lower-case-starting identifiers - true variables. 
+
+## Elimination of the Custom Data Types
+
+Opposite to the constructor, which constructs new value of your data type, there is a `which-_` eliminator for each defined data type.
+
+Specific eliminator will be named after this scheme: starting with `which-` and following the name of the type you want to eliminate.
+
+For example: `which-Bool` for `Bool` and `which-List` for `List`.
+
+Eliminator is special function, which takes a value of the type you wish to eliminate folowed by `N` values - each of these is a counterpart to one specific constructor of your data type and it will be evaluated if and only if the actual value was constructed by that constructor.
+
+Which value corresponds to which constructor is determined by the order.
+
+It works like this:
+
+```haskell
+data Maybe a = Nothing | Just a
+
+data List a
+  = []
+  | a : (List a)
+
+head lst = (which-List lst
+            Nothing
+            (\ head tail -> Just head))
+```
+
+Thanks to the evaluation strategy of the Frea you don't need to worry about evaluation of the expressions, which won't be selected, they will never be evaluated.
 
 _____
 
