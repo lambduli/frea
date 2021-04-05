@@ -48,8 +48,6 @@ unify (TyTuple ts'left) (TyTuple ts'right)
   = if length ts'left /= length ts'right
     then throwError $ UnifShapeMismatch (TyTuple ts'left) (TyTuple ts'right)
     else unifyMany ts'left ts'right
--- unify (TyList t'left) (TyList t'right)
---   = unify t'left t'right
 unify t1 t2 = throwError $ UnifShapeMismatch t1 t2
 
 
@@ -74,8 +72,6 @@ name `occurs'in` (TyCon conname)
   = False
 name `occurs'in` (TyTuple ts)
   = any (name `occurs'in`) ts
--- name `occurs'in` (TyList t)
---   = name `occurs'in` t
 name `occurs'in` (TyArr left right)
   = name `occurs'in` left || name `occurs'in` right
 name `occurs'in` (TyApp left right)

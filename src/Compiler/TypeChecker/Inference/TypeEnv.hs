@@ -33,12 +33,6 @@ empty't'env = Map.fromList
 
   , ("#div",  ForAll []         (TyTuple [t'Int, t'Int] `TyArr` t'Int))
   , ("#/",    ForAll []         (TyTuple [t'Double, t'Double] `TyArr` t'Double))
-  -- , ("#++",   ForAll ["a"]      (TyTuple [TyList (TyVar "a"), TyList (TyVar "a")] `TyArr` TyList (TyVar "a")))
-  -- prepend element to a list
-  -- , ("#:",    ForAll ["a"]      (TyTuple [TyVar "a", TyList (TyVar "a")] `TyArr` TyList (TyVar "a")))
-  -- , ("#head", ForAll ["a"]      (TyList (TyVar "a") `TyArr` TyVar "a"))
-  -- , ("#tail", ForAll ["a"]      (TyList (TyVar "a") `TyArr` TyList (TyVar "a")))
-  -- , ("#nil?", ForAll ["a"]      (TyList (TyVar "a") `TyArr` t'Bool))
   , ("#show", ForAll ["a"]      (TyVar "a" `TyArr` (TyApp (TyCon "List") t'Char))) -- wiring the List type into the compiler
   -- , ("#showint", ForAll []      ((TyCon "Int") `TyArr` (TyList (TyCon "Char"))))
   -- , ("#showbool", ForAll []     ((TyCon "Bool") `TyArr` (TyList (TyCon "Char"))))
