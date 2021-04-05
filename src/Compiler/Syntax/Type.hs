@@ -7,7 +7,7 @@ data Type
   = TyVar String
   | TyCon String
   | TyTuple [Type]
-  | TyList Type
+  -- | TyList Type
   | TyArr Type Type
   | TyApp Type Type
   deriving (Eq)
@@ -20,8 +20,8 @@ instance Show Type where
     = name
   show (TyTuple types)
     = "(" ++ intercalate ", " (map show types) ++ ")"
-  show (TyList type')
-    = "[" ++ show type' ++ "]"
+  -- show (TyList type')
+  --   = "[" ++ show type' ++ "]"
   show (TyArr left@(TyArr _ _) res'type)
     = "(" ++ show left ++ ") -> " ++ show res'type
   show (TyArr arg'type res'type)

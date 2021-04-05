@@ -29,7 +29,7 @@ infer expr = case expr of
   Lit (LitInt i) -> return (t'Int, [])
   Lit (LitDouble d) -> return (t'Double, [])
   Lit (LitChar ch) -> return (t'Char, [])
-  Lit (LitString s) -> return (TyList t'Char, [])
+  Lit (LitString s) -> return (TyApp (TyCon "List") t'Char, []) -- wiring the List type into the compiler
   Lit LitUnit -> return (t'Unit, [])
 
   (Var x) -> do
@@ -80,13 +80,13 @@ infer expr = case expr of
           (t, cs) <- infer expr
           return (t : types, cs ++ constrs)
 
-  List exprs -> do
-    type'var <- fresh
-    let infer' costrs expr = do
-          (t, cs) <- infer expr
-          return $ (type'var, t) : cs
-    constrs <- foldM infer' [] exprs
-    return (TyList type'var, constrs)
+  -- List exprs -> do
+  --   type'var <- fresh
+  --   let infer' costrs expr = do
+  --         (t, cs) <- infer expr
+  --         return $ (type'var, t) : cs
+  --   constrs <- foldM infer' [] exprs
+  --   return (TyList type'var, constrs)
 
 
 -- Return the internal constraints used in solving for the type of an expression
