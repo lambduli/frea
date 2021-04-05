@@ -17,21 +17,30 @@ a *. b  = ((#*.) (a, b))
 a `div` b = ((#div) (a, b))
 a / b  = ((#/) (a, b))
 
-a ++ b  = ((#++) (a, b))
-a `cons` b  = ((#:) (a, b))
+-- a ++ b  = ((#++) (a, b))
+-- a `cons` b  = ((#:) (a, b))
 
-head a  = ((#head) a)
-tail a  = ((#tail) a)
-nil? a  = ((#nil?) a)
+-- head a  = ((#head) a)
+-- tail a  = ((#tail) a)
+-- nil? a  = ((#nil?) a)
 
 show a = ((#show) a)
 
 undefined = undefined
 
-a !! b  = if (b == 0) then (head a) else ((tail a) !! (b - 1))
+-- a !! b  = if (b == 0) then (head a) else ((tail a) !! (b - 1))
 
 fst a  = ((#fst) a)
 snd a  = ((#snd) a)
+
+la ++ lb = (which-List la
+            lb
+            (\ ha ta -> (ha : (ta ++ lb))))
+
+head lst = (which-List lst
+            Nothing
+            (\ h t -> (Just h)))
+
 
 data Bool
   = True
@@ -46,13 +55,10 @@ data Maybe a
   | Just a
 
 data List a
-  = Nil
+  = []
   | a : (List a)
 
--- data Aoo x y z = Bo (x y) z
+show-List list = (which-List list
+                    "[]"
+                    ( \ head tail -> ( ((show head) ++ " : ") ++ (show-List tail) ) ))
 
-data Boo x y z = Bo (x y z) -- | Bu y z
-
--- data Malformed x = Malformed (Either x)
-
--- data Coo a = Co a

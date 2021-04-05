@@ -59,8 +59,8 @@ evaluate expr env =
     Tuple exprs ->
       return $ Right $ Val.Tuple $ map (\ expr -> Val.Thunk (\ env -> evaluate expr env) env) exprs
 
-    List exprs ->
-      return $ Right $ Val.List $ map (\ expr -> Val.Thunk (\ env -> evaluate expr env) env) exprs
+    -- List exprs ->
+    --   return $ Right $ Val.List $ map (\ expr -> Val.Thunk (\ env -> evaluate expr env) env) exprs
 
     Let name val expr ->
       return $ Right $ Val.Thunk (\ env -> evaluate (App (Lam name expr) val) env) env
