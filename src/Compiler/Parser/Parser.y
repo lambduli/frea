@@ -169,15 +169,17 @@ Exp             ::  { Expression }
                 |   '[' NoneOrManySeparated(Exp) ']'                { List $2 }
 
 Binding         ::  { (String, Expression) }
-                :   LowIdent '=' Exp                                { ($1, Fix (Lam $1 $3)) }
-                |   LowIdent Params '=' Exp                         { ($1, Fix $ foldr (\ arg body -> Lam arg body) $4 ($1 : $2)) }
-                |   '(' Op ')' Params '=' Exp                       { ($2, Fix $ foldr (\ arg body -> Lam arg body) $6 ($2 : $4)) }
-                -- |   rec '(' Op ')' Params '=' Exp                   { ($3, Fix $ foldr (\ arg body -> Lam arg body) $7 ($3 : $5)) }
-                -- |   rec LowIdent Params '=' Exp                        { ($2, Fix $ foldr (\ arg body -> Lam arg body) $5 ($2 : $3)) }
-                |   Var Op Var '=' Exp                              { ($2, Fix (Lam $2 (Lam $1 (Lam $3 $5)))) }
-                -- |   rec Var Op Var '=' Exp                          { ($3, Fix (Lam $3 (Lam $2 (Lam $4 $6)))) }
-                |   Var '`' Var '`' Var '=' Exp                     { ($3, Fix (Lam $3 (Lam $1 (Lam $5 $7)))) }
-                -- |   rec Var '`' Var '`' Var '=' Exp                 { ($4, Fix (Lam $4 (Lam $2 (Lam $6 $8)))) }
+                :   LowIdent '=' Exp                                { ($1, $3) }
+                |   LowIdent Params '=' Exp                         { ($1, foldr (\ arg body -> Lam arg body) $4 $2) }
+                |   '(' Op ')' Params '=' Exp                       { ($2, foldr (\ arg body -> Lam arg body) $6 $4) }
+                |   Var Op Var '=' Exp                              { ($2, (Lam $1 (Lam $3 $5))) }
+                |   Var '`' Var '`' Var '=' Exp                     { ($3, (Lam $1 (Lam $5 $7))) }
+                
+                |   rec LowIdent '=' Exp                            { ($2, Fix (Lam $2 $4)) }
+                |   rec LowIdent Params '=' Exp                     { ($2, Fix $ foldr (\ arg body -> Lam arg body) $5 ($2 : $3)) }
+                |   rec Var Op Var '=' Exp                          { ($3, Fix (Lam $3 (Lam $2 (Lam $4 $6)))) }
+                |   rec '(' Op ')' Params '=' Exp                   { ($3, Fix $ foldr (\ arg body -> Lam arg body) $7 ($3 : $5)) }
+                |   rec Var '`' Var '`' Var '=' Exp                 { ($4, Fix (Lam $4 (Lam $2 (Lam $6 $8)))) }
 
 GlobalBinding   ::  { (String, Expression) }
                 :   LowIdent '=' Exp                                { ($1, $3) }
