@@ -80,14 +80,6 @@ infer expr = case expr of
           (t, cs) <- infer expr
           return (t : types, cs ++ constrs)
 
-  -- List exprs -> do
-  --   type'var <- fresh
-  --   let infer' costrs expr = do
-  --         (t, cs) <- infer expr
-  --         return $ (type'var, t) : cs
-  --   constrs <- foldM infer' [] exprs
-  --   return (TyList type'var, constrs)
-
 
 -- Return the internal constraints used in solving for the type of an expression
 -- for debugging ?
