@@ -33,6 +33,7 @@ import Compiler.TypeChecker.Inference.Infer
 import Compiler.TypeChecker.Inference.TypeEnv
 import Compiler.KindChecker.KindEnv
 import Compiler.KindChecker.KindError
+import qualified Interpreter.Print as IP
 
 
 main :: IO ()
@@ -154,7 +155,7 @@ repl env t'env k'env mem = do
               -- loop
               repl env t'env k'env mem
             _ -> do
-              let error'or'expr'n'state = runState (force expression env) mem
+              let error'or'expr'n'state = runState (IP.print $ force expression env) mem
               -- print
               case error'or'expr'n'state of
                 (Left err, mem') -> do
@@ -163,11 +164,11 @@ repl env t'env k'env mem = do
                   -- loop
                   repl env t'env k'env mem
 
-                (Right expr', mem') -> do
+                (Right str', mem') -> do
                   -- TODO: this is WRONG! present for whatever reason doesn't work well
                   -- so when you try to force the value for printing it doesn't update the memory or smth
                   -- so it breaks
-                  putStrLn $ "         " ++ show expr'
+                  putStrLn $ "         " ++ str'
 
                   -- loop
                   repl env t'env k'env mem' 
