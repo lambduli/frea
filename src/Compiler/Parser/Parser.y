@@ -145,7 +145,7 @@ Exp             ::  { Expression }
                 --  Note: Consider adding Constructor Expression for this ^^^
                 |   '(' symid ')'                                   { Op $2 }
                 -- NOTE: To resolve 2 R/R conflicts
-                |   Lit                                             { Lit $1 }
+                |   Lit                                             { $1 }
                 |   lambda Params '->' Exp                          { foldr (\ arg body -> Lam arg body) $4 $2 }
 
                 |   Exp '`' Var '`' Exp                             { App (App (Var $3) $1) $5 }
@@ -196,12 +196,13 @@ GlobalBinding   ::  { (String, Expression) }
 Decl            ::  { Declaration }
                 :   GlobalBinding                                   { Binding (fst $1) (snd $1) }
 
-Lit             ::  { Lit }
-                :   Integer                                         { $1 }
-                |   Double                                          { $1 }
-                |   char                                            { LitChar $1 }
-                |   string                                          { LitString $1 }
-                |   unit                                            { LitUnit }
+Lit             ::  { Expression }
+                :   Integer                                         { Lit $1 }
+                |   Double                                          { Lit $1 }
+                |   char                                            { Lit $ LitChar $1 }
+                |   string                                          { foldr (\ item acc -> App (App (Var ":") (Lit $ LitChar item)) acc ) (Var "[]") $1 }
+                --  LitString $1 }
+                |   unit                                            { Lit LitUnit }
 
 Integer         ::  { Lit }
                 :   integer                                         { LitInt $1 }

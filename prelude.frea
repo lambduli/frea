@@ -28,7 +28,7 @@ show a = ((#show) a)
 
 undefined = undefined
 
--- a !! b  = if (b == 0) then (head a) else ((tail a) !! (b - 1))
+a !! b  = if (b == 0) then (head a) else ((tail a) !! (b - 1))
 
 fst a  = ((#fst) a)
 snd a  = ((#snd) a)
@@ -40,6 +40,10 @@ la ++ lb = (which-List la
 head lst = (which-List lst
             Nothing
             (\ h t -> (Just h)))
+
+tail lst = (which-List lst
+            undefined -- unsafe but whatever
+            (\ h t -> t))
 
 
 data Bool
@@ -61,4 +65,12 @@ data List a
 show-List list = (which-List list
                     "[]"
                     ( \ head tail -> ( ((show head) ++ " : ") ++ (show-List tail) ) ))
+
+map fn lst = (which-List lst
+              []
+              (\ h t -> ((fn h) : (map fn t)) ))
+
+show-Maybe m = (which-Maybe m
+                "Nothing"
+                (\ v -> (show v)))
 

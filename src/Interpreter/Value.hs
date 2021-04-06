@@ -21,7 +21,7 @@ data Value
   | Lit Lit
   | Lam String Expression Env
   | Tuple [Value]
-  | List [Value]
+  -- | List [Value]
   | Thunk (Env -> State Memory (Either EvaluationError Value)) Env
   | Data String [Value] -- Name of the Constr and list of arguments
 
@@ -31,7 +31,7 @@ instance Show Value where
   show (Lit lit) = show lit
   show (Lam par body env) = "<lambda>"
   show (Tuple values) = "(" ++ intercalate ", " (map show values) ++ ")"
-  show (List values) = "[" ++ intercalate ", " (map show values) ++ "]"
+  -- show (List values) = "[" ++ intercalate ", " (map show values) ++ "]"
   show (Thunk force'f env) = "<thunk>"
   show (Data name [])
     = name
@@ -105,3 +105,9 @@ from'val'bool :: Value -> Bool
 from'val'bool (Data "True" []) = True
 from'val'bool (Data "Fase" []) = False
 from'val'bool _ = error "Trying to convert non Boolean value to the Bool type!"
+
+
+str'to'value :: String -> Value
+str'to'value "" = Data "[]" []
+str'to'value (ch : str) = Data ":" [Lit $ LitChar ch, rest]
+  where rest = str'to'value str

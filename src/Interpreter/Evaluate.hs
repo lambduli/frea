@@ -277,7 +277,7 @@ apply'operator "#show" val env = do
   res <- force'val val
   case res of
     Left err -> return $ Left err
-    Right val -> return $ Right $ Val.Lit $ LitString $ show val
+    Right val -> return $ Right $ Val.str'to'value $ show val -- wiring the String into the compiler
 
 apply'operator name expr env
   = return $ Left $ BadOperatorApplication name expr

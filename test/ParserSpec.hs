@@ -19,7 +19,7 @@ spec = describe "Test the parser" $ do
   it "Parses a single char" $ do
     "'c'" <=> Lit (LitChar 'c')
   it "Parses a single string" $ do
-    "\"hello\"" <=> Lit (LitString "hello")
+    "\"h\"" <=> App (App (Var ":") (Lit $ LitChar 'h')) (Var "[]")
   it "Parses a single boolean (True)" $ do
     "True" <=> Var "True"
   it "Parses a single boolean (False)" $ do
