@@ -22,12 +22,6 @@ a *. b  = ((#*.) (a, b))
 a `div` b = ((#div) (a, b))
 a / b  = ((#/) (a, b))
 
--- a ++ b  = ((#++) (a, b))
--- a `cons` b  = ((#:) (a, b))
-
--- head a  = ((#head) a)
--- tail a  = ((#tail) a)
-
 nil? a  = (which-List a
             True
             (\ h t -> False))
@@ -35,8 +29,6 @@ nil? a  = (which-List a
 show a = ((#show) a)
 
 undefined = undefined
-
--- a !! b  = if (b == 0) then (head a) else ((tail a) !! (b - 1))
 
 lst !! ix = if (ix == 0)
             then (which-List lst Nothing (\ h t -> (Just h)))
