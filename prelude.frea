@@ -1,5 +1,10 @@
-a && b = ((#&&) (a, b))
-a || b = ((#||) (a, b))
+a && b = (which-Bool a
+          b
+          False)
+
+a || b = (which-Bool a
+          True
+          b)
 
 a == b  = ((#=) (a, b))
 a < b  = ((#<) (a, b))
@@ -22,13 +27,20 @@ a / b  = ((#/) (a, b))
 
 -- head a  = ((#head) a)
 -- tail a  = ((#tail) a)
--- nil? a  = ((#nil?) a)
+
+nil? a  = (which-List a
+            True
+            (\ h t -> False))
 
 show a = ((#show) a)
 
 undefined = undefined
 
-a !! b  = if (b == 0) then (head a) else ((tail a) !! (b - 1))
+-- a !! b  = if (b == 0) then (head a) else ((tail a) !! (b - 1))
+
+lst !! ix = if (ix == 0)
+            then (which-List lst Nothing (\ h t -> (Just h)))
+            else (which-List lst Nothing (\ h t -> (t !! (ix - 1))))
 
 fst a  = ((#fst) a)
 snd a  = ((#snd) a)
@@ -42,8 +54,8 @@ head lst = (which-List lst
             (\ h t -> (Just h)))
 
 tail lst = (which-List lst
-            undefined -- unsafe but whatever
-            (\ h t -> t))
+            Nothing
+            (\ h t -> (Just t)))
 
 
 data Bool
@@ -61,6 +73,7 @@ data Maybe a
 data List a
   = []
   | a : (List a)
+
 
 show-List list = (which-List list
                     "[]"
