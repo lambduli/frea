@@ -175,20 +175,6 @@ apply'operator "#=" (Val.Tuple [val'l, val'r]) env = do
     (Right _, Left err) -> return $ Left err
     (Left err, _) -> return $ Left err
 
--- apply'operator "#&&" (Val.Tuple [val'l, val'r]) env = do
---   res'l <- force'val val'l
---   case res'l of
---     Right b -- wiring the Bool into the typechecker
---         | Val.from'val'bool b -> return $ Right val'r
---         | otherwise  -> return $ Right $ Val.to'val'bool False
-
--- apply'operator "#||" (Val.Tuple [val'l, val'r]) env = do
---   res'l <- force'val val'l
---   case res'l of
---     Right b -- wiring the Bool into the typechecker
---       | Val.from'val'bool b -> return $ Right val'r
---       | otherwise  -> return $ Right $ Val.to'val'bool True
-
 apply'operator "#<" (Val.Tuple [val'l, val'r]) env = do
   res'l <- force'val val'l
   res'r <- force'val val'r
