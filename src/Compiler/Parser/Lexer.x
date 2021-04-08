@@ -74,8 +74,6 @@ token :-
 <0>         ","             { plainTok TokComma }
 <0>         "`"             { plainTok TokBackTick }
 
-<0>         "#&&"           { plainTok $ TokNativeSym "#&&" }
-<0>         "#||"           { plainTok $ TokNativeSym "#||" }
 
 <0>         "#="            { plainTok $ TokNativeSym "#=" }
 <0>         "#<"            { plainTok $ TokNativeSym "#<" }
@@ -92,14 +90,6 @@ token :-
 <0>         "#snd"          { plainTok $ TokNativeSym "#snd" }
 <0>         "#show"         { plainTok $ TokNativeSym "#show" }
 
--- <0>         "#showint"      { plainTok $ TokNativeSym "#showint" }
--- <0>         "#showbool"     { plainTok $ TokNativeSym "#showbool" }
--- <0>         "#showdouble"   { plainTok $ TokNativeSym "#showdouble" }
--- <0>         "#showchar"     { plainTok $ TokNativeSym "#showchar" }
--- <0>         "#showstring"   { plainTok $ TokNativeSym "#showstring" }
--- <0>         "#showtuple"    { plainTok $ TokNativeSym "#showtuple" }
--- <0>         "#showlist"     { plainTok $ TokNativeSym "#showlist" }
--- <0>         "#showunit"     { plainTok $ TokNativeSym "#showunit" }
 
 -- variables and constructors - qualified and un-qualified
 <0>         @variableident  { parametrizedTok TokVarLower id }
