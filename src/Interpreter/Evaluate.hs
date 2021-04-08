@@ -113,7 +113,7 @@ evaluate expr env =
       return $ Right $ Val.Thunk (\ env -> evaluate (App expr $ Fix expr) env) env
 
     Intro name exprs -> do
-      mem <- get
+      -- mem <- get
       let values = map (\ expr -> Val.Thunk (\ env -> evaluate expr env) env) exprs
       return $ Right $ Val.Thunk (\ env -> return . Right $ Val.Data name values) env
       
