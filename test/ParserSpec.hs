@@ -25,7 +25,7 @@ spec = describe "Test the parser" $ do
   it "Parses a single boolean (False)" $ do
     "False" <=> Var "False"
   it "Parses a single unit" $ do
-    "()" <=> Lit LitUnit
+    "()" <=> Var "()"
   it "Parses a single empty list" $ do
     "[]" <=> Var "[]"
   it "Parses a single short list" $ do
