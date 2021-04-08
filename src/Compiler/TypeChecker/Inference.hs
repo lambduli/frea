@@ -29,7 +29,6 @@ infer expr = case expr of
   Lit (LitInt i) -> return (t'Int, [])
   Lit (LitDouble d) -> return (t'Double, [])
   Lit (LitChar ch) -> return (t'Char, [])
-  -- Lit (LitString s) -> return (TyApp (TyCon "List") t'Char, []) -- wiring the List type into the compiler
   Lit LitUnit -> return (t'Unit, [])
 
   (Var x) -> do

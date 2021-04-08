@@ -17,9 +17,6 @@ import Compiler.TypeChecker.Inference.InferState
 import Compiler.TypeChecker.TypeError
 
 
-import Debug.Trace
-
-
 letters :: [String]
 letters = [1..] >>= flip replicateM ['a'..'z']
 
