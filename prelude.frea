@@ -57,6 +57,7 @@ tail lst = (which-List lst
             Nothing
             (\ h t -> (Just t)))
 
+data () = ()
 
 data Bool
   = True

@@ -65,7 +65,7 @@ token :-
 
 -- special symbols
 -- [ \( \) \, \[ \] \` \' \{ \} ]
-<0>         "()"            { plainTok TokUnit }
+<0>         "(" $space* ")" { parametrizedTok TokVarUpper (const "()") }
 <0>         "("             { plainTok TokLeftParen }
 <0>         ")"             { plainTok TokRightParen }
 <0>         "[" $space* "]" { parametrizedTok TokVarUpper (const "[]") }

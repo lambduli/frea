@@ -52,7 +52,6 @@ data Token
   | TokChar Char -- 'a'
   | TokDouble Double -- 0.23
   | TokString String -- "string"
-  | TokUnit -- ()
 
 
   | TokAssume -- assume

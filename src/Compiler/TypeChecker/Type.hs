@@ -12,5 +12,3 @@ t'Int = TyCon "Int"
 t'Double = TyCon "Double"
 
 t'Char = TyCon "Char"
-
-t'Unit = TyCon "Unit"
