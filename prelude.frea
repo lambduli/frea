@@ -6,21 +6,21 @@ a || b = (which-Bool a
           True
           b)
 
-a == b  = ((#=) (a, b))
-a < b  = ((#<) (a, b))
-a > b  = ((#>) (a, b))
+a == b  = (#= (a, b))
+a < b  = (#< (a, b))
+a > b  = (#> (a, b))
 
-a + b  = ((#+) (a, b))
-a +. b  = ((#+.) (a, b))
+a + b  = (#+ (a, b))
+a +. b  = (#+. (a, b))
 
-a - b  = ((#-) (a, b))
-a -. b  = ((#-.) (a, b))
+a - b  = (#- (a, b))
+a -. b  = (#-. (a, b))
 
-a * b  = ((#*) (a, b))
-a *. b  = ((#*.) (a, b))
+a * b  = (#* (a, b))
+a *. b  = (#*. (a, b))
 
-a `div` b = ((#div) (a, b))
-a / b  = ((#/) (a, b))
+a `div` b = (#div (a, b))
+a / b  = (#/ (a, b))
 
 nil? a  = (which-List a
             True
@@ -34,8 +34,8 @@ lst !! ix = if (ix == 0)
             then (which-List lst Nothing (\ h t -> (Just h)))
             else (which-List lst Nothing (\ h t -> (t !! (ix - 1))))
 
-fst a  = ((#fst) a)
-snd a  = ((#snd) a)
+fst a  = (#fst a)
+snd a  = (#snd a)
 
 la ++ lb = (which-List la
             lb
@@ -80,3 +80,5 @@ show-Maybe m = (which-Maybe m
                 "Nothing"
                 (\ v -> (show v)))
 
+
+fact n = if (n == 0) then 1 else (n * (fact (n - 1)))
