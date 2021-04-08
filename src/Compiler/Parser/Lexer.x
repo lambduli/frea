@@ -89,6 +89,7 @@ token :-
 <0>         "#fst"          { plainTok $ TokNativeSym "#fst" }
 <0>         "#snd"          { plainTok $ TokNativeSym "#snd" }
 <0>         "#show"         { plainTok $ TokNativeSym "#show" }
+<0>         "#debug"        { plainTok $ TokNativeSym "#debug" }
 
 
 -- variables and constructors - qualified and un-qualified

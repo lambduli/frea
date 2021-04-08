@@ -123,16 +123,16 @@ Con             ::  { String }
                 :   conid                                           { $1 }
 
 Op              ::  { String }
-                :   symid                                           { $1 }
-                |   op                                              { $1 }
+                -- :   symid                                           { $1 }
+                :   op                                              { $1 }
                 |   '|'                                             { "|" }
 
 OpCon           ::  { String }
                 :   opcon                                           { $1 }
 
 Oper            ::  { Expression }
-                :   symid                                           { Op $1 }
-                |   op                                              { Var $1 }
+                -- :   symid                                           { Op $1 }
+                :   op                                              { Var $1 }
                 |   '|'                                             { Var "|" }
                 |   opcon                                           { Var $1 }
 
@@ -144,7 +144,7 @@ Exp             ::  { Expression }
                 |   '(' op ')'                                      { Var $2 }
                 |   '(' opcon ')'                                   { Var $2 }
                 --  Note: Consider adding Constructor Expression for this ^^^
-                |   '(' symid ')'                                   { Op $2 }
+                |   symid                                           { Op $1 }
                 -- NOTE: To resolve 2 R/R conflicts
                 |   Lit                                             { $1 }
                 |   lambda Params '->' Exp                          { foldr (\ arg body -> Lam arg body) $4 $2 }

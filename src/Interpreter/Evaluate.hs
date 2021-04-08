@@ -46,7 +46,7 @@ evaluate expr env =
       case env !? name of
         Just addr ->
           case mem !? addr of
-            Just val -> return $ Right val
+            Just (Val.At _ val) -> return $ Right val
             Nothing -> return $ Left $ Unexpected $ "V pameti sem nenasel " ++ name
         Nothing -> return $ Left $ UnboundVar name -- can't really happen thanks to the type system
 
@@ -73,7 +73,7 @@ evaluate expr env =
           mem <- get
           let addr = Addr $ Map.size mem
               env' = Map.insert par addr e'map
-              mem' = Map.insert addr right'val mem
+              mem' = Map.insert addr (Val.At addr right'val) mem
           put mem'
           evaluate body env') env
 
@@ -94,7 +94,7 @@ evaluate expr env =
             let addr = Addr $ Map.size mem
                 env'' = Map.insert par addr env'
                 right'val = Val.Thunk (\ env -> force right env) env
-                mem' = Map.insert addr right'val mem
+                mem' = Map.insert addr (Val.At addr right'val) mem
             put mem'
             force body env''
 
@@ -113,7 +113,7 @@ evaluate expr env =
       return $ Right $ Val.Thunk (\ env -> evaluate (App expr $ Fix expr) env) env
 
     Intro name exprs -> do
-      mem <- get
+      -- mem <- get
       let values = map (\ expr -> Val.Thunk (\ env -> evaluate expr env) env) exprs
       return $ Right $ Val.Thunk (\ env -> return . Right $ Val.Data name values) env
       
@@ -157,7 +157,7 @@ apply'closure (val : vals) (Val.Lam par body env) = do
   mem <- get
   let addr = Addr $ Map.size mem
       env' = Map.insert par addr env
-      mem' = Map.insert addr val mem
+      mem' = Map.insert addr (Val.At addr val) mem
   put mem'
   res <- force body env'
   case res of
@@ -264,6 +264,14 @@ apply'operator "#show" val env = do
   case res of
     Left err -> return $ Left err
     Right val -> return $ Right $ Val.str'to'value $ show val -- wiring the String into the compiler
+
+apply'operator "#debug" val env = do
+  res <- force'val val
+  case res of
+    Left err -> return $ Left err
+    Right val ->
+      let v = trace ("  @debug:  `" ++ show val ++ "`") val
+      in return $ Right v
 
 apply'operator name expr env
   = return $ Left $ BadOperatorApplication name expr

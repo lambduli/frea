@@ -93,9 +93,9 @@ spec = describe "Test the parser" $ do
     "((#+) (23, 42))" <=>
       App (Op "#+") (Tuple [Lit (LitInt 23), Lit (LitInt 42)])
   
-  it "Parses a simple arithmetic expression (23 #+ 42)" $ do
-    "(23 #+ 42)" <=>
-      App (App (Op "#+") (Lit (LitInt 23))) (Lit (LitInt 42))
+  it "Parses a simple arithmetic expression (#+ (23, 42))" $ do
+    "(#+ (23, 42))" <=>
+      App (Op "#+") (Tuple [(Lit (LitInt 23)), (Lit (LitInt 42))])
   -- NOTE: This is just a parser tests, this is not a valid expression in the language's evaluation semantisc.
   it "Parses a simple arithmetic expression [prefix] ((#+) 23 42)" $ do
     "((#+) 23 42)" <=>
