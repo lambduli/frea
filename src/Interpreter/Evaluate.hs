@@ -265,5 +265,13 @@ apply'operator "#show" val env = do
     Left err -> return $ Left err
     Right val -> return $ Right $ Val.str'to'value $ show val -- wiring the String into the compiler
 
+apply'operator "#debug" val env = do
+  res <- force'val val
+  case res of
+    Left err -> return $ Left err
+    Right val ->
+      let v = trace ("  @debug:  `" ++ show val ++ "`") val
+      in return $ Right v
+
 apply'operator name expr env
   = return $ Left $ BadOperatorApplication name expr
