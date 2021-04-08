@@ -91,7 +91,7 @@ frea λ > :t (1, "string", 'c')
 ```haskell
 frea λ > :t ()
 
-() :: Unit
+() :: ()
 ```
 ### Functions of course
 ```haskell
@@ -310,7 +310,7 @@ forever n = (forever n)
 
 result = (forever 0)
 
-lst = (result `cons` [1, 2, 3])
+lst = (result : [1, 2, 3])
 
 (lst !! 1)
 ```
