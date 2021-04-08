@@ -67,7 +67,7 @@ import Compiler.Syntax.Type
   '`'           { TokBackTick }
 
 
-  unit          { TokUnit }
+  unit          { TokVarUpper "()" }
   integer       { TokInt $$ }
   char          { TokChar $$ }
   double        { TokDouble $$ }
@@ -114,6 +114,7 @@ LowIdent        ::  { String }
 UpIdent         ::  { String }
                 :   Con                                             { $1 }
                 |   '(' opcon ')'                                   { $2 }
+                |   unit                                            { "()" }
 
 Var             ::  { String }
                 :   varid                                           { $1 }
@@ -202,7 +203,7 @@ Lit             ::  { Expression }
                 |   char                                            { Lit $ LitChar $1 }
                 |   string                                          { foldr (\ item acc -> App (App (Var ":") (Lit $ LitChar item)) acc ) (Var "[]") $1 }
                 --  LitString $1 }
-                |   unit                                            { Lit LitUnit }
+                -- |   unit                                            { Lit LitUnit }
 
 Integer         ::  { Lit }
                 :   integer                                         { LitInt $1 }

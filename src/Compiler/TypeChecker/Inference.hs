@@ -29,7 +29,7 @@ infer expr = case expr of
   Lit (LitInt i) -> return (t'Int, [])
   Lit (LitDouble d) -> return (t'Double, [])
   Lit (LitChar ch) -> return (t'Char, [])
-  Lit LitUnit -> return (t'Unit, [])
+  -- Lit LitUnit -> return (t'Unit, [])
 
   (Var x) -> do
     type' <- lookup'env x
