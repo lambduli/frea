@@ -47,7 +47,7 @@ generate'constr'insts (ConDecl name types : cons) env mem =
       intro     = Intro name vars
       con'lam   = foldr Lam intro params
       value     = Val.Thunk (\ env -> force con'lam env) Val.empty'env -- I don't need anything from the Env
-      mem'      = Map.insert addr value mem
+      mem'      = Map.insert addr (Val.At addr value) mem
   in  generate'constr'insts cons env mem'
 
 
@@ -64,7 +64,7 @@ generate'elim'insts name constructors env mem =
       elim        = Elim constructors val'var destr'vars
       which'elim  = Lam "value" $ foldr Lam elim params
       value       = Val.Thunk (\ env -> force which'elim env) env
-      mem'        = Map.insert addr value mem
+      mem'        = Map.insert addr (Val.At addr value) mem
   in  mem'
 
 
@@ -136,7 +136,7 @@ process'declarations declarations env t'env k'env mem = do
           Binding name expr ->
             let addr = env Map.! name
                 val  = Val.Thunk (\ env -> force expr env) env
-                mem' = Map.insert addr val mem
+                mem' = Map.insert addr (Val.At addr val) mem
             in  mem'
 
           DataDecl name _ constrs ->

@@ -13,8 +13,11 @@ import Interpreter.Address
 type Env = Map.Map String Address
 
 
-type Memory = Map.Map Address Value
+type Memory = Map.Map Address Stored
 
+
+data Stored
+  = At Address Value
 
 data Value
   = Op String
