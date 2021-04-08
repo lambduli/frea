@@ -14,19 +14,19 @@ To test: `$ stack test`
 let
   list = [1, 2, 3, 4, 5]
   double x = (2 * x)
-  map lst fn = if (nil? lst)
-                then []
-                else ((fn (head lst)) `cons` (map (tail lst) fn))
-in (map list double)
+  rec map fn lst = (which-List lst
+                      []
+                      (\ h t -> ((fn h) : (map fn t)) ))
+in (map double list)
 ```
 ### Factorial of 5
 ```haskell
 let
   zero n = (n == 0)
   dec n = (n - 1)
-  fact n = if (zero n)
-            then 1
-            else (n * (fact (dec n)))
+  rec fact n =  if (zero n)
+                then 1
+                else (n * (fact (dec n)))
 in (fact 5)
 ```
 
@@ -253,7 +253,7 @@ let
   zero n = (n == 0)
   dec n = (n - 1)
 in let rec
-  fact n = if (zero n)
+  fact n =  if (zero n)
             then 1
             else (n * (fact (dec n)))
 in (fact 5)
@@ -274,8 +274,6 @@ You you can use them to implement your own functions and operators.
 - `(#=)` :: forall a . (a, a) -> Bool
 - `(#<)` :: forall a . (a, a) -> Bool
 - `(#>)` :: forall a . (a, a) -> Bool
-- `(#&&)` :: (Bool, Bool) -> Bool
-- `(#||)` :: (Bool, Bool) -> Bool
 - `(#+)` :: (Int, Int) -> Int
 - `(#+.)` :: (Double, Double) -> Double
 - `(#*)` :: (Int, Int) -> Int
@@ -284,13 +282,9 @@ You you can use them to implement your own functions and operators.
 - `(#-.)` :: (Double, Double) -> Double
 - `(#div)` :: (Int, Int) -> Int
 - `(#/)` :: (Double, Double) -> Double
-- `(#++)` :: forall a . ([a], [a]) -> [a]
-- `(#:)` :: forall a . (a, [a]) -> [a]
-- `(#head)` :: forall a . [a] -> a
-- `(#tail)` :: forall a . [a] -> [a]
-- `(#nil?)` :: forall a . [a] -> Bool
 - `(#fst)` :: forall a b . (a, b) -> a
 - `(#snd)` :: forall a b . (a, b) -> b
+- `(#show)` :: forall a . a -> List Char
 
 ### Declaring bindings in the REPL
 
