@@ -13,7 +13,7 @@ import Interpreter.Address
 type Env = Map.Map String Address
 
 
-type Memory = Map.Map Address Stored
+type Memory = Map.Map Address Value
 
 
 data Stored
@@ -25,7 +25,7 @@ data Value
   | Lam String Expression Env
   | Tuple [Value]
   -- | List [Value]
-  | Thunk (Env -> State Memory (Either EvaluationError Value)) Env
+  | Thunk (Env -> State Memory (Either EvaluationError Value)) Env Address
   | Data String [Value] -- Name of the Constr and list of arguments
 
 
@@ -35,7 +35,7 @@ instance Show Value where
   show (Lam par body env) = "<lambda>"
   show (Tuple values) = "(" ++ intercalate ", " (map show values) ++ ")"
   -- show (List values) = "[" ++ intercalate ", " (map show values) ++ "]"
-  show (Thunk force'f env) = "<thunk>"
+  show (Thunk force'f env addr) = "<thunk>"
   show (Data name [])
     = name
   show (Data name exprs)

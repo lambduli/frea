@@ -2,6 +2,7 @@ module Interpreter.Print where
 
 import Control.Monad.State.Lazy
 import Data.List
+import qualified Data.Map.Strict as Map
 
 
 import Interpreter.Value
@@ -12,6 +13,8 @@ print :: State Memory (Either EvaluationError Value) -> State Memory (Either Eva
 print state = do
   res <- state
   case res of
+    Left err -> return $ Left err
+
     Right val -> print' val
 
     where
@@ -24,11 +27,15 @@ print state = do
         case sequence printed'vals of
           Left err -> return $ Left err
           Right vals -> return $ Right $ "(" ++ intercalate ", " vals ++ ")"
-      print' t@(Thunk force'f env) = do
+      print' t@(Thunk force'f env addr) = do
         val <- force'val t
         case val of
           Left err -> return $ Left err
-          Right val' -> print' val'
+          Right val' -> do
+            mem <- get
+            let mem' = Map.insert addr val' mem
+            put mem'
+            print' val'
       
       print' (Data con'tag []) = return $ Right con'tag
       print' (Data con'tag args) = do
