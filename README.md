@@ -303,7 +303,7 @@ a +. b  = ((#+.) (a, b))
 
 ### Evaluation Strategy
 
-Frea employs `"call-by-name"` semantics. Programs like this one are absolutely valid:
+Frea employs `"lazy"` evaluation. Programs like this one are absolutely valid:
 
 ```haskell
 forever n = (forever n)
@@ -315,3 +315,18 @@ lst = (result : [1, 2, 3])
 (lst !! 1)
 ```
 And won't trigger infinite loop.
+
+Nothing should get executed more than once, so program like this one:
+```haskell
+num = (#debug 23)
+
+fun a b = (a + b)
+
+(fun num num)
+```
+
+should produce only one
+```
+@debug  `23`
+```
+not two, even thought `num` is refered to two times.
