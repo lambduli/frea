@@ -24,7 +24,6 @@ data Value
   | Lit Lit
   | Lam String Expression Env
   | Tuple [Value]
-  -- | List [Value]
   | Thunk (Env -> State Memory (Either EvaluationError Value)) Env Address
   | Data String [Value] -- Name of the Constr and list of arguments
 
@@ -34,32 +33,11 @@ instance Show Value where
   show (Lit lit) = show lit
   show (Lam par body env) = "<lambda>"
   show (Tuple values) = "(" ++ intercalate ", " (map show values) ++ ")"
-  -- show (List values) = "[" ++ intercalate ", " (map show values) ++ "]"
   show (Thunk force'f env addr) = "<thunk>"
   show (Data name [])
     = name
   show (Data name exprs)
     = "(" ++ name ++ " " ++ unwords (map show exprs) ++ ")"
-
-
--- class Present a where
---   present :: Memory -> a -> String
-
-
--- instance Present Value where
---   present _ (Op name) = name
---   present _ (Lit lit) = show lit
---   present mem (Lam par body env) = "<lambda>"
---   present mem (Tuple values) = "(" ++ intercalate ", " (map (present mem) values) ++ ")"
---   present mem (List values) = "[" ++ intercalate ", " (map (present mem) values) ++ "]"
---   present mem (Thunk force'f env)
---     = case evalState (force'f env) mem of
---         Left err -> show err
---         Right val -> present mem val
---   present mem (Data name [])
---     = name
---   present mem (Data name exprs)
---     = "(" ++ name ++ " " ++ unwords (map (present mem) exprs) ++ ")"
 
 
 data EvaluationError
