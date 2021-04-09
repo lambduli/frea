@@ -17,11 +17,15 @@ import Debug.Trace
 
 
 force'val :: Val.Value -> State Val.Memory (Either EvaluationError Val.Value)
-force'val (Val.Thunk force'f env) = do
+force'val (Val.Thunk force'f env addr) = do
   result <- force'f env
   case result of
     Left err -> return $ Left err
-    Right val -> force'val val
+    Right val -> do
+      mem <- get
+      let mem' = Map.insert addr val mem
+      put mem'
+      force'val val
 force'val val = return $ Right val
 
 
@@ -29,11 +33,15 @@ force :: Expression -> Env -> State Val.Memory (Either EvaluationError Val.Value
 force expr env = do
   result <- evaluate expr env
   case result of
-      Right (Val.Thunk force'f env) -> do
+      Right (Val.Thunk force'f env addr) -> do
         result <- force'f env
         case result of
-          Right val -> force'val val
           Left err -> return $ Left err
+          Right val -> do
+            mem <- get
+            let mem' = Map.insert addr val mem
+            put mem'
+            force'val val
       Right val -> return $ Right val
       Left err -> return $ Left err
 
@@ -46,7 +54,7 @@ evaluate expr env =
       case env !? name of
         Just addr ->
           case mem !? addr of
-            Just (Val.At _ val) -> return $ Right val
+            Just val -> return $ Right val
             Nothing -> return $ Left $ Unexpected $ "V pameti sem nenasel " ++ name
         Nothing -> return $ Left $ UnboundVar name -- can't really happen thanks to the type system
 
@@ -57,25 +65,34 @@ evaluate expr env =
       return $ Right $ Val.Lit lit
 
     Tuple exprs ->
-      return $ Right $ Val.Tuple $ map (\ expr -> Val.Thunk (\ env -> evaluate expr env) env) exprs
+       return $ Right $ Val.Tuple $ map (\ expr -> Val.Thunk (\ env -> evaluate expr env) env (Addr (-1))) exprs
 
     Let name val expr ->
-      return $ Right $ Val.Thunk (\ env -> evaluate (App (Lam name expr) val) env) env
+      evaluate (App (Lam name expr) val) env
+      -- return $ Right $ Val.Thunk (\ env -> evaluate (App (Lam name expr) val) env) env
 
     Lam par body ->
       return $ Right $ Val.Lam par body env
 
 
-    App (Lam par body) right ->
-      let right'val = Val.Thunk (\ env -> force right env) env
-      in return $ Right $ Val.Thunk
-        (\ e'map -> do
-          mem <- get
-          let addr = Addr $ Map.size mem
-              env' = Map.insert par addr e'map
-              mem' = Map.insert addr (Val.At addr right'val) mem
-          put mem'
-          evaluate body env') env
+    App (Lam par body) right -> do
+      mem <- get
+      let addr = Addr $ Map.size mem
+          right'val = Val.Thunk (\ env -> force right env) env addr
+          env' = Map.insert par addr env
+          mem' = Map.insert addr right'val mem -- TODO: remove Val.At
+      put mem'
+      evaluate body env'
+
+      -- let right'val = Val.Thunk (\ env -> force right env) env
+      -- in return $ Right $ Val.Thunk
+      --   (\ e'map -> do
+      --     mem <- get
+      --     let addr = Addr $ Map.size mem
+      --         env' = Map.insert par addr e'map
+      --         mem' = Map.insert addr (Val.At addr right'val) mem -- TODO: lazy
+      --     put mem'
+      --     evaluate body env') env
 
     App (Op op) right -> do
       res <- force right env
@@ -83,72 +100,128 @@ evaluate expr env =
         Right r'val -> apply'operator op r'val env
         Left err -> return $ Left err
 
-    App left right ->
-      return $ Right $ Val.Thunk (\ env -> do
-        res <- force left env
-        case res of
-          Left err -> return $ Left err
+    App left right -> do
+      res <- force left env
+      case res of
+        Left err -> return $ Left err
 
-          Right (Val.Lam par body env') -> do
-            mem <- get
-            let addr = Addr $ Map.size mem
-                env'' = Map.insert par addr env'
-                right'val = Val.Thunk (\ env -> force right env) env
-                mem' = Map.insert addr (Val.At addr right'val) mem
-            put mem'
-            force body env''
+        Right (Val.Lam par body env') -> do
+          mem <- get
+          let addr = Addr $ Map.size mem
+              env'' = Map.insert par addr env'
+              right'val = Val.Thunk (\ env -> force right env) env addr
+              mem' = Map.insert addr right'val mem
+          put mem'
+          evaluate body env''
 
-          Right (Val.Op name) ->
-            force (App (Op name) right) env) env
+        Right (Val.Op name) ->
+            evaluate (App (Op name) right) env
 
-    If cond' then' else' ->
-      return $ Right $ Val.Thunk (\ env -> do
-        res <- force cond' env
-        case res of
-          Left err -> return $ Left err
-          Right (Val.Data con'name []) -> -- wiring the Bool into the type checker
-            if con'name == "True" then evaluate then' env else evaluate else' env) env
+
+      -- return $ Right $ Val.Thunk (\ env -> do -- TODO: lazy
+      --   res <- force left env
+      --   case res of
+      --     Left err -> return $ Left err
+
+      --     Right (Val.Lam par body env') -> do
+      --       mem <- get
+      --       let addr = Addr $ Map.size mem
+      --           env'' = Map.insert par addr env'
+      --           right'val = Val.Thunk (\ env -> force right env) env
+      --           mem' = Map.insert addr (Val.At addr right'val) mem
+      --       put mem'
+      --       force body env''
+
+      --     Right (Val.Op name) ->
+      --       force (App (Op name) right) env) env
+
+    If cond' then' else' -> do
+      res <- force cond' env
+      case res of
+        Left err -> return $ Left err
+
+        Right (Val.Data con'name []) -- wiring the Bool into the type checker
+          | con'name == "True" -> evaluate then' env
+          | otherwise -> evaluate else' env
+
+          -- if con'name == "True" then evaluate then' env else evaluate else' env
+
+
+      -- return $ Right $ Val.Thunk (\ env -> do -- TODO: lazy
+      --   res <- force cond' env
+      --   case res of
+      --     Left err -> return $ Left err
+      --     Right (Val.Data con'name []) -> -- wiring the Bool into the type checker
+      --       if con'name == "True" then evaluate then' env else evaluate else' env) env
 
     Fix expr ->
-      return $ Right $ Val.Thunk (\ env -> evaluate (App expr $ Fix expr) env) env
+      evaluate (App expr $ Fix expr) env
+      -- return $ Right $ Val.Thunk (\ env -> evaluate (App expr $ Fix expr) env) env -- TODO: lazy
 
     Intro name exprs -> do
       -- mem <- get
-      let values = map (\ expr -> Val.Thunk (\ env -> evaluate expr env) env) exprs
-      return $ Right $ Val.Thunk (\ env -> return . Right $ Val.Data name values) env
+      let values = map (\ expr -> Val.Thunk (\ env -> evaluate expr env) env (Addr (-1))) exprs
+      return . Right $ Val.Data name values
+      -- return $ Right $ Val.Thunk (\ env -> return . Right $ Val.Data name values) env -- TODO: lazy
       
       -- values <- mapM (\ expr -> force expr env) exprs
       -- case sequence values of
       --   Left wrong -> return $ Left wrong
       --   Right vals -> return $ Right $ Val.Thunk (\ env -> return . Right $ Val.Data name vals) env
 
-    Elim constructors value'to'elim destructors ->
-      return $ Right $ Val.Thunk (\ env -> do
-        res <- force value'to'elim env
-        case res of
-          Right (Val.Data tag arguments) -> do
-            let
-              [(_, destr)] = filter (\ (ConDecl name _, _) -> tag == name) (zip constructors destructors)
-              -- app = foldl App destr arguments
-            res <- force destr env
-            case res of
-              Left err -> return $ Left err
+    Elim constructors value'to'elim destructors -> do
+      res <- force value'to'elim env
+      case res of
+        Right (Val.Data tag arguments) -> do
+          let
+            [(_, destr)] = filter (\ (ConDecl name _, _) -> tag == name) (zip constructors destructors)
+            -- app = foldl App destr arguments
+          res <- force destr env
+          case res of
+            Left err -> return $ Left err
 
-              Right val | [] <- arguments ->
-                return $ Right val
+            Right val | [] <- arguments ->
+              return $ Right val
 
-              Right lam@(Val.Lam par body _) ->
-                apply'closure arguments lam
+            Right lam@(Val.Lam par body _) ->
+              apply'closure arguments lam
 
-              Right (Val.Op op) | [right] <- arguments -> do
-                res <- force'val right
-                case res of
-                  Left err -> return $ Left err
-                  Right r'val -> apply'operator op r'val env
+            Right (Val.Op op) | [right] <- arguments -> do
+              res <- force'val right
+              case res of
+                Left err -> return $ Left err
+                Right r'val -> apply'operator op r'val env
 
-          Left err -> return $ Left err
-          -- something -> trace ("something  " ++ Val.present mem something) $ Right something
-      ) env
+        Left err -> return $ Left err
+
+
+
+      -- return $ Right $ Val.Thunk (\ env -> do -- TODO: lazy
+      --   res <- force value'to'elim env
+      --   case res of
+      --     Right (Val.Data tag arguments) -> do
+      --       let
+      --         [(_, destr)] = filter (\ (ConDecl name _, _) -> tag == name) (zip constructors destructors)
+      --         -- app = foldl App destr arguments
+      --       res <- force destr env
+      --       case res of
+      --         Left err -> return $ Left err
+
+      --         Right val | [] <- arguments ->
+      --           return $ Right val
+
+      --         Right lam@(Val.Lam par body _) ->
+      --           apply'closure arguments lam
+
+      --         Right (Val.Op op) | [right] <- arguments -> do
+      --           res <- force'val right
+      --           case res of
+      --             Left err -> return $ Left err
+      --             Right r'val -> apply'operator op r'val env
+
+      --     Left err -> return $ Left err
+      --     -- something -> trace ("something  " ++ Val.present mem something) $ Right something
+      -- ) env
         
 
 apply'closure :: [Val.Value] -> Val.Value -> State Val.Memory (Either EvaluationError Val.Value)
@@ -157,7 +230,7 @@ apply'closure (val : vals) (Val.Lam par body env) = do
   mem <- get
   let addr = Addr $ Map.size mem
       env' = Map.insert par addr env
-      mem' = Map.insert addr (Val.At addr val) mem
+      mem' = Map.insert addr val mem
   put mem'
   res <- force body env'
   case res of
@@ -199,6 +272,9 @@ apply'operator "#+" (Val.Tuple [val'l, val'r]) env = do
   case (res'l, res'r) of
     (Right (Val.Lit (LitInt i'l)), Right (Val.Lit (LitInt i'r))) ->
       return $ Right $ Val.Lit (LitInt (i'l + i'r))
+    (Right _, Left err) -> return $ Left err
+    (Left err, _) -> return $ Left err
+
 
 apply'operator "#+." (Val.Tuple [val'l, val'r]) env = do
   res'l <- force'val val'l
@@ -254,10 +330,12 @@ apply'operator "#/" (Val.Tuple [val'l, val'r]) env = do
       return $ Right $ Val.Lit (LitDouble (d'l / d'r))
 
 apply'operator "#fst" (Val.Tuple [f, s]) env
-  = return $ Right $ Val.Thunk (\ _ -> return $ Right f) env
+  = return $ Right f
+  -- = return $ Right $ Val.Thunk (\ _ -> return $ Right f) env
 
 apply'operator "#snd" (Val.Tuple [f, s]) env
-  = return $ Right $ Val.Thunk (\ _ -> return $ Right s) env
+  = return $ Right s
+  -- = return $ Right $ Val.Thunk (\ _ -> return $ Right s) env
 
 apply'operator "#show" val env = do
   res <- force'val val
@@ -270,7 +348,7 @@ apply'operator "#debug" val env = do
   case res of
     Left err -> return $ Left err
     Right val ->
-      let v = trace ("  @debug:  `" ++ show val ++ "`") val
+      let v = trace ("@debug:  `" ++ show val ++ "`") val
       in return $ Right v
 
 apply'operator name expr env
