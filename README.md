@@ -259,8 +259,6 @@ in let rec
 in (fact 5)
 ```
 
-> This is archaic, more verbose version. You can safely ommit the `rec` keyword.
-
 ___
 
 ### Primitive operations
