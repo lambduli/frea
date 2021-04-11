@@ -105,12 +105,11 @@ frea λ > :t (+)
 
 (+) :: Int -> Int -> Int
 ```
-> The built-in "binary" operators (those starting with #) accept a single tuple and can not be used in infix. Therefore they must be wrapped in parenteses to work in the prefix notation.
 
-> Other (binary) operators can be used in infix as well as (binary) functions with help of backtick symbol like in the Haskell.
+> Operators can be used in infix as well as functions wrapped in the pair of backtics.
 
 ```haskell
-frea λ > let plus a b = (a + b) in (23 `plus` 42)
+frea λ > let a `plus` b = (a + b) in (23 `plus` 42)
 
 65
 ```
