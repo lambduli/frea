@@ -105,8 +105,8 @@ spec = describe "Test the parser" $ do
   it "Parses a simple infix function expression (23 `plus` 42)" $ do
     "(23 `plus` 42)" <=>
       App (App (Var "plus") (Lit (LitInt 23))) (Lit (LitInt 42))
-  it "Parses a let-in expression with simple infix function expression (let plus = plus in 23 `plus` 42)" $ do
-    "let plus = plus in 23 `plus` 42" <=>
+  it "Parses a let-in expression with simple infix function expression (let plus = plus in (23 `plus` 42))" $ do
+    "let plus = plus in (23 `plus` 42)" <=>
       Let "plus" (Var "plus") (App (App (Var "plus") (Lit (LitInt 23))) (Lit (LitInt 42)))
   it "Parses a let-in expression with simple infix function expression (let plus = (\\ a b -> ((#+) (a, b))) in (23 `plus` 42))" $ do
     "let plus = (\\ a b -> ((#+) (a, b))) in (23 `plus` 42)" <=>
