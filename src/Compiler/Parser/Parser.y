@@ -98,8 +98,8 @@ Constructors    ::  { [ConstrDecl] }
 Constr          ::  { ConstrDecl }
                 :   UpIdent NoneOrMany(Type)                        { ConDecl $1 $2 }
                 -- |   '(' Op ')' NoneOrMany(Type)                     { ConDecl $2 $4 }
-                |   Type OpCon Type                                 { ConDecl $2 [$1, $3] }
-                |   Type '`' Con '`' Type                           { ConDecl $3 [$1, $5] }
+                |   Type OpCon Type NoneOrMany(Type)                { ConDecl $2 ($1 : $3 : $4) }
+                |   Type '`' Con '`' Type NoneOrMany(Type)          { ConDecl $3 ($1 : $5 : $6) }
 
 ConstrOther     ::  { ConstrDecl }
                 :   '|' Constr                                      { $2 }
@@ -149,10 +149,10 @@ Exp             ::  { Expression }
                 |   Lit                                             { $1 }
                 |   lambda Params '->' Exp                          { foldr (\ arg body -> Lam arg body) $4 $2 }
 
-                |   Exp '`' Var '`' Exp                             { App (App (Var $3) $1) $5 }
-                |   Exp '`' Con '`' Exp                             { App (App (Var $3) $1) $5 }
+                |   '(' Exp '`' Var '`' OneOrMany(Exp) ')'          { foldl App (Var $4) ($2 : $6) }
+                |   '(' Exp '`' Con '`' OneOrMany(Exp) ')'          { foldl App (Var $4) ($2 : $6) }
                 --  Note: Consider adding Constructor Expression for this ^^^
-                |   Exp Oper Exp                                    { App (App $2 $1) $3 }
+                |   '(' Exp Oper OneOrMany(Exp) ')'                 { foldl App $3 ($2 : $4) }
                 |   '(' Exp OneOrMany(Exp) ')'                      { foldl App $2 $3 }
                 --  NOTE: what about (fn) ? you can't call a function without arguments!
                 |   '(' Exp ')'                                     { $2 }
@@ -174,21 +174,21 @@ Binding         ::  { (String, Expression) }
                 :   LowIdent '=' Exp                                { ($1, $3) }
                 |   LowIdent Params '=' Exp                         { ($1, foldr (\ arg body -> Lam arg body) $4 $2) }
                 |   '(' Op ')' Params '=' Exp                       { ($2, foldr (\ arg body -> Lam arg body) $6 $4) }
-                |   Var Op Var '=' Exp                              { ($2, (Lam $1 (Lam $3 $5))) }
-                |   Var '`' Var '`' Var '=' Exp                     { ($3, (Lam $1 (Lam $5 $7))) }
+                |   Var Op Params '=' Exp                           { ($2, foldr Lam $5 ($1 : $3)) }
+                |   Var '`' Var '`' Params '=' Exp                  { ($3, foldr Lam $7 ($1 : $5)) }
                 
                 |   rec LowIdent '=' Exp                            { ($2, Fix (Lam $2 $4)) }
                 |   rec LowIdent Params '=' Exp                     { ($2, Fix $ foldr (\ arg body -> Lam arg body) $5 ($2 : $3)) }
-                |   rec Var Op Var '=' Exp                          { ($3, Fix (Lam $3 (Lam $2 (Lam $4 $6)))) }
+                |   rec Var Op Params '=' Exp                       { ($3, Fix $ foldr Lam $6 ($3 : $2 : $4)) }
                 |   rec '(' Op ')' Params '=' Exp                   { ($3, Fix $ foldr (\ arg body -> Lam arg body) $7 ($3 : $5)) }
-                |   rec Var '`' Var '`' Var '=' Exp                 { ($4, Fix (Lam $4 (Lam $2 (Lam $6 $8)))) }
+                |   rec Var '`' Var '`' Params '=' Exp              { ($4, Fix $ foldr Lam $8 ($4 : $2 : $6)) }
 
 GlobalBinding   ::  { (String, Expression) }
                 :   LowIdent '=' Exp                                { ($1, $3) }
                 |   LowIdent Params '=' Exp                         { ($1, foldr (\ arg body -> Lam arg body) $4 $2) }
                 |   '(' Op ')' Params '=' Exp                       { ($2, foldr (\ arg body -> Lam arg body) $6 $4) }
-                |   Var Op Var '=' Exp                              { ($2, Lam $1 (Lam $3 $5)) }
-                |   Var '`' Var '`' Var '=' Exp                     { ($3, Lam $1 (Lam $5 $7)) }
+                |   Var Op Params '=' Exp                           { ($2, foldr Lam $5 ($1 : $3)) }
+                |   Var '`' Var '`' Params '=' Exp                  { ($3, foldr Lam $7 ($1 : $5)) }
                 -- |   rec '(' Op ')' Params '=' Exp                   { ($3, Fix $ foldr (\ arg body -> Lam arg body) $7 ($3 : $5)) }
                 -- |   rec LowIdent Params '=' Exp                     { ($2, Fix $ foldr (\ arg body -> Lam arg body) $5 ($2 : $3)) }
                 -- |   rec Var Op Var '=' Exp                          { ($3, Fix $ Lam $3 (Lam $2 (Lam $4 $6))) }
