@@ -49,6 +49,21 @@ tail lst = (which-List lst
             Nothing
             (\ h t -> (Just t)))
 
+show-List list = (which-List list
+                    "[]"
+                    ( \ head tail -> ( ((show head) ++ " : ") ++ (show-List tail) ) ))
+
+map fn lst = (which-List lst
+              []
+              (\ h t -> ((fn h) : (map fn t)) ))
+
+show-Maybe m = (which-Maybe m
+                "Nothing"
+                (\ v -> (show v)))
+
+
+fact n = if (n == 0) then 1 else (n * (fact (n - 1)))
+
 data () = ()
 
 data Bool
@@ -66,19 +81,3 @@ data Maybe a
 data List a
   = []
   | a : (List a)
-
-
-show-List list = (which-List list
-                    "[]"
-                    ( \ head tail -> ( ((show head) ++ " : ") ++ (show-List tail) ) ))
-
-map fn lst = (which-List lst
-              []
-              (\ h t -> ((fn h) : (map fn t)) ))
-
-show-Maybe m = (which-Maybe m
-                "Nothing"
-                (\ v -> (show v)))
-
-
-fact n = if (n == 0) then 1 else (n * (fact (n - 1)))
