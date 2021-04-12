@@ -1,7 +1,9 @@
 module Compiler.TypeChecker.Inference.TypeOf where
 
 
+import qualified Data.Set as Set
 import qualified Data.Map.Strict as Map
+import Data.Map.Strict ((!), (!?))
 import Data.Bifunctor
 import Control.Monad
 
@@ -75,11 +77,72 @@ infer'expression env expr = case runInfer env (infer expr) of
 
 infer'many :: [(String, Expression)] -> Infer ([(String, Type)], [Constraint])
 infer'many bindings = do
+  let indexed = index'bindings bindings
+  let graph = build'graph bindings
+  -- TODO: now use stronglyConnComp to solve the graph
+
   let names = map fst bindings
       gener name = do ForAll [] <$> fresh
   fresh'vars <- mapM gener names
   merge'into'env (zip names fresh'vars) $ infer'many' bindings
-  
+
+
+index'bindings :: [(String, Expression)] -> Map.Map String Int -- [((String, Expression), Int)]
+index'bindings = enumerate'bindings 0
+  where
+    enumerate'bindings :: Int -> [(String, Expression)] -> Map.Map String Int
+    enumerate'bindings _ [] = Map.empty
+    enumerate'bindings n ((name, expr) : bs) = Map.insert name n $ enumerate'bindings (n + 1) bs
+
+
+build'graph :: [(String, Expression)] -> Map.Map String Int -> [((String, Expression), Int, [Int])]
+build'graph bindings indexer = graph
+  where
+    get'deps :: Expression -> Set.Set Int
+    get'deps expr =
+      case expr of
+        Var name ->
+          maybe Set.empty Set.singleton (indexer !? name)
+
+        Op _ -> Set.empty
+
+        Lit _ -> Set.empty
+
+        Lam par body ->
+          case indexer !? par of
+            Nothing -> get'deps body
+            Just ix -> Set.delete ix $ get'deps body
+
+        App left right ->
+          get'deps left `Set.union` get'deps right
+
+        Tuple exprs ->
+          foldl (\ deps'acc expr -> deps'acc `Set.union` get'deps expr) Set.empty exprs
+
+        If b'expr then'expr else'expr ->
+          let b'deps = get'deps b'expr
+              t'deps = get'deps then'expr
+              e'deps = get'deps else'expr
+          in  b'deps `Set.union` t'deps `Set.union` e'deps
+
+        Let name val'expr body'expr ->
+          let v'deps = get'deps val'expr
+              b'deps = get'deps body'expr
+          in  v'deps `Set.union` b'deps
+
+        Fix expr -> get'deps expr
+
+        -- this should always yield an empty Set, but just to be sure
+        Intro _ exprs -> foldl (\ deps'acc expr -> deps'acc `Set.union` get'deps expr) Set.empty exprs
+
+        Elim _ expr exprs ->
+          foldl (\ deps'acc expr -> deps'acc `Set.union` get'deps expr) Set.empty (expr : exprs)
+
+
+    dependencies = map (get'deps . snd) bindings
+
+    graph = zipWith (\ (name, expr) deps -> ((name, expr), indexer ! name, Set.toList deps)) bindings dependencies
+
 
 infer'many' :: [(String, Expression)] -> Infer ([(String, Type)], [Constraint])
 infer'many' [] = do
