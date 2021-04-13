@@ -1,11 +1,13 @@
 module Compiler.TypeChecker.Inference.TypeOf where
 
 
+import Data.Graph (SCC(..), stronglyConnComp)
 import qualified Data.Set as Set
 import qualified Data.Map.Strict as Map
 import Data.Map.Strict ((!), (!?))
 import Data.Bifunctor
 import Control.Monad
+import Control.Monad.Reader
 
 import Compiler.Syntax.Declaration
 import Compiler.Syntax.Type
@@ -22,6 +24,8 @@ import Compiler.TypeChecker.Inference.InferUtils
 import Compiler.KindChecker.KindEnv
 import Compiler.KindChecker.Inference hiding (infer)
 import Compiler.KindChecker.KindError
+
+import Debug.Trace
 
 
 infer'env :: [Declaration] -> TypeEnv -> Either TypeError TypeEnv
@@ -78,9 +82,36 @@ infer'expression env expr = case runInfer env (infer expr) of
 infer'many :: [(String, Expression)] -> Infer ([(String, Type)], [Constraint])
 infer'many bindings = do
   let indexed = index'bindings bindings
-  let graph = build'graph bindings
-  -- TODO: now use stronglyConnComp to solve the graph
+  let graph = build'graph bindings indexed
+  let solved = stronglyConnComp graph
+  -- let ss = trace ("solved  " ++ show solved) solved
+  -- ted to mam vyreseny a co musim udelat je
+  -- ze projdu celej ten solve list a pro kazdy CyclicSCC [(String, Expression)]
+    -- priradim kazdymu jmenu Forall [] <$> fresh
+    -- pak vlastne provedu posbirani constraintu
+    -- pak je vratim nekam
+  -- pro kazdy AcyclicSCC (String, Expression)
+    -- tady to Expression nezavisi ani samo na sobe, takze neni potreba to zanaset
+    -- jenom to infernu -> posbiram constrainty a type a vratim je nekam vejs
+  infer'groups solved
+    where
+      infer'groups :: [SCC (String, Expression)] -> Infer ([(String, Type)], [Constraint])
+      infer'groups [] = return ([], [])
+      infer'groups ((AcyclicSCC bind) : sccs) = do
+        (t'binds, constrs) <- infer'group [bind]
+        t'env <- ask
+        (t'binds', constrs') <- merge'into'env (map (\ (n, t) -> (n, generalize t'env t)) t'binds) $ infer'groups sccs
+        return (t'binds ++ t'binds', constrs ++ constrs')
 
+      infer'groups ((CyclicSCC bindings) : sccs) = do
+        (t'binds, constrs) <- infer'group bindings
+        t'env <- ask
+        (t'binds', constrs') <- merge'into'env (map (\ (n, t) -> (n, generalize t'env t)) t'binds) $ infer'groups sccs
+        return (t'binds ++ t'binds', constrs ++ constrs')
+
+
+infer'group :: [(String, Expression)] -> Infer ([(String, Type)], [Constraint])
+infer'group bindings = do
   let names = map fst bindings
       gener name = do ForAll [] <$> fresh
   fresh'vars <- mapM gener names
