@@ -45,6 +45,9 @@ data Token
   | TokRightBracket -- ]
   | TokComma  -- ,
   | TokBackTick -- `
+  | TokSemicolon -- ;
+  | TokLeftBrace -- {
+  | TokRightBrace -- }
 
 
   -- literals

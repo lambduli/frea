@@ -38,13 +38,13 @@ spec = describe "Test the inference" $ do
     Right (ForAll [] $ TyTuple [t'Int, t'Bool, t'Char])
 
   it "Infers the type of a let inside lambda" $
-    "\\ x -> let y = ((#+) (x, 1)) in y" <::> ForAll [] (TyArr t'Int t'Int)
+    "\\ x -> let { y = ((#+) (x, 1)) } in y" <::> ForAll [] (TyArr t'Int t'Int)
 
   it "Infers the type of a let inside lambda [prefix] ((+) x 1)" $
-    "\\ x -> let (+) = (\\ a b -> ((#+) (a, b))) y = ((+) x 1) in y" <::> ForAll [] (TyArr t'Int t'Int)
+    "\\ x -> let { (+) = \\ a b -> ((#+) (a, b)) ; y = ((+) x 1) } in y" <::> ForAll [] (TyArr t'Int t'Int)
 
   it "Infers the type of a let inside lambda [infix] (x + 1)" $
-    "\\ x -> let (+) = (\\ a b -> ((#+) (a, b))) y = (x + 1) in y" <::> ForAll [] (TyArr t'Int t'Int)
+    "\\ x -> let { (+) = (\\ a b -> ((#+) (a, b))) ; y = (x + 1) } in y" <::> ForAll [] (TyArr t'Int t'Int)
 
   it "Infers the type of an equality check (on Int) inside the lambda" $
     "(\\ x -> if ((#=) (x, 23)) then True else False)" <::> ForAll [] (TyArr t'Int t'Bool)
@@ -62,7 +62,7 @@ spec = describe "Test the inference" $ do
 
   -- TODO: add more test with infix operators and functions 
   it "Infers the type of a let with infix function expression" $
-    "let plus = (\\ a b -> ((#+) (a, b))) in (23 `plus` 42)" <::> ForAll [] t'Int
+    "let { plus = (\\ a b -> ((#+) (a, b))) } in (23 `plus` 42)" <::> ForAll [] t'Int
 
 
 infix 4 <::>

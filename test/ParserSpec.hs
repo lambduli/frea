@@ -41,41 +41,61 @@ spec = describe "Test the parser" $ do
     "if True then 23 else 42" <=>
       If (Var "True") (Lit (LitInt 23)) (Lit (LitInt 42))
 
+  it "Parses a simple application" $ do
+    "a b c" <=>
+      App (App (Var "a") (Var "b")) (Var "c")
+
+  it "Parses an infix operation" $ do
+    "a ++ b" <=>
+      App (App (Var "++") (Var "a")) (Var "b")
+
+  it "Parses parenthesized infix operation" $ do
+    "(ix - 1)" <=>
+      App (App (Var "-") (Var "ix")) (Lit (LitInt 1))
+
+  it "Parses a simple infix operation" $ do
+    "(t !! 0)" <=>
+      App (App (Var "!!") (Var "t")) (Lit $ LitInt 0)
+
+  it "Parses a simple nested infix operation" $ do
+    "(t !! (ix - 1))" <=>
+      App (App (Var "!!") (Var "t")) (App (App (Var "-") (Var "ix")) (Lit (LitInt 1)))
+
   it "Parses a simple let expression" $ do
-    "let a = 23 in a" <=>
+    "let { a = 23 } in a" <=>
       Let "a" (Lit (LitInt 23)) (Var "a")
   it "Parses a multi let expression" $ do
-    "let a = 23 b = 42 in a" <=>
+    "let { a = 23 ; b = 42 } in a" <=>
       Let "a" (Lit (LitInt 23)) (Let "b" (Lit (LitInt 42)) (Var "a"))
   it "Parses a multi let with operators" $ do
-    "let (+) = 23 (<=>) = 42 in a" <=>
+    "let { (+) = 23 ; (<=>) = 42 } in a" <=>
       Let "+" (Lit (LitInt 23)) (Let "<=>" (Lit (LitInt 42)) (Var "a"))
   it "Parses a multi let with cross-level references" $ do
-    "let (+) = 23 (++) = (+) in a" <=>
+    "let { (+) = 23 ; (++) = (+) } in a" <=>
       Let "+" (Lit (LitInt 23)) (Let "++" (Var "+") (Var "a"))
   it "Parses a let function" $ do
-    "let f a b = b in x" <=>
+    "let { f a b = b } in x" <=>
       Let "f" (Lam "a" (Lam "b" (Var "b"))) (Var "x")
   it "Parses a let prefix operator" $ do
-    "let (+) a b = b in x" <=>
+    "let { (+) a b = b } in x" <=>
       Let "+" (Lam "a" (Lam "b" (Var "b"))) (Var "x")
   it "Parses a let infix operator" $ do
-    "let a + b = b in x" <=>
+    "let { a + b = b } in x" <=>
       Let "+" (Lam "a" (Lam "b" (Var "b"))) (Var "x")
   it "Parses a let infix operator" $ do
-    "let a + b = b in x" <=>
+    "let { a + b = b } in x" <=>
       Let "+" (Lam "a" (Lam "b" (Var "b"))) (Var "x")
 
   it "Parses an operator in infix let" $ do
-    "let a + b = b in x" <=>
+    "let { a + b = b } in x" <=>
       Let "+" (Lam "a" (Lam "b" (Var "b"))) (Var "x")
 
   it "Parses a function in infix let" $ do
-    "let a `plus` b = b in x" <=>
+    "let { a `plus` b = b } in x" <=>
       Let "plus" (Lam "a" (Lam "b" (Var "b"))) (Var "x")
 
   it "Parses a multi let" $ do
-    "let n = 23 f m = m in (f n)" <=>
+    "let { n = 23 ; f m = m } in (f n)" <=>
       Let "n" (Lit (LitInt 23)) (Let "f" (Lam "m" (Var "m") ) (App (Var "f") (Var "n")))
 
   it "Parses a fix expression" $ do
@@ -90,7 +110,7 @@ spec = describe "Test the parser" $ do
         (App (Var "fn") (Lit (LitInt 2)))
 
   it "Parses a simple arithmetic expression equivalent to 23 + 42" $ do
-    "((#+) (23, 42))" <=>
+    "(#+) (23, 42)" <=>
       App (Op "#+") (Tuple [Lit (LitInt 23), Lit (LitInt 42)])
   
   it "Parses a simple arithmetic expression (#+ (23, 42))" $ do
@@ -106,10 +126,10 @@ spec = describe "Test the parser" $ do
     "(23 `plus` 42)" <=>
       App (App (Var "plus") (Lit (LitInt 23))) (Lit (LitInt 42))
   it "Parses a let-in expression with simple infix function expression (let plus = plus in (23 `plus` 42))" $ do
-    "let plus = plus in (23 `plus` 42)" <=>
+    "let { plus = plus } in (23 `plus` 42)" <=>
       Let "plus" (Var "plus") (App (App (Var "plus") (Lit (LitInt 23))) (Lit (LitInt 42)))
   it "Parses a let-in expression with simple infix function expression (let plus = (\\ a b -> ((#+) (a, b))) in (23 `plus` 42))" $ do
-    "let plus = (\\ a b -> ((#+) (a, b))) in (23 `plus` 42)" <=>
+    "let { plus = \\ a b -> ((#+) (a, b)) } in (23 `plus` 42)" <=>
       Let
         "plus"
         (Lam "a" (Lam "b" (App (Op "#+") (Tuple [Var "a", Var "b"]))))
