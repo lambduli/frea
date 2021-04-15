@@ -220,8 +220,8 @@ TyApp           ::  { Type }
                 :   TyAppLeft OneOrMany(TyAppRight)                 { foldl TyApp $1 $2 }
 
 TyAppLeft       ::  { Type }
-                :   Var                                             { TyVar $1 }
-                |   Con                                             { TyCon $1 }
+                :   LowIdent                                        { TyVar $1 }
+                |   UpIdent                                         { TyCon $1 }
                 |   TyArr                                           { $1 }
                 |   TyTuple                                         { $1 }
                 |   '(' TyApp ')'                                   { $2 }

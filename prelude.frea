@@ -83,6 +83,8 @@ data Bool
   = True
   | False
 ;
+data Test a b c = One
+;
 data Either a b
   = Left a
   | Right b
