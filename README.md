@@ -12,22 +12,22 @@ To test: `$ stack test`
 ### Maping over a list
 ```haskell
 let
-  list = [1, 2, 3, 4, 5]
-  double x = (2 * x)
-  rec map fn lst = (which-List lst
+  { list = [1, 2, 3, 4, 5]
+  ; double x = 2 * x
+  ; rec map fn lst = which-List lst
                       []
-                      (\ h t -> ((fn h) : (map fn t)) ))
-in (map double list)
+                      \ h t -> (fn h) : (map fn t) }
+in map double list
 ```
 ### Factorial of 5
 ```haskell
 let
-  zero n = (n == 0)
-  dec n = (n - 1)
-  rec fact n =  if (zero n)
+  { zero n = n == 0
+  ; dec n = n - 1
+  ; rec fact n =  if zero n
                 then 1
-                else (n * (fact (dec n)))
-in (fact 5)
+                else n * (fact (dec n)) }
+in fact 5
 ```
 
 ___
@@ -97,7 +97,7 @@ frea λ > :t ()
 ```haskell
 frea λ > :t (\ int -> (int + 1))
 
-(\ int -> (int + 1)) :: Int -> Int
+(\ int -> ((+ int) 1)) :: Int -> Int
 ```
 ### Operators
 ```haskell
@@ -109,7 +109,7 @@ frea λ > :t (+)
 > Operators can be used in infix as well as functions wrapped in the pair of backtics.
 
 ```haskell
-frea λ > let a `plus` b = (a + b) in (23 `plus` 42)
+frea λ > let { a `plus` b = a + b } in 23 `plus` 42
 
 65
 ```
@@ -152,15 +152,14 @@ Which value corresponds to which constructor is determined by the order.
 It works like this:
 
 ```haskell
-data Maybe a = Nothing | Just a
-
-data List a
-  = []
-  | a : (List a)
-
-head lst = (which-List lst
-            Nothing
-            (\ head tail -> Just head))
+{ data Maybe a = Nothing | Just a
+; data List a
+    = []
+    | a : (List a)
+; head lst =  which-List
+                lst
+                Nothing
+                \ head tail -> Just head }
 ```
 
 Thanks to the evaluation strategy of the Frea you don't need to worry about evaluation of the expressions, which won't be selected, they will never be evaluated.
@@ -186,7 +185,7 @@ frea λ > if True then 23 else 42
 
 ### Let in expression
 ```haskell
-frea λ > let name = "Frea" in (name  ++ " is awesome!")
+frea λ > let { name = "Frea" } in name  ++ " is awesome!"
 
 "Frea is awesome!"
 ```
@@ -194,7 +193,7 @@ frea λ > let name = "Frea" in (name  ++ " is awesome!")
 You can also define binary operators or functions using infix notation:
 
 ```haskell
-frea λ > let a `plus` b = (a + b) in (23 `plus` 42)
+frea λ > let { a `plus` b = a + b } in 23 `plus` 42
 
 65
 ```
@@ -202,60 +201,61 @@ frea λ > let a `plus` b = (a + b) in (23 `plus` 42)
 or operator:
 
 ```haskell
-frea λ > let a |> b = b in ("left" |> "right")
+frea λ > let { a |> b = b } in "left" |> "right"
 
 "right"
 ```
 
 ### Operators
 ```haskell
-frea λ > ((+) 23 42)
+frea λ > (+) 23 42
 
 ```
 
 or
 
 ```haskell
-frea λ > (23 + 42)
+frea λ > 23 + 42
 
 65
 ```
 
 ### Function Application
 ```haskell
-frea λ > (fn arg1 arg2 arg3 ... argN)
+frea λ > fn arg1 arg2 arg3 ... argN
 ```
 
 or
 
 ```haskell
-frea λ> (arg1 `fn` arg2)
+frea λ> arg1 `fn` arg2
 ```
 
 ### Lambdas with many arguments
 ```haskell
-frea λ > (\ a b c -> c)
+frea λ > \ a b c -> c
 ```
 
 > You can use two different keywords for lambdas: `lambda` and `\`. When you use `\` you need to always put a space behind it, separating the first argument and the `\` symbol. That's because you can use any symbol to name operators, even `\`. Therefore `\i` is a valid variable name in Frea.
 
+<!--
 ### Recursion using Fix keyword
 ```haskell
 frea λ > (fix (\ fact n -> if (n == 0) then 1 else (n * (fact (n - 1)))) 5)
 
 120
 ```
+-->
 
 ### Recursion using Let rec
 ```haskell
 let
-  zero n = (n == 0)
-  dec n = (n - 1)
-in let rec
-  fact n =  if (zero n)
-            then 1
-            else (n * (fact (dec n)))
-in (fact 5)
+  { zero n = n == 0
+  ; dec n = n - 1
+  ; rec fact n =  if zero n
+                  then 1
+                  else n * (fact (dec n)) }
+in fact 5
 ```
 
 ___
@@ -289,12 +289,12 @@ You can just write a list of bindings as in `let in` expression but dropping the
 You can write stuff like:
 
 ```haskell
-a == b  = ((#=) (a, b))
-a < b   = ((#<) (a, b))
-a > b   = ((#>) (a, b))
+a == b  = (#=) (a, b)
+a < b   = (#<) (a, b)
+a > b   = (#>) (a, b)
 
-a + b   = ((#+) (a, b))
-a +. b  = ((#+.) (a, b))
+a + b   = (#+) (a, b)
+a +. b  = (#+.) (a, b)
 ```
 
 
@@ -303,23 +303,20 @@ a +. b  = ((#+.) (a, b))
 Frea employs `"lazy"` evaluation. Programs like this one are absolutely valid:
 
 ```haskell
-forever n = (forever n)
+{ forever n = forever n
+; result = forever 0
+; lst = result : [1, 2, 3] }
 
-result = (forever 0)
-
-lst = (result : [1, 2, 3])
-
-(lst !! 1)
+lst !! 1
 ```
 And won't trigger infinite loop.
 
 Nothing should get executed more than once, so program like this one:
 ```haskell
-num = (#debug 23)
+{ num = #debug 23
+; fun a b = a + b }
 
-fun a b = (a + b)
-
-(fun num num)
+fun num num
 ```
 
 should produce only one
