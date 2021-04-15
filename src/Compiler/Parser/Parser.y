@@ -20,7 +20,8 @@ import Compiler.Syntax.Type
 }
 
 
-%name parserAct
+%name parserMain
+%name parserType Type
 %tokentype { Token }
 %error { parseError }
 %monad { P }
@@ -65,6 +66,9 @@ import Compiler.Syntax.Type
   ']'           { TokRightBracket }
   ','           { TokComma }
   '`'           { TokBackTick }
+  '{'           { TokLeftBrace }
+  '}'           { TokRightBrace }
+  ';'           { TokSemicolon }
 
 
   unit          { TokVarUpper "()" }
@@ -82,7 +86,7 @@ Program         ::  { Either [Declaration] Expression }
                 |   Declarations                                    { Left $1 }
 
 Declarations    ::  { [Declaration] }
-                :   OneOrMany(Declaration)                          { $1 }
+                :   Layout(Declaration)                             { $1 }
 
 Declaration     ::  { Declaration }
                 :   Decl                                            { $1 }
@@ -95,11 +99,13 @@ Constructors    ::  { [ConstrDecl] }
                 :   {- empty -}                                     { [] }
                 |   '=' Constr NoneOrMany(ConstrOther)              { $2 : $3 }
 
+ConName         ::  { String }
+                :   OpCon                                           { $1 }
+                |   '`' Con '`'                                     { $2 }
+
 Constr          ::  { ConstrDecl }
-                :   UpIdent NoneOrMany(Type)                        { ConDecl $1 $2 }
-                -- |   '(' Op ')' NoneOrMany(Type)                     { ConDecl $2 $4 }
-                |   Type OpCon Type NoneOrMany(Type)                { ConDecl $2 ($1 : $3 : $4) }
-                |   Type '`' Con '`' Type NoneOrMany(Type)          { ConDecl $3 ($1 : $5 : $6) }
+                :   UpIdent NoneOrMany(TyAppRight)                   { ConDecl $1 $2 }
+                |   Type ConName OneOrMany(Type)                    { ConDecl $2 ($1 : $3) }
 
 ConstrOther     ::  { ConstrDecl }
                 :   '|' Constr                                      { $2 }
@@ -123,44 +129,39 @@ Con             ::  { String }
                 :   conid                                           { $1 }
 
 Op              ::  { String }
-                -- :   symid                                           { $1 }
                 :   op                                              { $1 }
-                |   '|'                                             { "|" }
 
 OpCon           ::  { String }
                 :   opcon                                           { $1 }
 
 Oper            ::  { Expression }
-                -- :   symid                                           { Op $1 }
                 :   op                                              { Var $1 }
-                |   '|'                                             { Var "|" }
                 |   opcon                                           { Var $1 }
 
 Exp             ::  { Expression }
-                :   Var                                             { Var $1 }
+                :   AppLeft                                         { $1 }
+                |   Application                                     { $1 }
+                |   '(' Exp ')'                                     { $2 }
+
+Application     ::  { Expression }
+                :   AppLeft OneOrMany(AppRight)                     { foldl App $1 $2 }
+                |   AppLeft '`' Var '`' OneOrMany(AppRight)         { foldl App (Var $3) ($1 : $5) }
+                |   AppLeft '`' Con '`' OneOrMany(AppRight)         { foldl App (Var $3) ($1 : $5) }
+                --  Note: Consider adding Constructor Expression for this ^^^
+                |   AppLeft Oper OneOrMany(AppRight)                { foldl App $2 ($1 : $3) }
+                --  NOTE: what about (fn) ? you can't call a function without arguments!
+
+AppLeft         ::  { Expression }
+                :   LowIdent                                        { Var $1 }
                 |   Con                                             { Var $1 }
-                --  Note: Consider adding Constructor Expression for this ^^^
-                -- |   '(' Oper ')'                                    { $2 }
-                |   '(' op ')'                                      { Var $2 }
                 |   '(' opcon ')'                                   { Var $2 }
-                --  Note: Consider adding Constructor Expression for this ^^^
                 |   symid                                           { Op $1 }
-                -- NOTE: To resolve 2 R/R conflicts
                 |   Lit                                             { $1 }
                 |   lambda Params '->' Exp                          { foldr (\ arg body -> Lam arg body) $4 $2 }
-
-                |   '(' Exp '`' Var '`' OneOrMany(Exp) ')'          { foldl App (Var $4) ($2 : $6) }
-                |   '(' Exp '`' Con '`' OneOrMany(Exp) ')'          { foldl App (Var $4) ($2 : $6) }
-                --  Note: Consider adding Constructor Expression for this ^^^
-                |   '(' Exp Oper OneOrMany(Exp) ')'                 { foldl App $3 ($2 : $4) }
-                |   '(' Exp OneOrMany(Exp) ')'                      { foldl App $2 $3 }
-                --  NOTE: what about (fn) ? you can't call a function without arguments!
-                |   '(' Exp ')'                                     { $2 }
-                --  NOTE: therefore redundant parentheses are a OK
-
-                |   fix Exp                                         { Fix $2 }
+                |   '(' AppLeft ')'                                 { $2 }
+                                |   fix Exp                                         { Fix $2 }
                 |   if Exp then Exp else Exp                        { If $2 $4 $6 }
-                |   let OneOrMany(Binding) in Exp                   { foldr
+                |   let Layout(Binding) in Exp                      { foldr
                                                                         (\ (name, expr) body -> Let name expr body)
                                                                         $4
                                                                         $2 }
@@ -169,30 +170,25 @@ Exp             ::  { Expression }
                 |   '(' Exp CommaSeparated(Exp) ')'                 { Tuple $ $2 : $3 }
                 |   '[' NoneOrManySeparated(Exp) ']'                 { foldr (\ item acc -> App (App (Var ":") item) acc ) (Var "[]") $2 }
                 -- wiring the List type into the compiler
+                |   '(' Application ')'                             { $2 }
+
+AppRight        ::  { Expression }
+                :   AppLeft                                         { $1 }
+
 
 Binding         ::  { (String, Expression) }
-                :   LowIdent '=' Exp                                { ($1, $3) }
-                |   LowIdent Params '=' Exp                         { ($1, foldr (\ arg body -> Lam arg body) $4 $2) }
-                |   '(' Op ')' Params '=' Exp                       { ($2, foldr (\ arg body -> Lam arg body) $6 $4) }
+                :   LowIdent Params '=' Exp                         { ($1, foldr (\ arg body -> Lam arg body) $4 $2) }
                 |   Var Op Params '=' Exp                           { ($2, foldr Lam $5 ($1 : $3)) }
                 |   Var '`' Var '`' Params '=' Exp                  { ($3, foldr Lam $7 ($1 : $5)) }
                 
-                |   rec LowIdent '=' Exp                            { ($2, Fix (Lam $2 $4)) }
-                |   rec LowIdent Params '=' Exp                     { ($2, Fix $ foldr (\ arg body -> Lam arg body) $5 ($2 : $3)) }
-                |   rec Var Op Params '=' Exp                       { ($3, Fix $ foldr Lam $6 ($3 : $2 : $4)) }
-                |   rec '(' Op ')' Params '=' Exp                   { ($3, Fix $ foldr (\ arg body -> Lam arg body) $7 ($3 : $5)) }
-                |   rec Var '`' Var '`' Params '=' Exp              { ($4, Fix $ foldr Lam $8 ($4 : $2 : $6)) }
+                -- |   rec LowIdent Params '=' Exp                     { ($2, Fix $ foldr (\ arg body -> Lam arg body) $5 ($2 : $3)) }
+                -- |   rec Var Op Params '=' Exp                       { ($3, Fix $ foldr Lam $6 ($3 : $2 : $4)) }
+                -- |   rec Var '`' Var '`' Params '=' Exp              { ($4, Fix $ foldr Lam $8 ($4 : $2 : $6)) }
 
 GlobalBinding   ::  { (String, Expression) }
-                :   LowIdent '=' Exp                                { ($1, $3) }
-                |   LowIdent Params '=' Exp                         { ($1, foldr (\ arg body -> Lam arg body) $4 $2) }
-                |   '(' Op ')' Params '=' Exp                       { ($2, foldr (\ arg body -> Lam arg body) $6 $4) }
+                :   LowIdent Params '=' Exp                         { ($1, foldr (\ arg body -> Lam arg body) $4 $2) }
                 |   Var Op Params '=' Exp                           { ($2, foldr Lam $5 ($1 : $3)) }
                 |   Var '`' Var '`' Params '=' Exp                  { ($3, foldr Lam $7 ($1 : $5)) }
-                -- |   rec '(' Op ')' Params '=' Exp                   { ($3, Fix $ foldr (\ arg body -> Lam arg body) $7 ($3 : $5)) }
-                -- |   rec LowIdent Params '=' Exp                     { ($2, Fix $ foldr (\ arg body -> Lam arg body) $5 ($2 : $3)) }
-                -- |   rec Var Op Var '=' Exp                          { ($3, Fix $ Lam $3 (Lam $2 (Lam $4 $6))) }
-                -- |   rec Var '`' Var '`' Var '=' Exp                 { ($4, Fix $ Lam $4 (Lam $2 (Lam $6 $8))) }
 
 Decl            ::  { Declaration }
                 :   GlobalBinding                                   { Binding (fst $1) (snd $1) }
@@ -202,8 +198,6 @@ Lit             ::  { Expression }
                 |   Double                                          { Lit $1 }
                 |   char                                            { Lit $ LitChar $1 }
                 |   string                                          { foldr (\ item acc -> App (App (Var ":") (Lit $ LitChar item)) acc ) (Var "[]") $1 }
-                --  LitString $1 }
-                -- |   unit                                            { Lit LitUnit }
 
 Integer         ::  { Lit }
                 :   integer                                         { LitInt $1 }
@@ -212,34 +206,40 @@ Double          ::  { Lit }
                 :   double                                          { LitDouble $1 }
 
 Type            ::  { Type }
-                :   LowIdent                                        { TyVar $1 }
-                |   UpIdent                                         { TyCon $1 }
-                |   TyArr                                           { $1 }
-                |   TyTuple                                         { $1 }
-                -- |   TyList                                          { $1 }
-                |   '(' TyApp ')'                                   { $2 }
+                :   TyAppLeft                                       { $1 }
+                |   TyApp                                           { $1 }
                 |   '(' Type ')'                                    { $2 }
 
 TyArr           ::  { Type }
-                -- :   '(' TyArr ')' OneOrMany(TyArrRight)             { undefined }
                 :   Type '->' Type                                  { TyArr $1 $3 }
-                |   Type '->' TyArr                                 { TyArr $1 $3 }
-
--- TyArrRight      ::  { Type }
---                 :   Type '->'                                       { $1 }
 
 TyTuple         ::  { Type }
                 :   '(' Type CommaSeparated(Type) ')'               { TyTuple $ $2 : $3 }
 
--- TyList          ::  { Type }
---                 :   '[' Type ']'                                    { TyList $2 }
-
 TyApp           ::  { Type }
-                :   Type OneOrMany(Type)                            { foldl TyApp $1 $2 }
+                :   TyAppLeft OneOrMany(TyAppRight)                 { foldl TyApp $1 $2 }
+
+TyAppLeft       ::  { Type }
+                :   LowIdent                                        { TyVar $1 }
+                |   UpIdent                                         { TyCon $1 }
+                |   TyArr                                           { $1 }
+                |   TyTuple                                         { $1 }
+                |   '(' TyApp ')'                                   { $2 }
+                |   '(' TyAppLeft ')'                               { $2 }
+
+TyAppRight      ::  { Type }
+                :   TyAppLeft                                       { $1 }
 
 NoneOrMany(tok)
                 :   {- empty -}                                     { [] }
                 |   tok NoneOrMany(tok)                             { $1 : $2 }
+
+Layout(tok)
+                :   '{' LayoutInside(tok)                           { $2 }
+
+LayoutInside(tok)
+                :   tok '}'                                         { [$1] }
+                |   tok ';' LayoutInside(tok)                       { $1 : $3 }
 
 OneOrMany(tok)
                 :   tok NoneOrMany(tok)                             { $1 : $2 }
@@ -263,6 +263,10 @@ parseError _ = do
 
 
 parse'expr :: String -> Either [Declaration] Expression
-parse'expr s =
-  evalP parserAct s
+parse'expr s = evalP parserMain s
+
+
+parse'type :: String -> Type
+parse'type s = evalP parserType s
+
 }

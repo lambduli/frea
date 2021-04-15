@@ -1,83 +1,99 @@
+{
+
 a && b = (which-Bool a
           b
           False)
+
+;
 
 a || b = (which-Bool a
           True
           b)
 
+;
+
 a == b  = (#= (a, b))
+;
 a < b  = (#< (a, b))
+;
 a > b  = (#> (a, b))
-
+;
 a + b  = (#+ (a, b))
+;
 a +. b  = (#+. (a, b))
-
+;
 a - b  = (#- (a, b))
+;
 a -. b  = (#-. (a, b))
-
+;
 a * b  = (#* (a, b))
+;
 a *. b  = (#*. (a, b))
-
+;
 a `div` b = (#div (a, b))
+;
 a / b  = (#/ (a, b))
-
+;
 nil? a  = (which-List a
             True
             (\ h t -> False))
-
+;
 show a = ((#show) a)
-
+;
 undefined = undefined
-
+;
 lst !! ix = if (ix == 0)
             then (which-List lst Nothing (\ h t -> (Just h)))
             else (which-List lst Nothing (\ h t -> (t !! (ix - 1))))
-
+;
 fst a  = (#fst a)
+;
 snd a  = (#snd a)
-
+;
 la ++ lb = (which-List la
             lb
             (\ ha ta -> (ha : (ta ++ lb))))
-
+;
 head lst = (which-List lst
             Nothing
             (\ h t -> (Just h)))
-
+;
 tail lst = (which-List lst
             Nothing
             (\ h t -> (Just t)))
-
+;
 show-List list = (which-List list
                     "[]"
                     ( \ head tail -> ( ((show head) ++ " : ") ++ (show-List tail) ) ))
-
+;
 map fn lst = (which-List lst
               []
               (\ h t -> ((fn h) : (map fn t)) ))
-
+;
 show-Maybe m = (which-Maybe m
                 "Nothing"
                 (\ v -> (show v)))
-
+;
 
 fact n = if (n == 0) then 1 else (n * (fact (n - 1)))
-
+;
 data () = ()
-
+;
 data Bool
   = True
   | False
-
+;
+data Test a b c = One
+;
 data Either a b
   = Left a
   | Right b
-
+;
 data Maybe a
   = Nothing
   | Just a
-
+;
 data List a
   = []
   | a : (List a)
+}
