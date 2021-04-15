@@ -20,7 +20,8 @@ import Compiler.Syntax.Type
 }
 
 
-%name parserAct
+%name parserMain
+%name parserType Type
 %tokentype { Token }
 %error { parseError }
 %monad { P }
@@ -98,10 +99,16 @@ Constructors    ::  { [ConstrDecl] }
                 :   {- empty -}                                     { [] }
                 |   '=' Constr NoneOrMany(ConstrOther)              { $2 : $3 }
 
+ConName         ::  { String }
+                :   OpCon                                           { $1 }
+                |   '`' Con '`'                                     { $2 }
+
 Constr          ::  { ConstrDecl }
-                :   UpIdent NoneOrMany(Type)                        { ConDecl $1 $2 }
-                |   Type OpCon Type NoneOrMany(Type)                { ConDecl $2 ($1 : $3 : $4) }
-                |   Type '`' Con '`' Type NoneOrMany(Type)          { ConDecl $3 ($1 : $5 : $6) }
+                :   UpIdent NoneOrMany(TyAppRight)                   { ConDecl $1 $2 }
+                -- |   UpIdent                                         { ConDecl $1 [] }
+                --:   UpIdent NoneOrMany(Type)                        { ConDecl $1 $2 }
+                |   Type ConName OneOrMany(Type)                    { ConDecl $2 ($1 : $3) }
+                -- |   Type '`' Con '`' OneOrMany(Type)                { ConDecl $3 ($1 : $5) }
 
 ConstrOther     ::  { ConstrDecl }
                 :   '|' Constr                                      { $2 }
@@ -126,14 +133,14 @@ Con             ::  { String }
 
 Op              ::  { String }
                 :   op                                              { $1 }
-                |   '|'                                             { "|" }
+                -- |   '|'                                             { "|" }
 
 OpCon           ::  { String }
                 :   opcon                                           { $1 }
 
 Oper            ::  { Expression }
                 :   op                                              { Var $1 }
-                |   '|'                                             { Var "|" }
+                -- |   '|'                                             { Var "|" }
                 |   opcon                                           { Var $1 }
 
 Exp             ::  { Expression }
@@ -179,9 +186,9 @@ Binding         ::  { (String, Expression) }
                 |   Var Op Params '=' Exp                           { ($2, foldr Lam $5 ($1 : $3)) }
                 |   Var '`' Var '`' Params '=' Exp                  { ($3, foldr Lam $7 ($1 : $5)) }
                 
-                |   rec LowIdent Params '=' Exp                     { ($2, Fix $ foldr (\ arg body -> Lam arg body) $5 ($2 : $3)) }
-                |   rec Var Op Params '=' Exp                       { ($3, Fix $ foldr Lam $6 ($3 : $2 : $4)) }
-                |   rec Var '`' Var '`' Params '=' Exp              { ($4, Fix $ foldr Lam $8 ($4 : $2 : $6)) }
+                -- |   rec LowIdent Params '=' Exp                     { ($2, Fix $ foldr (\ arg body -> Lam arg body) $5 ($2 : $3)) }
+                -- |   rec Var Op Params '=' Exp                       { ($3, Fix $ foldr Lam $6 ($3 : $2 : $4)) }
+                -- |   rec Var '`' Var '`' Params '=' Exp              { ($4, Fix $ foldr Lam $8 ($4 : $2 : $6)) }
 
 GlobalBinding   ::  { (String, Expression) }
                 :   LowIdent Params '=' Exp                         { ($1, foldr (\ arg body -> Lam arg body) $4 $2) }
@@ -204,22 +211,45 @@ Double          ::  { Lit }
                 :   double                                          { LitDouble $1 }
 
 Type            ::  { Type }
-                :   LowIdent                                        { TyVar $1 }
-                |   UpIdent                                         { TyCon $1 }
-                |   TyArr                                           { $1 }
-                |   TyTuple                                         { $1 }
-                |   '(' TyApp ')'                                   { $2 }
+                :   TyAppLeft                                       { $1 }
+                |   TyApp                                           { $1 }
                 |   '(' Type ')'                                    { $2 }
+
+                -- :   Var                                             { TyVar $1 }
+                -- |   Con                                             { TyCon $1 }
+                -- |   TyArr                                           { $1 }
+                -- |   TyTuple                                         { $1 }
+                -- |   TyApp                                           { $1 }
+                -- |   '(' Type ')'                                    { $2 }
 
 TyArr           ::  { Type }
                 :   Type '->' Type                                  { TyArr $1 $3 }
-                |   Type '->' TyArr                                 { TyArr $1 $3 }
+                -- :   Type TyArrRight                                 { TyArr $1 $2 }
+                
+                -- :   Type '->' Type                                  { TyArr $1 $3 }
+                -- |   Type '->' TyArr                                 { TyArr $1 $3 }
+
+-- TyArrRight      ::  { Type }
+--                 :   '->' Type                                       { $2 }
+--                 |   '->' Type TyArrRight                            { TyArr $2 $3 }
 
 TyTuple         ::  { Type }
                 :   '(' Type CommaSeparated(Type) ')'               { TyTuple $ $2 : $3 }
 
 TyApp           ::  { Type }
-                :   Type OneOrMany(Type)                            { foldl TyApp $1 $2 }
+                :   TyAppLeft OneOrMany(TyAppRight)                 { foldl TyApp $1 $2 }
+                -- :   Type OneOrMany(Type)                            { foldl TyApp $1 $2 }
+
+TyAppLeft       ::  { Type }
+                :   Var                                             { TyVar $1 }
+                |   Con                                             { TyCon $1 }
+                |   TyArr                                           { $1 }
+                |   TyTuple                                         { $1 }
+                |   '(' TyApp ')'                                   { $2 }
+                |   '(' TyAppLeft ')'                               { $2 }
+
+TyAppRight      ::  { Type }
+                :   TyAppLeft                                       { $1 }
 
 NoneOrMany(tok)
                 :   {- empty -}                                     { [] }
@@ -254,6 +284,10 @@ parseError _ = do
 
 
 parse'expr :: String -> Either [Declaration] Expression
-parse'expr s =
-  evalP parserAct s
+parse'expr s = evalP parserMain s
+
+
+parse'type :: String -> Type
+parse'type s = evalP parserType s
+
 }

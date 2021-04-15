@@ -45,6 +45,14 @@ spec = describe "Test the parser" $ do
     "a b c" <=>
       App (App (Var "a") (Var "b")) (Var "c")
 
+  it "Parses a nested application" $ do
+    "(a b) c" <=>
+      App (App (Var "a") (Var "b")) (Var "c")
+
+  it "Parse an infix constructor application" $ do
+    "a : b" <=>
+      App (App (Var ":") (Var "a")) (Var "b")
+
   it "Parses an infix operation" $ do
     "a ++ b" <=>
       App (App (Var "++") (Var "a")) (Var "b")
