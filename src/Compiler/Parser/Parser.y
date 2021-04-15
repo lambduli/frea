@@ -105,10 +105,7 @@ ConName         ::  { String }
 
 Constr          ::  { ConstrDecl }
                 :   UpIdent NoneOrMany(TyAppRight)                   { ConDecl $1 $2 }
-                -- |   UpIdent                                         { ConDecl $1 [] }
-                --:   UpIdent NoneOrMany(Type)                        { ConDecl $1 $2 }
                 |   Type ConName OneOrMany(Type)                    { ConDecl $2 ($1 : $3) }
-                -- |   Type '`' Con '`' OneOrMany(Type)                { ConDecl $3 ($1 : $5) }
 
 ConstrOther     ::  { ConstrDecl }
                 :   '|' Constr                                      { $2 }
@@ -133,14 +130,12 @@ Con             ::  { String }
 
 Op              ::  { String }
                 :   op                                              { $1 }
-                -- |   '|'                                             { "|" }
 
 OpCon           ::  { String }
                 :   opcon                                           { $1 }
 
 Oper            ::  { Expression }
                 :   op                                              { Var $1 }
-                -- |   '|'                                             { Var "|" }
                 |   opcon                                           { Var $1 }
 
 Exp             ::  { Expression }
@@ -215,30 +210,14 @@ Type            ::  { Type }
                 |   TyApp                                           { $1 }
                 |   '(' Type ')'                                    { $2 }
 
-                -- :   Var                                             { TyVar $1 }
-                -- |   Con                                             { TyCon $1 }
-                -- |   TyArr                                           { $1 }
-                -- |   TyTuple                                         { $1 }
-                -- |   TyApp                                           { $1 }
-                -- |   '(' Type ')'                                    { $2 }
-
 TyArr           ::  { Type }
                 :   Type '->' Type                                  { TyArr $1 $3 }
-                -- :   Type TyArrRight                                 { TyArr $1 $2 }
-                
-                -- :   Type '->' Type                                  { TyArr $1 $3 }
-                -- |   Type '->' TyArr                                 { TyArr $1 $3 }
-
--- TyArrRight      ::  { Type }
---                 :   '->' Type                                       { $2 }
---                 |   '->' Type TyArrRight                            { TyArr $2 $3 }
 
 TyTuple         ::  { Type }
                 :   '(' Type CommaSeparated(Type) ')'               { TyTuple $ $2 : $3 }
 
 TyApp           ::  { Type }
                 :   TyAppLeft OneOrMany(TyAppRight)                 { foldl TyApp $1 $2 }
-                -- :   Type OneOrMany(Type)                            { foldl TyApp $1 $2 }
 
 TyAppLeft       ::  { Type }
                 :   Var                                             { TyVar $1 }
