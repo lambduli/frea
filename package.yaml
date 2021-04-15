@@ -7,7 +7,6 @@ maintainer:          "example@example.com"
 copyright:           "2021 Author name here"
 
 extra-source-files:
-- README.md
 - ChangeLog.md
 - src/Compiler/Parser/Lexer.x
 - src/Compiler/Parser/Parser.y

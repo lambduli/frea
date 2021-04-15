@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 9bd0c6e92c6ff1f9c035cf5468a0a362adcbc2d564ff116e66c73e9a777993fc
+-- hash: 31ecc3a94b3c009543be9be0d7d4e6cad1d6d54f9cacf259cf86df9ec7c8f4ba
 
 name:           frea
 version:        0.1.0.0
@@ -18,7 +18,6 @@ license:        BSD3
 license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
-    README.md
     ChangeLog.md
     src/Compiler/Parser/Lexer.x
     src/Compiler/Parser/Parser.y
