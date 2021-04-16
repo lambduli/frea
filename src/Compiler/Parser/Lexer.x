@@ -76,6 +76,7 @@ token :-
 <0>         "{"             { plainTok TokLeftBrace }
 <0>         "}"             { plainTok TokRightBrace }
 <0>         ";"             { plainTok TokSemicolon }
+<0>         "::"            { plainTok TokHasType }
 
 
 <0>         "#="            { plainTok $ TokNativeSym "#=" }
