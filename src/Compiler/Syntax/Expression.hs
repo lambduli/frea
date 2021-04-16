@@ -18,6 +18,7 @@ data Expression
   | If Expression Expression Expression -- OK
   | Let String Expression Expression -- OK
   | Fix Expression -- OK
+  | Ann Type Expression
   | Intro String [Expression]
   | Elim [ConstrDecl] Expression [Expression]
   --     for matching elim what? destructors
