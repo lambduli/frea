@@ -1,5 +1,7 @@
 {
 
+(&&) :: Bool -> Bool -> Bool
+;
 a && b = (which-Bool a
           b
           False)
