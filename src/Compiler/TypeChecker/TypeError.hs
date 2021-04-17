@@ -9,6 +9,8 @@ data TypeError
   | UnboundVariable String
   | UnifShapeMismatch Type Type
   | UnifCountMismatch [Type] [Type]
+  | TEMismatch Type String
+  | Unexpected String
   deriving (Eq)
 
 instance Show TypeError where
@@ -23,3 +25,7 @@ instance Show TypeError where
     = "[Shape] Couldn't match type `" ++ show type'l ++ "` with `" ++ show type'r ++ "`"
   show (UnifCountMismatch left right)
     = "[Count] Couldn't unify  " ++ show left ++ " ~/~  " ++ show right
+  show (TEMismatch t s)
+    = "Can't type check the type " ++ show t ++ " and the expression " ++ s
+  show (Unexpected s)
+    = "Something bad happened: " ++ s
