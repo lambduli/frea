@@ -24,6 +24,9 @@ import Compiler.TypeChecker.Inference.InferState
 import Compiler.TypeChecker.Inference.InferUtils
 
 
+-- | TODO: once I merge the kind checking into the same process as type checking
+-- | I will be able to create two types of constraints, for types and for kinds
+-- | that will allow me easily assert that some specific type should be of some specific kind
 check :: Type -> Expression -> Infer ((), [Constraint])
 check (TyVar n) e@(Lit _) = throwError $ TEMismatch (TyVar n) (show e)
 check t'Int (Lit (LitInt i)) = return ((), [])
