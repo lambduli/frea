@@ -48,6 +48,7 @@ data Token
   | TokSemicolon -- ;
   | TokLeftBrace -- {
   | TokRightBrace -- }
+  | TokHasType
 
 
   -- literals

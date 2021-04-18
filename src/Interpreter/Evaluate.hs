@@ -145,6 +145,8 @@ evaluate expr env =
                 Right r'val -> apply'operator op r'val env
 
         Left err -> return $ Left err
+
+    Ann _ expr -> evaluate expr env
         
 
 apply'closure :: [Val.Value] -> Val.Value -> State Val.Memory (Either EvaluationError Val.Value)

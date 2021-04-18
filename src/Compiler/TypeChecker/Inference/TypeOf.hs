@@ -36,10 +36,12 @@ infer'env binds t'env = do
     where
       is'fun :: Declaration -> Bool
       is'fun (Binding _ _) = True
+      is'fun (Annotated _ _ _) = True
       is'fun _ = False
 
       to'pair :: Declaration -> (String, Expression)
       to'pair (Binding name expr) = (name, expr)
+      to'pair (Annotated name type' expr) = (name, Ann type' expr)
 
 
 infer'decls :: [Declaration]  -> KindEnv -> Either KindError KindEnv
@@ -168,6 +170,9 @@ build'graph bindings indexer = graph
 
         Elim _ expr exprs ->
           foldl (\ deps'acc expr -> deps'acc `Set.union` get'deps expr) Set.empty (expr : exprs)
+
+        Ann _ expr ->
+          get'deps expr
 
 
     dependencies = map (get'deps . snd) bindings
