@@ -24,43 +24,40 @@ import Compiler.TypeChecker.Inference.InferState
 import Compiler.TypeChecker.Inference.InferUtils
 
 
-check :: Type -> Expression -> Infer (Type, [Constraint])
+check :: Type -> Expression -> Infer ((), [Constraint])
 check (TyVar n) e@(Lit _) = throwError $ TEMismatch (TyVar n) (show e)
-check t'Int (Lit (LitInt i)) = return (t'Int, [])
-check t'Double (Lit (LitDouble i)) = return (t'Double, [])
-check t'Char (Lit (LitChar i)) = return (t'Char, [])
+check t'Int (Lit (LitInt i)) = return ((), [])
+check t'Double (Lit (LitDouble i)) = return ((), [])
+check t'Char (Lit (LitChar i)) = return ((), [])
 
 check t (Var x) = do
   -- for now just assume t is valid type of kind *
   type' <- lookup'env x
-  return (type', [(t, type')])
+  return ((), [(t, type')])
 
 check t (Op x) = do
   -- assume t :: *
   type' <- lookup'env x
-  return (type', [(t, type')])
+  return ((), [(t, type')])
 
 check (from `TyArr` to) (Lam x body) = do
   -- assume from :: * and to :: *
   (t, constrs) <- put'in'env (x, ForAll [] from) (check to body)
-  return (from `TyArr` to, constrs)
-
+  return ((), constrs)
 
 check t (App left right) = do
   -- assume t :: *
   (t'l, cs'l) <- infer left
   (t'r, cs'r) <- infer right
   t'var <- fresh
-  return (t'var, (t, t'var) : (t'l, t'r `TyArr` t'var) : cs'l ++ cs'r)
-
+  return ((), (t, t'var) : (t'l, t'r `TyArr` t'var) : cs'l ++ cs'r)
 
 check t (If cond tr fl) = do
   -- assume t :: *
   (t1, c1) <- infer cond
-  (t2, c2) <- check t tr
-  (t3, c3) <- check t fl
-  return (t2, (t1, t'Bool) : (t2, t3) : c1 ++ c2 ++ c3)
-
+  ((), c2) <- check t tr
+  ((), c3) <- check t fl
+  return ((), (t1, t'Bool) : c1 ++ c2 ++ c3)
 
 check t (Let x ex'val ex'body) = do
   -- assume t :: *
@@ -70,18 +67,18 @@ check t (Let x ex'val ex'body) = do
       Left err -> throwError err
       Right sub -> do
           let sc = generalize (apply sub env) (apply sub t'val)
-          (t'body, cs'body) <- put'in'env (x, sc) $ local (apply sub) (check t ex'body)
-          return (t'body, cs'val ++ cs'body)
+          ((), cs'body) <- put'in'env (x, sc) $ local (apply sub) (check t ex'body)
+          return ((), cs'val ++ cs'body)
 
 
 check (TyTuple types') (Tuple exprs) = do
   -- assume each type :: * where type isfrom types'
-  (types, cs) <- foldM check' ([], []) (zip types' exprs)
-  return (TyTuple $ reverse types, cs)
+  cs <- foldM check' [] (zip types' exprs)
+  return ((), cs)
     where
-      check' (types, constrs) (ty, expr) = do
-        (t, cs) <- check ty expr
-        return (t : types, cs ++ constrs)
+      check' constrs (ty, expr) = do
+        ((), cs) <- check ty expr
+        return (cs ++ constrs)
 
 
 check _ (Fix _) = throwError $ Unexpected "I am not type checking Fix expressions right now."
@@ -144,7 +141,8 @@ infer expr = case expr of
   Ann type' expr -> do
     let scheme = generalize empty't'env type'
     t' <- instantiate scheme
-    check t' expr
+    (_, constrs) <- check t' expr
+    return (type', constrs)
 
     -- co ted?
     -- expr vlastne muze bejt uplne cokoliv
