@@ -36,6 +36,7 @@ ___
 
 ## REPL commands:
 - `:t` *followed by an expression* does not evaluate the expression but rather tells you it's type
+- `:k` *followed by a type* checks what `kind` does the `type` have
 - `:exit` or `:q` / `:Q` exits the REPL
 - *expression* standing on it's own will be typechecked and possibly evaluated (it can span across multiple lines)
 
@@ -296,6 +297,25 @@ a > b   = (#>) (a, b)
 a + b   = (#+) (a, b)
 a +. b  = (#+.) (a, b)
 ```
+
+### Typ Annotations
+
+You can optionally add type annotations to your top level declarations.
+
+```haskell
+foo :: a -> Bool
+foo n = True
+```
+
+You can also annotate expressions.
+
+```haskell
+let id = (\ i -> i) in [((id 42) :: Int), id 23]
+```
+
+> As of now, type annotations inside the expression needs to be wrapped in set of parentheses.
+
+> Frea is still able to infer the principle type without any type annotation.
 
 
 ### Evaluation Strategy
