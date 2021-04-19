@@ -20,7 +20,7 @@ env = empty't'env `Map.union` Map.fromList
   [ ("True"   , ForAll [] (TyCon "Bool"))
   , ("False"  , ForAll [] (TyCon "Bool"))
   , ("[]"     , ForAll ["a"] (TyApp (TyCon "List") (TyVar "a")))
-  , (":"      , ForAll ["a"] ((TyVar "a") `TyArr` (TyApp (TyCon "List") (TyVar "a")) `TyArr` (TyApp (TyCon "List") (TyVar "a")))) ]
+  , (":"      , ForAll ["a"] ((TyVar "a") `TyArr` ((TyApp (TyCon "List") (TyVar "a")) `TyArr` (TyApp (TyCon "List") (TyVar "a"))))) ]
 
 
 spec :: Spec
@@ -31,6 +31,9 @@ spec = describe "Test the inference" $ do
 
   it "Infers the type of a List" $
     infer'expression env (Var "[]") `shouldBe` Right (ForAll ["a"] $ TyApp (TyCon "List") (TyVar "a"))
+  
+  it "Infer the type of a singleton List" $
+    "[23]" <::> ForAll [] (TyApp (TyCon "List") t'Int)
 
   it "Infers the type of a tuple" $
     infer'expression env (Tuple [Lit (LitInt 23), Var "True", Lit (LitChar 'a')])
@@ -55,10 +58,8 @@ spec = describe "Test the inference" $ do
   it "Infers the type of a polymorphic tuple" $
     "(\\ x -> (1, x))" <::> ForAll ["a"] (TyVar "a" `TyArr` TyTuple [t'Int, TyVar "a"])
 
-  -- it "Infers the type of a list of applications" $
-  --  "let fn = (\\ i -> i) in [(fn 23), (fn ((#+) (23, 1))), (fn 42)]" <::> ForAll [] (TyApp (TyCon "List") t'Int)
-  -- TODO: uncomment once you get rid of the FIX expression in the let declarations
-  -- NOTE: I am not sure what's going in, in the REPL it works just fine.
+  it "Infers the type of a list of applications" $
+   "let { fn = (lambda i -> i) } in [fn 23, fn (#+ (23, 1)), fn 42]" <::> ForAll [] (TyApp (TyCon "List") t'Int)
 
   -- TODO: add more test with infix operators and functions 
   it "Infers the type of a let with infix function expression" $
