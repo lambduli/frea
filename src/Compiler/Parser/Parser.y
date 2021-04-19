@@ -1,5 +1,5 @@
 {
-module Compiler.Parser.Parser (parse'expr) where
+module Compiler.Parser.Parser (parse'expr, parse'type) where
 
 import Control.Monad (unless, fail)
 import Control.Monad.State
@@ -105,8 +105,8 @@ ConName         ::  { String }
                 |   '`' Con '`'                                     { $2 }
 
 Constr          ::  { ConstrDecl }
-                :   UpIdent NoneOrMany(TyAppRight)                   { ConDecl $1 $2 }
-                |   Type ConName OneOrMany(Type)                    { ConDecl $2 ($1 : $3) }
+                :   UpIdent NoneOrMany(TyAppLeft)                  { ConDecl $1 $2 }
+                |   TyAppLeft ConName OneOrMany(TyAppLeft)        { ConDecl $2 ($1 : $3) }
 
 ConstrOther     ::  { ConstrDecl }
                 :   '|' Constr                                      { $2 }
@@ -224,7 +224,7 @@ TyTuple         ::  { Type }
                 :   '(' Type CommaSeparated(Type) ')'               { TyTuple $ $2 : $3 }
 
 TyApp           ::  { Type }
-                :   TyAppLeft OneOrMany(TyAppRight)                 { foldl TyApp $1 $2 }
+                :   TyAppLeft OneOrMany(TyAppLeft)                 { foldl TyApp $1 $2 }
 
 TyAppLeft       ::  { Type }
                 :   LowIdent                                        { TyVar $1 }
@@ -234,8 +234,8 @@ TyAppLeft       ::  { Type }
                 |   '(' TyApp ')'                                   { $2 }
                 |   '(' TyAppLeft ')'                               { $2 }
 
-TyAppRight      ::  { Type }
-                :   TyAppLeft                                       { $1 }
+-- TyAppLeft      ::  { Type }
+--                 :   TyAppLeft                                       { $1 }
 
 NoneOrMany(tok)
                 :   {- empty -}                                     { [] }

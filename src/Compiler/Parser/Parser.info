@@ -7,14 +7,14 @@ state 33 contains 4 shift/reduce conflicts.
 state 52 contains 1 shift/reduce conflicts.
 state 53 contains 1 shift/reduce conflicts.
 state 57 contains 4 shift/reduce conflicts and 1 reduce/reduce conflicts.
-state 58 contains 4 shift/reduce conflicts.
+state 63 contains 1 shift/reduce conflicts.
 state 64 contains 1 shift/reduce conflicts.
-state 65 contains 1 shift/reduce conflicts.
-state 77 contains 14 shift/reduce conflicts.
-state 86 contains 14 shift/reduce conflicts.
-state 108 contains 1 shift/reduce conflicts.
-state 109 contains 4 shift/reduce conflicts.
-state 176 contains 4 shift/reduce conflicts.
+state 76 contains 14 shift/reduce conflicts.
+state 85 contains 14 shift/reduce conflicts.
+state 107 contains 1 shift/reduce conflicts.
+state 108 contains 4 shift/reduce conflicts and 1 reduce/reduce conflicts.
+state 136 contains 1 reduce/reduce conflicts.
+state 177 contains 4 shift/reduce conflicts.
 
 terminal match is unused
 terminal with is unused
@@ -41,8 +41,8 @@ Grammar
 	Constructors -> '=' Constr NoneOrMany__ConstrOther__   (9)
 	ConName -> OpCon                                   (10)
 	ConName -> '`' Con '`'                             (11)
-	Constr -> UpIdent NoneOrMany__TyAppRight__         (12)
-	Constr -> Type ConName OneOrMany__Type__           (13)
+	Constr -> UpIdent NoneOrMany__TyAppLeft__          (12)
+	Constr -> TyAppLeft ConName OneOrMany__TyAppLeft__   (13)
 	ConstrOther -> '|' Constr                          (14)
 	Params -> NoneOrMany__Var__                        (15)
 	LowIdent -> Var                                    (16)
@@ -89,7 +89,7 @@ Grammar
 	GlobalBinding -> Var Op Params '=' Exp             (57)
 	GlobalBinding -> Var '`' Var '`' Params '=' Exp    (58)
 	Decl -> GlobalBinding                              (59)
-	Decl -> Annotation Binding                         (60)
+	Decl -> Annotation ';' GlobalBinding               (60)
 	Lit -> Integer                                     (61)
 	Lit -> Double                                      (62)
 	Lit -> char                                        (63)
@@ -102,40 +102,36 @@ Grammar
 	Type -> '(' Type ')'                               (70)
 	TyArr -> Type '->' Type                            (71)
 	TyTuple -> '(' Type CommaSeparated__Type__ ')'     (72)
-	TyApp -> TyAppLeft OneOrMany__TyAppRight__         (73)
+	TyApp -> TyAppLeft OneOrMany__TyAppLeft__          (73)
 	TyAppLeft -> LowIdent                              (74)
 	TyAppLeft -> UpIdent                               (75)
 	TyAppLeft -> TyArr                                 (76)
 	TyAppLeft -> TyTuple                               (77)
 	TyAppLeft -> '(' TyApp ')'                         (78)
 	TyAppLeft -> '(' TyAppLeft ')'                     (79)
-	TyAppRight -> TyAppLeft                            (80)
-	CommaSeparated__Exp__ -> ',' Exp                   (81)
-	CommaSeparated__Exp__ -> ',' Exp CommaSeparated__Exp__   (82)
-	CommaSeparated__Type__ -> ',' Type                 (83)
-	CommaSeparated__Type__ -> ',' Type CommaSeparated__Type__   (84)
-	Layout__Binding__ -> '{' LayoutInside__Binding__   (85)
-	Layout__Declaration__ -> '{' LayoutInside__Declaration__   (86)
-	NoneOrMany__ConstrOther__ ->                       (87)
-	NoneOrMany__ConstrOther__ -> ConstrOther NoneOrMany__ConstrOther__   (88)
-	NoneOrMany__TyAppRight__ ->                        (89)
-	NoneOrMany__TyAppRight__ -> TyAppRight NoneOrMany__TyAppRight__   (90)
-	NoneOrMany__Var__ ->                               (91)
-	NoneOrMany__Var__ -> Var NoneOrMany__Var__         (92)
-	NoneOrManySeparated__Exp__ ->                      (93)
-	NoneOrManySeparated__Exp__ -> Exp                  (94)
-	NoneOrManySeparated__Exp__ -> Exp ',' NoneOrManySeparated__Exp__   (95)
-	OneOrMany__AppRight__ -> AppRight NoneOrMany__AppRight__   (96)
-	OneOrMany__TyAppRight__ -> TyAppRight NoneOrMany__TyAppRight__   (97)
-	OneOrMany__Type__ -> Type NoneOrMany__Type__       (98)
-	LayoutInside__Binding__ -> Binding '}'             (99)
-	LayoutInside__Binding__ -> Binding ';' LayoutInside__Binding__   (100)
-	LayoutInside__Declaration__ -> Declaration '}'     (101)
-	LayoutInside__Declaration__ -> Declaration ';' LayoutInside__Declaration__   (102)
-	NoneOrMany__AppRight__ ->                          (103)
-	NoneOrMany__AppRight__ -> AppRight NoneOrMany__AppRight__   (104)
-	NoneOrMany__Type__ ->                              (105)
-	NoneOrMany__Type__ -> Type NoneOrMany__Type__      (106)
+	CommaSeparated__Exp__ -> ',' Exp                   (80)
+	CommaSeparated__Exp__ -> ',' Exp CommaSeparated__Exp__   (81)
+	CommaSeparated__Type__ -> ',' Type                 (82)
+	CommaSeparated__Type__ -> ',' Type CommaSeparated__Type__   (83)
+	Layout__Binding__ -> '{' LayoutInside__Binding__   (84)
+	Layout__Declaration__ -> '{' LayoutInside__Declaration__   (85)
+	NoneOrMany__ConstrOther__ ->                       (86)
+	NoneOrMany__ConstrOther__ -> ConstrOther NoneOrMany__ConstrOther__   (87)
+	NoneOrMany__TyAppLeft__ ->                         (88)
+	NoneOrMany__TyAppLeft__ -> TyAppLeft NoneOrMany__TyAppLeft__   (89)
+	NoneOrMany__Var__ ->                               (90)
+	NoneOrMany__Var__ -> Var NoneOrMany__Var__         (91)
+	NoneOrManySeparated__Exp__ ->                      (92)
+	NoneOrManySeparated__Exp__ -> Exp                  (93)
+	NoneOrManySeparated__Exp__ -> Exp ',' NoneOrManySeparated__Exp__   (94)
+	OneOrMany__AppRight__ -> AppRight NoneOrMany__AppRight__   (95)
+	OneOrMany__TyAppLeft__ -> TyAppLeft NoneOrMany__TyAppLeft__   (96)
+	LayoutInside__Binding__ -> Binding '}'             (97)
+	LayoutInside__Binding__ -> Binding ';' LayoutInside__Binding__   (98)
+	LayoutInside__Declaration__ -> Declaration '}'     (99)
+	LayoutInside__Declaration__ -> Declaration ';' LayoutInside__Declaration__   (100)
+	NoneOrMany__AppRight__ ->                          (101)
+	NoneOrMany__AppRight__ -> AppRight NoneOrMany__AppRight__   (102)
 
 -----------------------------------------------------------------------------
 Terminals
@@ -159,7 +155,7 @@ Terminals
 	'->'           { TokOperator "->" }
 	'='            { TokOperator "=" }
 	'|'            { TokOperator "|" }
-	'::'           { TokOperator "::" }
+	'::'           { TokHasType }
 	varid          { TokVarLower $$ }
 	conid          { TokVarUpper $$ }
 	op             { TokOperator $$ }
@@ -220,22 +216,19 @@ Non-terminals
 	TyTuple         rule  72
 	TyApp           rule  73
 	TyAppLeft       rules 74, 75, 76, 77, 78, 79
-	TyAppRight      rule  80
-	CommaSeparated__Exp__ rules 81, 82
-	CommaSeparated__Type__ rules 83, 84
-	Layout__Binding__ rule  85
-	Layout__Declaration__ rule  86
-	NoneOrMany__ConstrOther__ rules 87, 88
-	NoneOrMany__TyAppRight__ rules 89, 90
-	NoneOrMany__Var__ rules 91, 92
-	NoneOrManySeparated__Exp__ rules 93, 94, 95
-	OneOrMany__AppRight__ rule  96
-	OneOrMany__TyAppRight__ rule  97
-	OneOrMany__Type__ rule  98
-	LayoutInside__Binding__ rules 99, 100
-	LayoutInside__Declaration__ rules 101, 102
-	NoneOrMany__AppRight__ rules 103, 104
-	NoneOrMany__Type__ rules 105, 106
+	CommaSeparated__Exp__ rules 80, 81
+	CommaSeparated__Type__ rules 82, 83
+	Layout__Binding__ rule  84
+	Layout__Declaration__ rule  85
+	NoneOrMany__ConstrOther__ rules 86, 87
+	NoneOrMany__TyAppLeft__ rules 88, 89
+	NoneOrMany__Var__ rules 90, 91
+	NoneOrManySeparated__Exp__ rules 92, 93, 94
+	OneOrMany__AppRight__ rule  95
+	OneOrMany__TyAppLeft__ rule  96
+	LayoutInside__Binding__ rules 97, 98
+	LayoutInside__Declaration__ rules 99, 100
+	NoneOrMany__AppRight__ rules 101, 102
 
 -----------------------------------------------------------------------------
 States
@@ -388,7 +381,6 @@ State 4
 	char           reduce using rule 16
 	double         reduce using rule 16
 	string         reduce using rule 16
-	rec            reduce using rule 16
 	%eof           reduce using rule 16
 
 
@@ -498,16 +490,16 @@ State 8
 	conid          shift, and enter state 18
 			(reduce using rule 27)
 
-	op             shift, and enter state 79
+	op             shift, and enter state 78
 			(reduce using rule 27)
 
-	opcon          shift, and enter state 80
+	opcon          shift, and enter state 79
 			(reduce using rule 27)
 
 	symid          shift, and enter state 19
 			(reduce using rule 27)
 
-	'('            shift, and enter state 81
+	'('            shift, and enter state 80
 			(reduce using rule 27)
 
 	')'            reduce using rule 27
@@ -516,7 +508,7 @@ State 8
 
 	']'            reduce using rule 27
 	','            reduce using rule 27
-	'`'            shift, and enter state 82
+	'`'            shift, and enter state 81
 			(reduce using rule 27)
 
 	'}'            reduce using rule 27
@@ -538,13 +530,13 @@ State 8
 	LowIdent       goto state 3
 	Var            goto state 4
 	Con            goto state 5
-	Oper           goto state 75
-	AppLeft        goto state 76
-	AppRight       goto state 77
+	Oper           goto state 74
+	AppLeft        goto state 75
+	AppRight       goto state 76
 	Lit            goto state 9
 	Integer        goto state 10
 	Double         goto state 11
-	OneOrMany__AppRight__goto state 78
+	OneOrMany__AppRight__goto state 77
 
 State 9
 
@@ -667,7 +659,7 @@ State 12
 	LowIdent       goto state 3
 	Var            goto state 4
 	Con            goto state 5
-	Exp            goto state 74
+	Exp            goto state 73
 	Application    goto state 7
 	AppLeft        goto state 8
 	Lit            goto state 9
@@ -678,20 +670,20 @@ State 13
 
 	AppLeft -> let . Layout__Binding__ in Exp           (rule 43)
 
-	'{'            shift, and enter state 73
+	'{'            shift, and enter state 72
 
-	Layout__Binding__goto state 72
+	Layout__Binding__goto state 71
 
 State 14
 
 	AppLeft -> lambda . Params '->' Exp                 (rule 39)
 
-	'->'           reduce using rule 91
+	'->'           reduce using rule 90
 	varid          shift, and enter state 17
 
-	Params         goto state 69
-	Var            goto state 70
-	NoneOrMany__Var__goto state 71
+	Params         goto state 68
+	Var            goto state 69
+	NoneOrMany__Var__goto state 70
 
 State 15
 
@@ -715,7 +707,7 @@ State 15
 	LowIdent       goto state 3
 	Var            goto state 4
 	Con            goto state 5
-	Exp            goto state 68
+	Exp            goto state 67
 	Application    goto state 7
 	AppLeft        goto state 8
 	Lit            goto state 9
@@ -729,7 +721,7 @@ State 16
 	varid          shift, and enter state 17
 	'('            shift, and enter state 49
 
-	LowIdent       goto state 67
+	LowIdent       goto state 66
 	Var            goto state 4
 
 State 17
@@ -766,7 +758,6 @@ State 17
 	char           reduce using rule 21
 	double         reduce using rule 21
 	string         reduce using rule 21
-	rec            reduce using rule 21
 	%eof           reduce using rule 21
 
 
@@ -804,7 +795,6 @@ State 18
 	char           reduce using rule 22
 	double         reduce using rule 22
 	string         reduce using rule 22
-	rec            reduce using rule 22
 	%eof           reduce using rule 22
 
 
@@ -859,7 +849,7 @@ State 20
 	varid          shift, and enter state 17
 	conid          shift, and enter state 18
 	op             shift, and enter state 54
-	opcon          shift, and enter state 66
+	opcon          shift, and enter state 65
 	symid          shift, and enter state 19
 	'('            shift, and enter state 20
 	'['            shift, and enter state 21
@@ -872,9 +862,9 @@ State 20
 	Var            goto state 4
 	Con            goto state 5
 	Op             goto state 50
-	Exp            goto state 63
-	Application    goto state 64
-	AppLeft        goto state 65
+	Exp            goto state 62
+	Application    goto state 63
+	AppLeft        goto state 64
 	Lit            goto state 9
 	Integer        goto state 10
 	Double         goto state 11
@@ -893,7 +883,7 @@ State 21
 	symid          shift, and enter state 19
 	'('            shift, and enter state 20
 	'['            shift, and enter state 21
-	']'            reduce using rule 93
+	']'            reduce using rule 92
 	integer        shift, and enter state 22
 	char           shift, and enter state 23
 	double         shift, and enter state 24
@@ -902,13 +892,13 @@ State 21
 	LowIdent       goto state 3
 	Var            goto state 4
 	Con            goto state 5
-	Exp            goto state 61
+	Exp            goto state 60
 	Application    goto state 7
 	AppLeft        goto state 8
 	Lit            goto state 9
 	Integer        goto state 10
 	Double         goto state 11
-	NoneOrManySeparated__Exp__goto state 62
+	NoneOrManySeparated__Exp__goto state 61
 
 State 22
 
@@ -1058,7 +1048,6 @@ State 26
 	'}'            reduce using rule 74
 	';'            reduce using rule 74
 	unit           reduce using rule 74
-	rec            reduce using rule 74
 	%eof           reduce using rule 74
 
 
@@ -1078,7 +1067,6 @@ State 27
 	'}'            reduce using rule 75
 	';'            reduce using rule 75
 	unit           reduce using rule 75
-	rec            reduce using rule 75
 	%eof           reduce using rule 75
 
 
@@ -1099,7 +1087,6 @@ State 28
 	'}'            reduce using rule 18
 	';'            reduce using rule 18
 	unit           reduce using rule 18
-	rec            reduce using rule 18
 	%eof           reduce using rule 18
 
 
@@ -1108,7 +1095,7 @@ State 29
 	%start_parserType -> Type .                         (rule 1)
 	TyArr -> Type . '->' Type                           (rule 71)
 
-	'->'           shift, and enter state 60
+	'->'           shift, and enter state 59
 	%eof           accept
 
 
@@ -1128,7 +1115,6 @@ State 30
 	'}'            reduce using rule 76
 	';'            reduce using rule 76
 	unit           reduce using rule 76
-	rec            reduce using rule 76
 	%eof           reduce using rule 76
 
 
@@ -1148,7 +1134,6 @@ State 31
 	'}'            reduce using rule 77
 	';'            reduce using rule 77
 	unit           reduce using rule 77
-	rec            reduce using rule 77
 	%eof           reduce using rule 77
 
 
@@ -1168,14 +1153,13 @@ State 32
 	'}'            reduce using rule 69
 	';'            reduce using rule 69
 	unit           reduce using rule 69
-	rec            reduce using rule 69
 	%eof           reduce using rule 69
 
 
 State 33
 
 	Type -> TyAppLeft .                                 (rule 68)
-	TyApp -> TyAppLeft . OneOrMany__TyAppRight__        (rule 73)
+	TyApp -> TyAppLeft . OneOrMany__TyAppLeft__         (rule 73)
 
 	'->'           reduce using rule 68
 	'|'            reduce using rule 68
@@ -1197,7 +1181,6 @@ State 33
 	unit           shift, and enter state 35
 			(reduce using rule 68)
 
-	rec            reduce using rule 68
 	%eof           reduce using rule 68
 
 	LowIdent       goto state 26
@@ -1209,8 +1192,7 @@ State 33
 	TyTuple        goto state 31
 	TyApp          goto state 32
 	TyAppLeft      goto state 57
-	TyAppRight     goto state 58
-	OneOrMany__TyAppRight__goto state 59
+	OneOrMany__TyAppLeft__goto state 58
 
 State 34
 
@@ -1256,7 +1238,6 @@ State 35
 	'}'            reduce using rule 20
 	';'            reduce using rule 20
 	unit           reduce using rule 20
-	rec            reduce using rule 20
 	%eof           reduce using rule 20
 
 
@@ -1283,7 +1264,7 @@ State 38
 
 State 39
 
-	Layout__Declaration__ -> '{' . LayoutInside__Declaration__    (rule 86)
+	Layout__Declaration__ -> '{' . LayoutInside__Declaration__    (rule 85)
 
 	data           shift, and enter state 48
 	varid          shift, and enter state 17
@@ -1300,11 +1281,11 @@ State 39
 
 State 40
 
-	LayoutInside__Declaration__ -> Declaration . '}'    (rule 101)
-	LayoutInside__Declaration__ -> Declaration . ';' LayoutInside__Declaration__    (rule 102)
+	LayoutInside__Declaration__ -> Declaration . '}'    (rule 99)
+	LayoutInside__Declaration__ -> Declaration . ';' LayoutInside__Declaration__    (rule 100)
 
-	'}'            shift, and enter state 125
-	';'            shift, and enter state 126
+	'}'            shift, and enter state 124
+	';'            shift, and enter state 125
 
 
 State 41
@@ -1320,13 +1301,13 @@ State 42
 	GlobalBinding -> LowIdent . Params '=' Exp          (rule 56)
 	Annotation -> LowIdent . '::' Type                  (rule 67)
 
-	'='            reduce using rule 91
-	'::'           shift, and enter state 124
+	'='            reduce using rule 90
+	'::'           shift, and enter state 123
 	varid          shift, and enter state 17
 
-	Params         goto state 123
-	Var            goto state 70
-	NoneOrMany__Var__goto state 71
+	Params         goto state 122
+	Var            goto state 69
+	NoneOrMany__Var__goto state 70
 
 State 43
 
@@ -1338,9 +1319,9 @@ State 43
 	'::'           reduce using rule 16
 	varid          reduce using rule 16
 	op             shift, and enter state 54
-	'`'            shift, and enter state 122
+	'`'            shift, and enter state 121
 
-	Op             goto state 121
+	Op             goto state 120
 
 State 44
 
@@ -1360,21 +1341,16 @@ State 45
 
 State 46
 
-	Decl -> Annotation . Binding                        (rule 60)
+	Decl -> Annotation . ';' GlobalBinding              (rule 60)
 
-	varid          shift, and enter state 17
-	'('            shift, and enter state 49
-	rec            shift, and enter state 94
+	';'            shift, and enter state 119
 
-	LowIdent       goto state 90
-	Var            goto state 91
-	Binding        goto state 120
 
 State 47
 
-	Layout__Declaration__ -> '{' LayoutInside__Declaration__ .    (rule 86)
+	Layout__Declaration__ -> '{' LayoutInside__Declaration__ .    (rule 85)
 
-	%eof           reduce using rule 86
+	%eof           reduce using rule 85
 
 
 State 48
@@ -1382,10 +1358,10 @@ State 48
 	Data -> data . UpIdent Params Constructors          (rule 7)
 
 	conid          shift, and enter state 18
-	'('            shift, and enter state 119
+	'('            shift, and enter state 118
 	unit           shift, and enter state 35
 
-	UpIdent        goto state 118
+	UpIdent        goto state 117
 	Con            goto state 28
 
 State 49
@@ -1400,7 +1376,7 @@ State 50
 
 	LowIdent -> '(' Op . ')'                            (rule 17)
 
-	')'            shift, and enter state 117
+	')'            shift, and enter state 116
 
 
 State 51
@@ -1409,11 +1385,11 @@ State 51
 	TyArr -> Type . '->' Type                           (rule 71)
 	TyTuple -> '(' Type . CommaSeparated__Type__ ')'    (rule 72)
 
-	'->'           shift, and enter state 60
-	')'            shift, and enter state 115
-	','            shift, and enter state 116
+	'->'           shift, and enter state 59
+	')'            shift, and enter state 114
+	','            shift, and enter state 115
 
-	CommaSeparated__Type__goto state 114
+	CommaSeparated__Type__goto state 113
 
 State 52
 
@@ -1421,7 +1397,7 @@ State 52
 	TyAppLeft -> '(' TyApp . ')'                        (rule 78)
 
 	'->'           reduce using rule 69
-	')'            shift, and enter state 113
+	')'            shift, and enter state 112
 			(reduce using rule 69)
 
 	','            reduce using rule 69
@@ -1430,14 +1406,14 @@ State 52
 State 53
 
 	Type -> TyAppLeft .                                 (rule 68)
-	TyApp -> TyAppLeft . OneOrMany__TyAppRight__        (rule 73)
+	TyApp -> TyAppLeft . OneOrMany__TyAppLeft__         (rule 73)
 	TyAppLeft -> '(' TyAppLeft . ')'                    (rule 79)
 
 	'->'           reduce using rule 68
 	varid          shift, and enter state 17
 	conid          shift, and enter state 18
 	'('            shift, and enter state 34
-	')'            shift, and enter state 112
+	')'            shift, and enter state 111
 			(reduce using rule 68)
 
 	','            reduce using rule 68
@@ -1452,8 +1428,7 @@ State 53
 	TyTuple        goto state 31
 	TyApp          goto state 32
 	TyAppLeft      goto state 57
-	TyAppRight     goto state 58
-	OneOrMany__TyAppRight__goto state 59
+	OneOrMany__TyAppLeft__goto state 58
 
 State 54
 
@@ -1468,46 +1443,45 @@ State 55
 
 	UpIdent -> '(' opcon . ')'                          (rule 19)
 
-	')'            shift, and enter state 111
+	')'            shift, and enter state 110
 
 
 State 56
 
 	TyArr -> Type . '->' Type                           (rule 71)
 
-	'->'           shift, and enter state 60
+	'->'           shift, and enter state 59
 
 
 State 57
 
 	Type -> TyAppLeft .                                 (rule 68)
-	TyApp -> TyAppLeft . OneOrMany__TyAppRight__        (rule 73)
-	TyAppRight -> TyAppLeft .                           (rule 80)
+	TyApp -> TyAppLeft . OneOrMany__TyAppLeft__         (rule 73)
+	OneOrMany__TyAppLeft__ -> TyAppLeft . NoneOrMany__TyAppLeft__    (rule 96)
 
-	'->'           reduce using rule 80
+	'->'           reduce using rule 88
 			(reduce using rule 68)
 
-	'|'            reduce using rule 80
+	'|'            reduce using rule 88
 	varid          shift, and enter state 17
-			(reduce using rule 80)
+			(reduce using rule 88)
 
 	conid          shift, and enter state 18
-			(reduce using rule 80)
+			(reduce using rule 88)
 
-	opcon          reduce using rule 80
+	opcon          reduce using rule 88
 	'('            shift, and enter state 34
-			(reduce using rule 80)
+			(reduce using rule 88)
 
-	')'            reduce using rule 80
-	','            reduce using rule 80
-	'`'            reduce using rule 80
-	'}'            reduce using rule 80
-	';'            reduce using rule 80
+	')'            reduce using rule 88
+	','            reduce using rule 88
+	'`'            reduce using rule 88
+	'}'            reduce using rule 88
+	';'            reduce using rule 88
 	unit           shift, and enter state 35
-			(reduce using rule 80)
+			(reduce using rule 88)
 
-	rec            reduce using rule 80
-	%eof           reduce using rule 80
+	%eof           reduce using rule 88
 
 	LowIdent       goto state 26
 	UpIdent        goto state 27
@@ -1517,52 +1491,13 @@ State 57
 	TyArr          goto state 30
 	TyTuple        goto state 31
 	TyApp          goto state 32
-	TyAppLeft      goto state 57
-	TyAppRight     goto state 58
-	OneOrMany__TyAppRight__goto state 59
+	TyAppLeft      goto state 108
+	NoneOrMany__TyAppLeft__goto state 109
+	OneOrMany__TyAppLeft__goto state 58
 
 State 58
 
-	OneOrMany__TyAppRight__ -> TyAppRight . NoneOrMany__TyAppRight__    (rule 97)
-
-	'->'           reduce using rule 89
-	'|'            reduce using rule 89
-	varid          shift, and enter state 17
-			(reduce using rule 89)
-
-	conid          shift, and enter state 18
-			(reduce using rule 89)
-
-	opcon          reduce using rule 89
-	'('            shift, and enter state 34
-			(reduce using rule 89)
-
-	')'            reduce using rule 89
-	','            reduce using rule 89
-	'`'            reduce using rule 89
-	'}'            reduce using rule 89
-	';'            reduce using rule 89
-	unit           shift, and enter state 35
-			(reduce using rule 89)
-
-	rec            reduce using rule 89
-	%eof           reduce using rule 89
-
-	LowIdent       goto state 26
-	UpIdent        goto state 27
-	Var            goto state 4
-	Con            goto state 28
-	Type           goto state 56
-	TyArr          goto state 30
-	TyTuple        goto state 31
-	TyApp          goto state 32
-	TyAppLeft      goto state 57
-	TyAppRight     goto state 109
-	NoneOrMany__TyAppRight__goto state 110
-
-State 59
-
-	TyApp -> TyAppLeft OneOrMany__TyAppRight__ .        (rule 73)
+	TyApp -> TyAppLeft OneOrMany__TyAppLeft__ .         (rule 73)
 
 	'->'           reduce using rule 73
 	'|'            reduce using rule 73
@@ -1576,11 +1511,10 @@ State 59
 	'}'            reduce using rule 73
 	';'            reduce using rule 73
 	unit           reduce using rule 73
-	rec            reduce using rule 73
 	%eof           reduce using rule 73
 
 
-State 60
+State 59
 
 	TyArr -> Type '->' . Type                           (rule 71)
 
@@ -1593,53 +1527,53 @@ State 60
 	UpIdent        goto state 27
 	Var            goto state 4
 	Con            goto state 28
-	Type           goto state 108
+	Type           goto state 107
 	TyArr          goto state 30
 	TyTuple        goto state 31
 	TyApp          goto state 32
 	TyAppLeft      goto state 33
 
+State 60
+
+	NoneOrManySeparated__Exp__ -> Exp .                 (rule 93)
+	NoneOrManySeparated__Exp__ -> Exp . ',' NoneOrManySeparated__Exp__    (rule 94)
+
+	']'            reduce using rule 93
+	','            shift, and enter state 106
+
+
 State 61
-
-	NoneOrManySeparated__Exp__ -> Exp .                 (rule 94)
-	NoneOrManySeparated__Exp__ -> Exp . ',' NoneOrManySeparated__Exp__    (rule 95)
-
-	']'            reduce using rule 94
-	','            shift, and enter state 107
-
-
-State 62
 
 	AppLeft -> '[' NoneOrManySeparated__Exp__ . ']'     (rule 46)
 
-	']'            shift, and enter state 106
+	']'            shift, and enter state 105
 
 
-State 63
+State 62
 
 	Exp -> '(' Exp . ')'                                (rule 29)
 	AppLeft -> '(' Exp . CommaSeparated__Exp__ ')'      (rule 45)
 	AppLeft -> '(' Exp . '::' Type ')'                  (rule 48)
 
-	'::'           shift, and enter state 103
-	')'            shift, and enter state 104
-	','            shift, and enter state 105
+	'::'           shift, and enter state 102
+	')'            shift, and enter state 103
+	','            shift, and enter state 104
 
-	CommaSeparated__Exp__goto state 102
+	CommaSeparated__Exp__goto state 101
 
-State 64
+State 63
 
 	Exp -> Application .                                (rule 28)
 	AppLeft -> '(' Application . ')'                    (rule 47)
 
 	'::'           reduce using rule 28
-	')'            shift, and enter state 101
+	')'            shift, and enter state 100
 			(reduce using rule 28)
 
 	','            reduce using rule 28
 
 
-State 65
+State 64
 
 	Exp -> AppLeft .                                    (rule 27)
 	Application -> AppLeft . OneOrMany__AppRight__      (rule 30)
@@ -1656,16 +1590,16 @@ State 65
 	'::'           reduce using rule 27
 	varid          shift, and enter state 17
 	conid          shift, and enter state 18
-	op             shift, and enter state 79
-	opcon          shift, and enter state 80
+	op             shift, and enter state 78
+	opcon          shift, and enter state 79
 	symid          shift, and enter state 19
-	'('            shift, and enter state 81
-	')'            shift, and enter state 100
+	'('            shift, and enter state 80
+	')'            shift, and enter state 99
 			(reduce using rule 27)
 
 	'['            shift, and enter state 21
 	','            reduce using rule 27
-	'`'            shift, and enter state 82
+	'`'            shift, and enter state 81
 	integer        shift, and enter state 22
 	char           shift, and enter state 23
 	double         shift, and enter state 24
@@ -1674,33 +1608,33 @@ State 65
 	LowIdent       goto state 3
 	Var            goto state 4
 	Con            goto state 5
-	Oper           goto state 75
-	AppLeft        goto state 76
-	AppRight       goto state 77
+	Oper           goto state 74
+	AppLeft        goto state 75
+	AppRight       goto state 76
 	Lit            goto state 9
 	Integer        goto state 10
 	Double         goto state 11
-	OneOrMany__AppRight__goto state 78
+	OneOrMany__AppRight__goto state 77
 
-State 66
+State 65
 
 	AppLeft -> '(' opcon . ')'                          (rule 36)
 
-	')'            shift, and enter state 99
+	')'            shift, and enter state 98
 
 
-State 67
+State 66
 
 	AppLeft -> letrec LowIdent . Params '=' Exp in Exp    (rule 44)
 
-	'='            reduce using rule 91
+	'='            reduce using rule 90
 	varid          shift, and enter state 17
 
-	Params         goto state 98
-	Var            goto state 70
-	NoneOrMany__Var__goto state 71
+	Params         goto state 97
+	Var            goto state 69
+	NoneOrMany__Var__goto state 70
 
-State 68
+State 67
 
 	AppLeft -> fix Exp .                                (rule 41)
 
@@ -1733,27 +1667,27 @@ State 68
 	%eof           reduce using rule 41
 
 
-State 69
+State 68
 
 	AppLeft -> lambda Params . '->' Exp                 (rule 39)
 
-	'->'           shift, and enter state 97
+	'->'           shift, and enter state 96
 
+
+State 69
+
+	NoneOrMany__Var__ -> Var . NoneOrMany__Var__        (rule 91)
+
+	'->'           reduce using rule 90
+	'='            reduce using rule 90
+	varid          shift, and enter state 17
+	'}'            reduce using rule 90
+	';'            reduce using rule 90
+
+	Var            goto state 69
+	NoneOrMany__Var__goto state 95
 
 State 70
-
-	NoneOrMany__Var__ -> Var . NoneOrMany__Var__        (rule 92)
-
-	'->'           reduce using rule 91
-	'='            reduce using rule 91
-	varid          shift, and enter state 17
-	'}'            reduce using rule 91
-	';'            reduce using rule 91
-
-	Var            goto state 70
-	NoneOrMany__Var__goto state 96
-
-State 71
 
 	Params -> NoneOrMany__Var__ .                       (rule 15)
 
@@ -1763,34 +1697,34 @@ State 71
 	';'            reduce using rule 15
 
 
-State 72
+State 71
 
 	AppLeft -> let Layout__Binding__ . in Exp           (rule 43)
 
-	in             shift, and enter state 95
+	in             shift, and enter state 94
 
 
-State 73
+State 72
 
-	Layout__Binding__ -> '{' . LayoutInside__Binding__    (rule 85)
+	Layout__Binding__ -> '{' . LayoutInside__Binding__    (rule 84)
 
 	varid          shift, and enter state 17
 	'('            shift, and enter state 49
-	rec            shift, and enter state 94
+	rec            shift, and enter state 93
 
-	LowIdent       goto state 90
-	Var            goto state 91
-	Binding        goto state 92
-	LayoutInside__Binding__goto state 93
+	LowIdent       goto state 89
+	Var            goto state 90
+	Binding        goto state 91
+	LayoutInside__Binding__goto state 92
 
-State 74
+State 73
 
 	AppLeft -> if Exp . then Exp else Exp               (rule 42)
 
-	then           shift, and enter state 89
+	then           shift, and enter state 88
 
 
-State 75
+State 74
 
 	Application -> AppLeft Oper . OneOrMany__AppRight__    (rule 33)
 
@@ -1802,7 +1736,7 @@ State 75
 	varid          shift, and enter state 17
 	conid          shift, and enter state 18
 	symid          shift, and enter state 19
-	'('            shift, and enter state 81
+	'('            shift, and enter state 80
 	'['            shift, and enter state 21
 	integer        shift, and enter state 22
 	char           shift, and enter state 23
@@ -1812,14 +1746,14 @@ State 75
 	LowIdent       goto state 3
 	Var            goto state 4
 	Con            goto state 5
-	AppLeft        goto state 76
-	AppRight       goto state 77
+	AppLeft        goto state 75
+	AppRight       goto state 76
 	Lit            goto state 9
 	Integer        goto state 10
 	Double         goto state 11
-	OneOrMany__AppRight__goto state 88
+	OneOrMany__AppRight__goto state 87
 
-State 76
+State 75
 
 	AppRight -> AppLeft .                               (rule 49)
 
@@ -1852,77 +1786,77 @@ State 76
 	%eof           reduce using rule 49
 
 
-State 77
+State 76
 
-	OneOrMany__AppRight__ -> AppRight . NoneOrMany__AppRight__    (rule 96)
+	OneOrMany__AppRight__ -> AppRight . NoneOrMany__AppRight__    (rule 95)
 
 	if             shift, and enter state 12
-			(reduce using rule 103)
+			(reduce using rule 101)
 
-	then           reduce using rule 103
-	else           reduce using rule 103
+	then           reduce using rule 101
+	else           reduce using rule 101
 	let            shift, and enter state 13
-			(reduce using rule 103)
+			(reduce using rule 101)
 
-	in             reduce using rule 103
+	in             reduce using rule 101
 	lambda         shift, and enter state 14
-			(reduce using rule 103)
+			(reduce using rule 101)
 
 	fix            shift, and enter state 15
-			(reduce using rule 103)
+			(reduce using rule 101)
 
 	letrec         shift, and enter state 16
-			(reduce using rule 103)
+			(reduce using rule 101)
 
-	'::'           reduce using rule 103
+	'::'           reduce using rule 101
 	varid          shift, and enter state 17
-			(reduce using rule 103)
+			(reduce using rule 101)
 
 	conid          shift, and enter state 18
-			(reduce using rule 103)
+			(reduce using rule 101)
 
-	op             reduce using rule 103
-	opcon          reduce using rule 103
+	op             reduce using rule 101
+	opcon          reduce using rule 101
 	symid          shift, and enter state 19
-			(reduce using rule 103)
+			(reduce using rule 101)
 
-	'('            shift, and enter state 81
-			(reduce using rule 103)
+	'('            shift, and enter state 80
+			(reduce using rule 101)
 
-	')'            reduce using rule 103
+	')'            reduce using rule 101
 	'['            shift, and enter state 21
-			(reduce using rule 103)
+			(reduce using rule 101)
 
-	']'            reduce using rule 103
-	','            reduce using rule 103
-	'`'            reduce using rule 103
-	'}'            reduce using rule 103
-	';'            reduce using rule 103
+	']'            reduce using rule 101
+	','            reduce using rule 101
+	'`'            reduce using rule 101
+	'}'            reduce using rule 101
+	';'            reduce using rule 101
 	integer        shift, and enter state 22
-			(reduce using rule 103)
+			(reduce using rule 101)
 
 	char           shift, and enter state 23
-			(reduce using rule 103)
+			(reduce using rule 101)
 
 	double         shift, and enter state 24
-			(reduce using rule 103)
+			(reduce using rule 101)
 
 	string         shift, and enter state 25
-			(reduce using rule 103)
+			(reduce using rule 101)
 
-	%eof           reduce using rule 103
+	%eof           reduce using rule 101
 
 	LowIdent       goto state 3
 	Var            goto state 4
 	Con            goto state 5
-	AppLeft        goto state 76
-	AppRight       goto state 86
+	AppLeft        goto state 75
+	AppRight       goto state 85
 	Lit            goto state 9
 	Integer        goto state 10
 	Double         goto state 11
-	NoneOrMany__AppRight__goto state 87
+	NoneOrMany__AppRight__goto state 86
 
-State 78
+State 77
 
 	Application -> AppLeft OneOrMany__AppRight__ .      (rule 30)
 
@@ -1955,7 +1889,7 @@ State 78
 	%eof           reduce using rule 30
 
 
-State 79
+State 78
 
 	Oper -> op .                                        (rule 25)
 
@@ -1975,7 +1909,7 @@ State 79
 	string         reduce using rule 25
 
 
-State 80
+State 79
 
 	Oper -> opcon .                                     (rule 26)
 
@@ -1995,7 +1929,7 @@ State 80
 	string         reduce using rule 26
 
 
-State 81
+State 80
 
 	LowIdent -> '(' . Op ')'                            (rule 17)
 	AppLeft -> '(' . opcon ')'                          (rule 36)
@@ -2012,7 +1946,7 @@ State 81
 	varid          shift, and enter state 17
 	conid          shift, and enter state 18
 	op             shift, and enter state 54
-	opcon          shift, and enter state 66
+	opcon          shift, and enter state 65
 	symid          shift, and enter state 19
 	'('            shift, and enter state 20
 	'['            shift, and enter state 21
@@ -2025,14 +1959,14 @@ State 81
 	Var            goto state 4
 	Con            goto state 5
 	Op             goto state 50
-	Exp            goto state 85
-	Application    goto state 64
-	AppLeft        goto state 65
+	Exp            goto state 84
+	Application    goto state 63
+	AppLeft        goto state 64
 	Lit            goto state 9
 	Integer        goto state 10
 	Double         goto state 11
 
-State 82
+State 81
 
 	Application -> AppLeft '`' . Var '`' OneOrMany__AppRight__    (rule 31)
 	Application -> AppLeft '`' . Con '`' OneOrMany__AppRight__    (rule 32)
@@ -2040,137 +1974,137 @@ State 82
 	varid          shift, and enter state 17
 	conid          shift, and enter state 18
 
-	Var            goto state 83
-	Con            goto state 84
+	Var            goto state 82
+	Con            goto state 83
+
+State 82
+
+	Application -> AppLeft '`' Var . '`' OneOrMany__AppRight__    (rule 31)
+
+	'`'            shift, and enter state 154
+
 
 State 83
 
-	Application -> AppLeft '`' Var . '`' OneOrMany__AppRight__    (rule 31)
+	Application -> AppLeft '`' Con . '`' OneOrMany__AppRight__    (rule 32)
 
 	'`'            shift, and enter state 153
 
 
 State 84
 
-	Application -> AppLeft '`' Con . '`' OneOrMany__AppRight__    (rule 32)
-
-	'`'            shift, and enter state 152
-
-
-State 85
-
 	AppLeft -> '(' Exp . CommaSeparated__Exp__ ')'      (rule 45)
 	AppLeft -> '(' Exp . '::' Type ')'                  (rule 48)
 
-	'::'           shift, and enter state 103
-	','            shift, and enter state 105
+	'::'           shift, and enter state 102
+	','            shift, and enter state 104
 
-	CommaSeparated__Exp__goto state 102
+	CommaSeparated__Exp__goto state 101
 
-State 86
+State 85
 
-	NoneOrMany__AppRight__ -> AppRight . NoneOrMany__AppRight__    (rule 104)
+	NoneOrMany__AppRight__ -> AppRight . NoneOrMany__AppRight__    (rule 102)
 
 	if             shift, and enter state 12
-			(reduce using rule 103)
+			(reduce using rule 101)
 
-	then           reduce using rule 103
-	else           reduce using rule 103
+	then           reduce using rule 101
+	else           reduce using rule 101
 	let            shift, and enter state 13
-			(reduce using rule 103)
+			(reduce using rule 101)
 
-	in             reduce using rule 103
+	in             reduce using rule 101
 	lambda         shift, and enter state 14
-			(reduce using rule 103)
+			(reduce using rule 101)
 
 	fix            shift, and enter state 15
-			(reduce using rule 103)
+			(reduce using rule 101)
 
 	letrec         shift, and enter state 16
-			(reduce using rule 103)
+			(reduce using rule 101)
 
-	'::'           reduce using rule 103
+	'::'           reduce using rule 101
 	varid          shift, and enter state 17
-			(reduce using rule 103)
+			(reduce using rule 101)
 
 	conid          shift, and enter state 18
-			(reduce using rule 103)
+			(reduce using rule 101)
 
-	op             reduce using rule 103
-	opcon          reduce using rule 103
+	op             reduce using rule 101
+	opcon          reduce using rule 101
 	symid          shift, and enter state 19
-			(reduce using rule 103)
+			(reduce using rule 101)
 
-	'('            shift, and enter state 81
-			(reduce using rule 103)
+	'('            shift, and enter state 80
+			(reduce using rule 101)
 
-	')'            reduce using rule 103
+	')'            reduce using rule 101
 	'['            shift, and enter state 21
-			(reduce using rule 103)
+			(reduce using rule 101)
 
-	']'            reduce using rule 103
-	','            reduce using rule 103
-	'`'            reduce using rule 103
-	'}'            reduce using rule 103
-	';'            reduce using rule 103
+	']'            reduce using rule 101
+	','            reduce using rule 101
+	'`'            reduce using rule 101
+	'}'            reduce using rule 101
+	';'            reduce using rule 101
 	integer        shift, and enter state 22
-			(reduce using rule 103)
+			(reduce using rule 101)
 
 	char           shift, and enter state 23
-			(reduce using rule 103)
+			(reduce using rule 101)
 
 	double         shift, and enter state 24
-			(reduce using rule 103)
+			(reduce using rule 101)
 
 	string         shift, and enter state 25
-			(reduce using rule 103)
+			(reduce using rule 101)
 
-	%eof           reduce using rule 103
+	%eof           reduce using rule 101
 
 	LowIdent       goto state 3
 	Var            goto state 4
 	Con            goto state 5
-	AppLeft        goto state 76
-	AppRight       goto state 86
+	AppLeft        goto state 75
+	AppRight       goto state 85
 	Lit            goto state 9
 	Integer        goto state 10
 	Double         goto state 11
-	NoneOrMany__AppRight__goto state 151
+	NoneOrMany__AppRight__goto state 152
+
+State 86
+
+	OneOrMany__AppRight__ -> AppRight NoneOrMany__AppRight__ .    (rule 95)
+
+	if             reduce using rule 95
+	then           reduce using rule 95
+	else           reduce using rule 95
+	let            reduce using rule 95
+	in             reduce using rule 95
+	lambda         reduce using rule 95
+	fix            reduce using rule 95
+	letrec         reduce using rule 95
+	'::'           reduce using rule 95
+	varid          reduce using rule 95
+	conid          reduce using rule 95
+	op             reduce using rule 95
+	opcon          reduce using rule 95
+	symid          reduce using rule 95
+	'('            reduce using rule 95
+	')'            reduce using rule 95
+	'['            reduce using rule 95
+	']'            reduce using rule 95
+	','            reduce using rule 95
+	'`'            reduce using rule 95
+	'}'            reduce using rule 95
+	';'            reduce using rule 95
+	integer        reduce using rule 95
+	char           reduce using rule 95
+	double         reduce using rule 95
+	string         reduce using rule 95
+	%eof           reduce using rule 95
+
 
 State 87
-
-	OneOrMany__AppRight__ -> AppRight NoneOrMany__AppRight__ .    (rule 96)
-
-	if             reduce using rule 96
-	then           reduce using rule 96
-	else           reduce using rule 96
-	let            reduce using rule 96
-	in             reduce using rule 96
-	lambda         reduce using rule 96
-	fix            reduce using rule 96
-	letrec         reduce using rule 96
-	'::'           reduce using rule 96
-	varid          reduce using rule 96
-	conid          reduce using rule 96
-	op             reduce using rule 96
-	opcon          reduce using rule 96
-	symid          reduce using rule 96
-	'('            reduce using rule 96
-	')'            reduce using rule 96
-	'['            reduce using rule 96
-	']'            reduce using rule 96
-	','            reduce using rule 96
-	'`'            reduce using rule 96
-	'}'            reduce using rule 96
-	';'            reduce using rule 96
-	integer        reduce using rule 96
-	char           reduce using rule 96
-	double         reduce using rule 96
-	string         reduce using rule 96
-	%eof           reduce using rule 96
-
-
-State 88
 
 	Application -> AppLeft Oper OneOrMany__AppRight__ .    (rule 33)
 
@@ -2203,7 +2137,7 @@ State 88
 	%eof           reduce using rule 33
 
 
-State 89
+State 88
 
 	AppLeft -> if Exp then . Exp else Exp               (rule 42)
 
@@ -2225,25 +2159,25 @@ State 89
 	LowIdent       goto state 3
 	Var            goto state 4
 	Con            goto state 5
-	Exp            goto state 150
+	Exp            goto state 151
 	Application    goto state 7
 	AppLeft        goto state 8
 	Lit            goto state 9
 	Integer        goto state 10
 	Double         goto state 11
 
-State 90
+State 89
 
 	Binding -> LowIdent . Params '=' Exp                (rule 50)
 
-	'='            reduce using rule 91
+	'='            reduce using rule 90
 	varid          shift, and enter state 17
 
-	Params         goto state 149
-	Var            goto state 70
-	NoneOrMany__Var__goto state 71
+	Params         goto state 150
+	Var            goto state 69
+	NoneOrMany__Var__goto state 70
 
-State 91
+State 90
 
 	LowIdent -> Var .                                   (rule 16)
 	Binding -> Var . Op Params '=' Exp                  (rule 51)
@@ -2252,27 +2186,27 @@ State 91
 	'='            reduce using rule 16
 	varid          reduce using rule 16
 	op             shift, and enter state 54
-	'`'            shift, and enter state 148
+	'`'            shift, and enter state 149
 
-	Op             goto state 147
+	Op             goto state 148
+
+State 91
+
+	LayoutInside__Binding__ -> Binding . '}'            (rule 97)
+	LayoutInside__Binding__ -> Binding . ';' LayoutInside__Binding__    (rule 98)
+
+	'}'            shift, and enter state 146
+	';'            shift, and enter state 147
+
 
 State 92
 
-	LayoutInside__Binding__ -> Binding . '}'            (rule 99)
-	LayoutInside__Binding__ -> Binding . ';' LayoutInside__Binding__    (rule 100)
+	Layout__Binding__ -> '{' LayoutInside__Binding__ .    (rule 84)
 
-	'}'            shift, and enter state 145
-	';'            shift, and enter state 146
+	in             reduce using rule 84
 
 
 State 93
-
-	Layout__Binding__ -> '{' LayoutInside__Binding__ .    (rule 85)
-
-	in             reduce using rule 85
-
-
-State 94
 
 	Binding -> rec . LowIdent Params '=' Exp            (rule 53)
 	Binding -> rec . Var Op Params '=' Exp              (rule 54)
@@ -2281,12 +2215,51 @@ State 94
 	varid          shift, and enter state 17
 	'('            shift, and enter state 49
 
-	LowIdent       goto state 143
-	Var            goto state 144
+	LowIdent       goto state 144
+	Var            goto state 145
+
+State 94
+
+	AppLeft -> let Layout__Binding__ in . Exp           (rule 43)
+
+	if             shift, and enter state 12
+	let            shift, and enter state 13
+	lambda         shift, and enter state 14
+	fix            shift, and enter state 15
+	letrec         shift, and enter state 16
+	varid          shift, and enter state 17
+	conid          shift, and enter state 18
+	symid          shift, and enter state 19
+	'('            shift, and enter state 20
+	'['            shift, and enter state 21
+	integer        shift, and enter state 22
+	char           shift, and enter state 23
+	double         shift, and enter state 24
+	string         shift, and enter state 25
+
+	LowIdent       goto state 3
+	Var            goto state 4
+	Con            goto state 5
+	Exp            goto state 143
+	Application    goto state 7
+	AppLeft        goto state 8
+	Lit            goto state 9
+	Integer        goto state 10
+	Double         goto state 11
 
 State 95
 
-	AppLeft -> let Layout__Binding__ in . Exp           (rule 43)
+	NoneOrMany__Var__ -> Var NoneOrMany__Var__ .        (rule 91)
+
+	'->'           reduce using rule 91
+	'='            reduce using rule 91
+	'}'            reduce using rule 91
+	';'            reduce using rule 91
+
+
+State 96
+
+	AppLeft -> lambda Params '->' . Exp                 (rule 39)
 
 	if             shift, and enter state 12
 	let            shift, and enter state 13
@@ -2313,53 +2286,14 @@ State 95
 	Integer        goto state 10
 	Double         goto state 11
 
-State 96
-
-	NoneOrMany__Var__ -> Var NoneOrMany__Var__ .        (rule 92)
-
-	'->'           reduce using rule 92
-	'='            reduce using rule 92
-	'}'            reduce using rule 92
-	';'            reduce using rule 92
-
-
 State 97
-
-	AppLeft -> lambda Params '->' . Exp                 (rule 39)
-
-	if             shift, and enter state 12
-	let            shift, and enter state 13
-	lambda         shift, and enter state 14
-	fix            shift, and enter state 15
-	letrec         shift, and enter state 16
-	varid          shift, and enter state 17
-	conid          shift, and enter state 18
-	symid          shift, and enter state 19
-	'('            shift, and enter state 20
-	'['            shift, and enter state 21
-	integer        shift, and enter state 22
-	char           shift, and enter state 23
-	double         shift, and enter state 24
-	string         shift, and enter state 25
-
-	LowIdent       goto state 3
-	Var            goto state 4
-	Con            goto state 5
-	Exp            goto state 141
-	Application    goto state 7
-	AppLeft        goto state 8
-	Lit            goto state 9
-	Integer        goto state 10
-	Double         goto state 11
-
-State 98
 
 	AppLeft -> letrec LowIdent Params . '=' Exp in Exp    (rule 44)
 
-	'='            shift, and enter state 140
+	'='            shift, and enter state 141
 
 
-State 99
+State 98
 
 	AppLeft -> '(' opcon ')' .                          (rule 36)
 
@@ -2392,7 +2326,7 @@ State 99
 	%eof           reduce using rule 36
 
 
-State 100
+State 99
 
 	AppLeft -> '(' AppLeft ')' .                        (rule 40)
 
@@ -2425,7 +2359,7 @@ State 100
 	%eof           reduce using rule 40
 
 
-State 101
+State 100
 
 	AppLeft -> '(' Application ')' .                    (rule 47)
 
@@ -2458,14 +2392,14 @@ State 101
 	%eof           reduce using rule 47
 
 
-State 102
+State 101
 
 	AppLeft -> '(' Exp CommaSeparated__Exp__ . ')'      (rule 45)
 
-	')'            shift, and enter state 139
+	')'            shift, and enter state 140
 
 
-State 103
+State 102
 
 	AppLeft -> '(' Exp '::' . Type ')'                  (rule 48)
 
@@ -2478,13 +2412,13 @@ State 103
 	UpIdent        goto state 27
 	Var            goto state 4
 	Con            goto state 28
-	Type           goto state 138
+	Type           goto state 139
 	TyArr          goto state 30
 	TyTuple        goto state 31
 	TyApp          goto state 32
 	TyAppLeft      goto state 33
 
-State 104
+State 103
 
 	Exp -> '(' Exp ')' .                                (rule 29)
 
@@ -2517,10 +2451,10 @@ State 104
 	%eof           reduce using rule 29
 
 
-State 105
+State 104
 
-	CommaSeparated__Exp__ -> ',' . Exp                  (rule 81)
-	CommaSeparated__Exp__ -> ',' . Exp CommaSeparated__Exp__    (rule 82)
+	CommaSeparated__Exp__ -> ',' . Exp                  (rule 80)
+	CommaSeparated__Exp__ -> ',' . Exp CommaSeparated__Exp__    (rule 81)
 
 	if             shift, and enter state 12
 	let            shift, and enter state 13
@@ -2540,14 +2474,14 @@ State 105
 	LowIdent       goto state 3
 	Var            goto state 4
 	Con            goto state 5
-	Exp            goto state 137
+	Exp            goto state 138
 	Application    goto state 7
 	AppLeft        goto state 8
 	Lit            goto state 9
 	Integer        goto state 10
 	Double         goto state 11
 
-State 106
+State 105
 
 	AppLeft -> '[' NoneOrManySeparated__Exp__ ']' .     (rule 46)
 
@@ -2580,9 +2514,9 @@ State 106
 	%eof           reduce using rule 46
 
 
-State 107
+State 106
 
-	NoneOrManySeparated__Exp__ -> Exp ',' . NoneOrManySeparated__Exp__    (rule 95)
+	NoneOrManySeparated__Exp__ -> Exp ',' . NoneOrManySeparated__Exp__    (rule 94)
 
 	if             shift, and enter state 12
 	let            shift, and enter state 13
@@ -2594,7 +2528,7 @@ State 107
 	symid          shift, and enter state 19
 	'('            shift, and enter state 20
 	'['            shift, and enter state 21
-	']'            reduce using rule 93
+	']'            reduce using rule 92
 	integer        shift, and enter state 22
 	char           shift, and enter state 23
 	double         shift, and enter state 24
@@ -2603,20 +2537,20 @@ State 107
 	LowIdent       goto state 3
 	Var            goto state 4
 	Con            goto state 5
-	Exp            goto state 61
+	Exp            goto state 60
 	Application    goto state 7
 	AppLeft        goto state 8
 	Lit            goto state 9
 	Integer        goto state 10
 	Double         goto state 11
-	NoneOrManySeparated__Exp__goto state 136
+	NoneOrManySeparated__Exp__goto state 137
 
-State 108
+State 107
 
 	TyArr -> Type . '->' Type                           (rule 71)
 	TyArr -> Type '->' Type .                           (rule 71)
 
-	'->'           shift, and enter state 60
+	'->'           shift, and enter state 59
 			(reduce using rule 71)
 
 	'|'            reduce using rule 71
@@ -2630,36 +2564,39 @@ State 108
 	'}'            reduce using rule 71
 	';'            reduce using rule 71
 	unit           reduce using rule 71
-	rec            reduce using rule 71
 	%eof           reduce using rule 71
 
 
-State 109
+State 108
 
-	NoneOrMany__TyAppRight__ -> TyAppRight . NoneOrMany__TyAppRight__    (rule 90)
+	Type -> TyAppLeft .                                 (rule 68)
+	TyApp -> TyAppLeft . OneOrMany__TyAppLeft__         (rule 73)
+	NoneOrMany__TyAppLeft__ -> TyAppLeft . NoneOrMany__TyAppLeft__    (rule 89)
+	OneOrMany__TyAppLeft__ -> TyAppLeft . NoneOrMany__TyAppLeft__    (rule 96)
 
-	'->'           reduce using rule 89
-	'|'            reduce using rule 89
+	'->'           reduce using rule 88
+			(reduce using rule 68)
+
+	'|'            reduce using rule 88
 	varid          shift, and enter state 17
-			(reduce using rule 89)
+			(reduce using rule 88)
 
 	conid          shift, and enter state 18
-			(reduce using rule 89)
+			(reduce using rule 88)
 
-	opcon          reduce using rule 89
+	opcon          reduce using rule 88
 	'('            shift, and enter state 34
-			(reduce using rule 89)
+			(reduce using rule 88)
 
-	')'            reduce using rule 89
-	','            reduce using rule 89
-	'`'            reduce using rule 89
-	'}'            reduce using rule 89
-	';'            reduce using rule 89
+	')'            reduce using rule 88
+	','            reduce using rule 88
+	'`'            reduce using rule 88
+	'}'            reduce using rule 88
+	';'            reduce using rule 88
 	unit           shift, and enter state 35
-			(reduce using rule 89)
+			(reduce using rule 88)
 
-	rec            reduce using rule 89
-	%eof           reduce using rule 89
+	%eof           reduce using rule 88
 
 	LowIdent       goto state 26
 	UpIdent        goto state 27
@@ -2669,31 +2606,30 @@ State 109
 	TyArr          goto state 30
 	TyTuple        goto state 31
 	TyApp          goto state 32
-	TyAppLeft      goto state 57
-	TyAppRight     goto state 109
-	NoneOrMany__TyAppRight__goto state 135
+	TyAppLeft      goto state 108
+	NoneOrMany__TyAppLeft__goto state 136
+	OneOrMany__TyAppLeft__goto state 58
+
+State 109
+
+	OneOrMany__TyAppLeft__ -> TyAppLeft NoneOrMany__TyAppLeft__ .    (rule 96)
+
+	'->'           reduce using rule 96
+	'|'            reduce using rule 96
+	varid          reduce using rule 96
+	conid          reduce using rule 96
+	opcon          reduce using rule 96
+	'('            reduce using rule 96
+	')'            reduce using rule 96
+	','            reduce using rule 96
+	'`'            reduce using rule 96
+	'}'            reduce using rule 96
+	';'            reduce using rule 96
+	unit           reduce using rule 96
+	%eof           reduce using rule 96
+
 
 State 110
-
-	OneOrMany__TyAppRight__ -> TyAppRight NoneOrMany__TyAppRight__ .    (rule 97)
-
-	'->'           reduce using rule 97
-	'|'            reduce using rule 97
-	varid          reduce using rule 97
-	conid          reduce using rule 97
-	opcon          reduce using rule 97
-	'('            reduce using rule 97
-	')'            reduce using rule 97
-	','            reduce using rule 97
-	'`'            reduce using rule 97
-	'}'            reduce using rule 97
-	';'            reduce using rule 97
-	unit           reduce using rule 97
-	rec            reduce using rule 97
-	%eof           reduce using rule 97
-
-
-State 111
 
 	UpIdent -> '(' opcon ')' .                          (rule 19)
 
@@ -2710,11 +2646,10 @@ State 111
 	'}'            reduce using rule 19
 	';'            reduce using rule 19
 	unit           reduce using rule 19
-	rec            reduce using rule 19
 	%eof           reduce using rule 19
 
 
-State 112
+State 111
 
 	TyAppLeft -> '(' TyAppLeft ')' .                    (rule 79)
 
@@ -2730,11 +2665,10 @@ State 112
 	'}'            reduce using rule 79
 	';'            reduce using rule 79
 	unit           reduce using rule 79
-	rec            reduce using rule 79
 	%eof           reduce using rule 79
 
 
-State 113
+State 112
 
 	TyAppLeft -> '(' TyApp ')' .                        (rule 78)
 
@@ -2750,18 +2684,17 @@ State 113
 	'}'            reduce using rule 78
 	';'            reduce using rule 78
 	unit           reduce using rule 78
-	rec            reduce using rule 78
 	%eof           reduce using rule 78
 
 
-State 114
+State 113
 
 	TyTuple -> '(' Type CommaSeparated__Type__ . ')'    (rule 72)
 
-	')'            shift, and enter state 134
+	')'            shift, and enter state 135
 
 
-State 115
+State 114
 
 	Type -> '(' Type ')' .                              (rule 70)
 
@@ -2777,14 +2710,13 @@ State 115
 	'}'            reduce using rule 70
 	';'            reduce using rule 70
 	unit           reduce using rule 70
-	rec            reduce using rule 70
 	%eof           reduce using rule 70
 
 
-State 116
+State 115
 
-	CommaSeparated__Type__ -> ',' . Type                (rule 83)
-	CommaSeparated__Type__ -> ',' . Type CommaSeparated__Type__    (rule 84)
+	CommaSeparated__Type__ -> ',' . Type                (rule 82)
+	CommaSeparated__Type__ -> ',' . Type CommaSeparated__Type__    (rule 83)
 
 	varid          shift, and enter state 17
 	conid          shift, and enter state 18
@@ -2795,13 +2727,13 @@ State 116
 	UpIdent        goto state 27
 	Var            goto state 4
 	Con            goto state 28
-	Type           goto state 133
+	Type           goto state 134
 	TyArr          goto state 30
 	TyTuple        goto state 31
 	TyApp          goto state 32
 	TyAppLeft      goto state 33
 
-State 117
+State 116
 
 	LowIdent -> '(' Op ')' .                            (rule 17)
 
@@ -2835,65 +2767,67 @@ State 117
 	char           reduce using rule 17
 	double         reduce using rule 17
 	string         reduce using rule 17
-	rec            reduce using rule 17
 	%eof           reduce using rule 17
 
 
-State 118
+State 117
 
 	Data -> data UpIdent . Params Constructors          (rule 7)
 
-	'='            reduce using rule 91
+	'='            reduce using rule 90
 	varid          shift, and enter state 17
-	'}'            reduce using rule 91
-	';'            reduce using rule 91
+	'}'            reduce using rule 90
+	';'            reduce using rule 90
 
-	Params         goto state 132
-	Var            goto state 70
-	NoneOrMany__Var__goto state 71
+	Params         goto state 133
+	Var            goto state 69
+	NoneOrMany__Var__goto state 70
 
-State 119
+State 118
 
 	UpIdent -> '(' . opcon ')'                          (rule 19)
 
 	opcon          shift, and enter state 55
 
 
+State 119
+
+	Decl -> Annotation ';' . GlobalBinding              (rule 60)
+
+	varid          shift, and enter state 17
+	'('            shift, and enter state 49
+
+	LowIdent       goto state 131
+	Var            goto state 43
+	GlobalBinding  goto state 132
+
 State 120
-
-	Decl -> Annotation Binding .                        (rule 60)
-
-	'}'            reduce using rule 60
-	';'            reduce using rule 60
-
-
-State 121
 
 	GlobalBinding -> Var Op . Params '=' Exp            (rule 57)
 
-	'='            reduce using rule 91
+	'='            reduce using rule 90
 	varid          shift, and enter state 17
 
-	Params         goto state 131
-	Var            goto state 70
-	NoneOrMany__Var__goto state 71
+	Params         goto state 130
+	Var            goto state 69
+	NoneOrMany__Var__goto state 70
 
-State 122
+State 121
 
 	GlobalBinding -> Var '`' . Var '`' Params '=' Exp    (rule 58)
 
 	varid          shift, and enter state 17
 
-	Var            goto state 130
+	Var            goto state 129
 
-State 123
+State 122
 
 	GlobalBinding -> LowIdent Params . '=' Exp          (rule 56)
 
-	'='            shift, and enter state 129
+	'='            shift, and enter state 128
 
 
-State 124
+State 123
 
 	Annotation -> LowIdent '::' . Type                  (rule 67)
 
@@ -2906,22 +2840,22 @@ State 124
 	UpIdent        goto state 27
 	Var            goto state 4
 	Con            goto state 28
-	Type           goto state 128
+	Type           goto state 127
 	TyArr          goto state 30
 	TyTuple        goto state 31
 	TyApp          goto state 32
 	TyAppLeft      goto state 33
 
+State 124
+
+	LayoutInside__Declaration__ -> Declaration '}' .    (rule 99)
+
+	%eof           reduce using rule 99
+
+
 State 125
 
-	LayoutInside__Declaration__ -> Declaration '}' .    (rule 101)
-
-	%eof           reduce using rule 101
-
-
-State 126
-
-	LayoutInside__Declaration__ -> Declaration ';' . LayoutInside__Declaration__    (rule 102)
+	LayoutInside__Declaration__ -> Declaration ';' . LayoutInside__Declaration__    (rule 100)
 
 	data           shift, and enter state 48
 	varid          shift, and enter state 17
@@ -2934,27 +2868,25 @@ State 126
 	GlobalBinding  goto state 44
 	Decl           goto state 45
 	Annotation     goto state 46
-	LayoutInside__Declaration__goto state 127
+	LayoutInside__Declaration__goto state 126
+
+State 126
+
+	LayoutInside__Declaration__ -> Declaration ';' LayoutInside__Declaration__ .    (rule 100)
+
+	%eof           reduce using rule 100
+
 
 State 127
-
-	LayoutInside__Declaration__ -> Declaration ';' LayoutInside__Declaration__ .    (rule 102)
-
-	%eof           reduce using rule 102
-
-
-State 128
 
 	Annotation -> LowIdent '::' Type .                  (rule 67)
 	TyArr -> Type . '->' Type                           (rule 71)
 
-	'->'           shift, and enter state 60
-	varid          reduce using rule 67
-	'('            reduce using rule 67
-	rec            reduce using rule 67
+	'->'           shift, and enter state 59
+	';'            reduce using rule 67
 
 
-State 129
+State 128
 
 	GlobalBinding -> LowIdent Params '=' . Exp          (rule 56)
 
@@ -2976,50 +2908,69 @@ State 129
 	LowIdent       goto state 3
 	Var            goto state 4
 	Con            goto state 5
-	Exp            goto state 172
+	Exp            goto state 173
 	Application    goto state 7
 	AppLeft        goto state 8
 	Lit            goto state 9
 	Integer        goto state 10
 	Double         goto state 11
 
-State 130
+State 129
 
 	GlobalBinding -> Var '`' Var . '`' Params '=' Exp    (rule 58)
 
-	'`'            shift, and enter state 171
+	'`'            shift, and enter state 172
+
+
+State 130
+
+	GlobalBinding -> Var Op Params . '=' Exp            (rule 57)
+
+	'='            shift, and enter state 171
 
 
 State 131
 
-	GlobalBinding -> Var Op Params . '=' Exp            (rule 57)
+	GlobalBinding -> LowIdent . Params '=' Exp          (rule 56)
 
-	'='            shift, and enter state 170
+	'='            reduce using rule 90
+	varid          shift, and enter state 17
 
+	Params         goto state 122
+	Var            goto state 69
+	NoneOrMany__Var__goto state 70
 
 State 132
 
-	Data -> data UpIdent Params . Constructors          (rule 7)
+	Decl -> Annotation ';' GlobalBinding .              (rule 60)
 
-	'='            shift, and enter state 169
-	'}'            reduce using rule 8
-	';'            reduce using rule 8
+	'}'            reduce using rule 60
+	';'            reduce using rule 60
 
-	Constructors   goto state 168
 
 State 133
 
-	TyArr -> Type . '->' Type                           (rule 71)
-	CommaSeparated__Type__ -> ',' Type .                (rule 83)
-	CommaSeparated__Type__ -> ',' Type . CommaSeparated__Type__    (rule 84)
+	Data -> data UpIdent Params . Constructors          (rule 7)
 
-	'->'           shift, and enter state 60
-	')'            reduce using rule 83
-	','            shift, and enter state 116
+	'='            shift, and enter state 170
+	'}'            reduce using rule 8
+	';'            reduce using rule 8
 
-	CommaSeparated__Type__goto state 167
+	Constructors   goto state 169
 
 State 134
+
+	TyArr -> Type . '->' Type                           (rule 71)
+	CommaSeparated__Type__ -> ',' Type .                (rule 82)
+	CommaSeparated__Type__ -> ',' Type . CommaSeparated__Type__    (rule 83)
+
+	'->'           shift, and enter state 59
+	')'            reduce using rule 82
+	','            shift, and enter state 115
+
+	CommaSeparated__Type__goto state 168
+
+State 135
 
 	TyTuple -> '(' Type CommaSeparated__Type__ ')' .    (rule 72)
 
@@ -3035,57 +2986,58 @@ State 134
 	'}'            reduce using rule 72
 	';'            reduce using rule 72
 	unit           reduce using rule 72
-	rec            reduce using rule 72
 	%eof           reduce using rule 72
-
-
-State 135
-
-	NoneOrMany__TyAppRight__ -> TyAppRight NoneOrMany__TyAppRight__ .    (rule 90)
-
-	'->'           reduce using rule 90
-	'|'            reduce using rule 90
-	varid          reduce using rule 90
-	conid          reduce using rule 90
-	opcon          reduce using rule 90
-	'('            reduce using rule 90
-	')'            reduce using rule 90
-	','            reduce using rule 90
-	'`'            reduce using rule 90
-	'}'            reduce using rule 90
-	';'            reduce using rule 90
-	unit           reduce using rule 90
-	rec            reduce using rule 90
-	%eof           reduce using rule 90
 
 
 State 136
 
-	NoneOrManySeparated__Exp__ -> Exp ',' NoneOrManySeparated__Exp__ .    (rule 95)
+	NoneOrMany__TyAppLeft__ -> TyAppLeft NoneOrMany__TyAppLeft__ .    (rule 89)
+	OneOrMany__TyAppLeft__ -> TyAppLeft NoneOrMany__TyAppLeft__ .    (rule 96)
 
-	']'            reduce using rule 95
+	'->'           reduce using rule 96
+			(reduce using rule 89)
+
+	'|'            reduce using rule 89
+	varid          reduce using rule 89
+	conid          reduce using rule 89
+	opcon          reduce using rule 89
+	'('            reduce using rule 89
+	')'            reduce using rule 89
+	','            reduce using rule 89
+	'`'            reduce using rule 89
+	'}'            reduce using rule 89
+	';'            reduce using rule 89
+	unit           reduce using rule 89
+	%eof           reduce using rule 89
 
 
 State 137
 
-	CommaSeparated__Exp__ -> ',' Exp .                  (rule 81)
-	CommaSeparated__Exp__ -> ',' Exp . CommaSeparated__Exp__    (rule 82)
+	NoneOrManySeparated__Exp__ -> Exp ',' NoneOrManySeparated__Exp__ .    (rule 94)
 
-	')'            reduce using rule 81
-	','            shift, and enter state 105
+	']'            reduce using rule 94
 
-	CommaSeparated__Exp__goto state 166
 
 State 138
+
+	CommaSeparated__Exp__ -> ',' Exp .                  (rule 80)
+	CommaSeparated__Exp__ -> ',' Exp . CommaSeparated__Exp__    (rule 81)
+
+	')'            reduce using rule 80
+	','            shift, and enter state 104
+
+	CommaSeparated__Exp__goto state 167
+
+State 139
 
 	AppLeft -> '(' Exp '::' Type . ')'                  (rule 48)
 	TyArr -> Type . '->' Type                           (rule 71)
 
-	'->'           shift, and enter state 60
-	')'            shift, and enter state 165
+	'->'           shift, and enter state 59
+	')'            shift, and enter state 166
 
 
-State 139
+State 140
 
 	AppLeft -> '(' Exp CommaSeparated__Exp__ ')' .      (rule 45)
 
@@ -3118,7 +3070,7 @@ State 139
 	%eof           reduce using rule 45
 
 
-State 140
+State 141
 
 	AppLeft -> letrec LowIdent Params '=' . Exp in Exp    (rule 44)
 
@@ -3140,14 +3092,14 @@ State 140
 	LowIdent       goto state 3
 	Var            goto state 4
 	Con            goto state 5
-	Exp            goto state 164
+	Exp            goto state 165
 	Application    goto state 7
 	AppLeft        goto state 8
 	Lit            goto state 9
 	Integer        goto state 10
 	Double         goto state 11
 
-State 141
+State 142
 
 	AppLeft -> lambda Params '->' Exp .                 (rule 39)
 
@@ -3180,7 +3132,7 @@ State 141
 	%eof           reduce using rule 39
 
 
-State 142
+State 143
 
 	AppLeft -> let Layout__Binding__ in Exp .           (rule 43)
 
@@ -3213,18 +3165,18 @@ State 142
 	%eof           reduce using rule 43
 
 
-State 143
+State 144
 
 	Binding -> rec LowIdent . Params '=' Exp            (rule 53)
 
-	'='            reduce using rule 91
+	'='            reduce using rule 90
 	varid          shift, and enter state 17
 
-	Params         goto state 163
-	Var            goto state 70
-	NoneOrMany__Var__goto state 71
+	Params         goto state 164
+	Var            goto state 69
+	NoneOrMany__Var__goto state 70
 
-State 144
+State 145
 
 	LowIdent -> Var .                                   (rule 16)
 	Binding -> rec Var . Op Params '=' Exp              (rule 54)
@@ -3233,97 +3185,97 @@ State 144
 	'='            reduce using rule 16
 	varid          reduce using rule 16
 	op             shift, and enter state 54
-	'`'            shift, and enter state 162
+	'`'            shift, and enter state 163
 
-	Op             goto state 161
-
-State 145
-
-	LayoutInside__Binding__ -> Binding '}' .            (rule 99)
-
-	in             reduce using rule 99
-
+	Op             goto state 162
 
 State 146
 
-	LayoutInside__Binding__ -> Binding ';' . LayoutInside__Binding__    (rule 100)
+	LayoutInside__Binding__ -> Binding '}' .            (rule 97)
 
-	varid          shift, and enter state 17
-	'('            shift, and enter state 49
-	rec            shift, and enter state 94
+	in             reduce using rule 97
 
-	LowIdent       goto state 90
-	Var            goto state 91
-	Binding        goto state 92
-	LayoutInside__Binding__goto state 160
 
 State 147
 
-	Binding -> Var Op . Params '=' Exp                  (rule 51)
+	LayoutInside__Binding__ -> Binding ';' . LayoutInside__Binding__    (rule 98)
 
-	'='            reduce using rule 91
 	varid          shift, and enter state 17
+	'('            shift, and enter state 49
+	rec            shift, and enter state 93
 
-	Params         goto state 159
-	Var            goto state 70
-	NoneOrMany__Var__goto state 71
+	LowIdent       goto state 89
+	Var            goto state 90
+	Binding        goto state 91
+	LayoutInside__Binding__goto state 161
 
 State 148
+
+	Binding -> Var Op . Params '=' Exp                  (rule 51)
+
+	'='            reduce using rule 90
+	varid          shift, and enter state 17
+
+	Params         goto state 160
+	Var            goto state 69
+	NoneOrMany__Var__goto state 70
+
+State 149
 
 	Binding -> Var '`' . Var '`' Params '=' Exp         (rule 52)
 
 	varid          shift, and enter state 17
 
-	Var            goto state 158
-
-State 149
-
-	Binding -> LowIdent Params . '=' Exp                (rule 50)
-
-	'='            shift, and enter state 157
-
+	Var            goto state 159
 
 State 150
 
-	AppLeft -> if Exp then Exp . else Exp               (rule 42)
+	Binding -> LowIdent Params . '=' Exp                (rule 50)
 
-	else           shift, and enter state 156
+	'='            shift, and enter state 158
 
 
 State 151
 
-	NoneOrMany__AppRight__ -> AppRight NoneOrMany__AppRight__ .    (rule 104)
+	AppLeft -> if Exp then Exp . else Exp               (rule 42)
 
-	if             reduce using rule 104
-	then           reduce using rule 104
-	else           reduce using rule 104
-	let            reduce using rule 104
-	in             reduce using rule 104
-	lambda         reduce using rule 104
-	fix            reduce using rule 104
-	letrec         reduce using rule 104
-	'::'           reduce using rule 104
-	varid          reduce using rule 104
-	conid          reduce using rule 104
-	op             reduce using rule 104
-	opcon          reduce using rule 104
-	symid          reduce using rule 104
-	'('            reduce using rule 104
-	')'            reduce using rule 104
-	'['            reduce using rule 104
-	']'            reduce using rule 104
-	','            reduce using rule 104
-	'`'            reduce using rule 104
-	'}'            reduce using rule 104
-	';'            reduce using rule 104
-	integer        reduce using rule 104
-	char           reduce using rule 104
-	double         reduce using rule 104
-	string         reduce using rule 104
-	%eof           reduce using rule 104
+	else           shift, and enter state 157
 
 
 State 152
+
+	NoneOrMany__AppRight__ -> AppRight NoneOrMany__AppRight__ .    (rule 102)
+
+	if             reduce using rule 102
+	then           reduce using rule 102
+	else           reduce using rule 102
+	let            reduce using rule 102
+	in             reduce using rule 102
+	lambda         reduce using rule 102
+	fix            reduce using rule 102
+	letrec         reduce using rule 102
+	'::'           reduce using rule 102
+	varid          reduce using rule 102
+	conid          reduce using rule 102
+	op             reduce using rule 102
+	opcon          reduce using rule 102
+	symid          reduce using rule 102
+	'('            reduce using rule 102
+	')'            reduce using rule 102
+	'['            reduce using rule 102
+	']'            reduce using rule 102
+	','            reduce using rule 102
+	'`'            reduce using rule 102
+	'}'            reduce using rule 102
+	';'            reduce using rule 102
+	integer        reduce using rule 102
+	char           reduce using rule 102
+	double         reduce using rule 102
+	string         reduce using rule 102
+	%eof           reduce using rule 102
+
+
+State 153
 
 	Application -> AppLeft '`' Con '`' . OneOrMany__AppRight__    (rule 32)
 
@@ -3335,7 +3287,7 @@ State 152
 	varid          shift, and enter state 17
 	conid          shift, and enter state 18
 	symid          shift, and enter state 19
-	'('            shift, and enter state 81
+	'('            shift, and enter state 80
 	'['            shift, and enter state 21
 	integer        shift, and enter state 22
 	char           shift, and enter state 23
@@ -3345,14 +3297,14 @@ State 152
 	LowIdent       goto state 3
 	Var            goto state 4
 	Con            goto state 5
-	AppLeft        goto state 76
-	AppRight       goto state 77
+	AppLeft        goto state 75
+	AppRight       goto state 76
 	Lit            goto state 9
 	Integer        goto state 10
 	Double         goto state 11
-	OneOrMany__AppRight__goto state 155
+	OneOrMany__AppRight__goto state 156
 
-State 153
+State 154
 
 	Application -> AppLeft '`' Var '`' . OneOrMany__AppRight__    (rule 31)
 
@@ -3364,7 +3316,7 @@ State 153
 	varid          shift, and enter state 17
 	conid          shift, and enter state 18
 	symid          shift, and enter state 19
-	'('            shift, and enter state 81
+	'('            shift, and enter state 80
 	'['            shift, and enter state 21
 	integer        shift, and enter state 22
 	char           shift, and enter state 23
@@ -3374,14 +3326,14 @@ State 153
 	LowIdent       goto state 3
 	Var            goto state 4
 	Con            goto state 5
-	AppLeft        goto state 76
-	AppRight       goto state 77
+	AppLeft        goto state 75
+	AppRight       goto state 76
 	Lit            goto state 9
 	Integer        goto state 10
 	Double         goto state 11
-	OneOrMany__AppRight__goto state 154
+	OneOrMany__AppRight__goto state 155
 
-State 154
+State 155
 
 	Application -> AppLeft '`' Var '`' OneOrMany__AppRight__ .    (rule 31)
 
@@ -3414,7 +3366,7 @@ State 154
 	%eof           reduce using rule 31
 
 
-State 155
+State 156
 
 	Application -> AppLeft '`' Con '`' OneOrMany__AppRight__ .    (rule 32)
 
@@ -3447,9 +3399,38 @@ State 155
 	%eof           reduce using rule 32
 
 
-State 156
+State 157
 
 	AppLeft -> if Exp then Exp else . Exp               (rule 42)
+
+	if             shift, and enter state 12
+	let            shift, and enter state 13
+	lambda         shift, and enter state 14
+	fix            shift, and enter state 15
+	letrec         shift, and enter state 16
+	varid          shift, and enter state 17
+	conid          shift, and enter state 18
+	symid          shift, and enter state 19
+	'('            shift, and enter state 20
+	'['            shift, and enter state 21
+	integer        shift, and enter state 22
+	char           shift, and enter state 23
+	double         shift, and enter state 24
+	string         shift, and enter state 25
+
+	LowIdent       goto state 3
+	Var            goto state 4
+	Con            goto state 5
+	Exp            goto state 186
+	Application    goto state 7
+	AppLeft        goto state 8
+	Lit            goto state 9
+	Integer        goto state 10
+	Double         goto state 11
+
+State 158
+
+	Binding -> LowIdent Params '=' . Exp                (rule 50)
 
 	if             shift, and enter state 12
 	let            shift, and enter state 13
@@ -3476,90 +3457,61 @@ State 156
 	Integer        goto state 10
 	Double         goto state 11
 
-State 157
-
-	Binding -> LowIdent Params '=' . Exp                (rule 50)
-
-	if             shift, and enter state 12
-	let            shift, and enter state 13
-	lambda         shift, and enter state 14
-	fix            shift, and enter state 15
-	letrec         shift, and enter state 16
-	varid          shift, and enter state 17
-	conid          shift, and enter state 18
-	symid          shift, and enter state 19
-	'('            shift, and enter state 20
-	'['            shift, and enter state 21
-	integer        shift, and enter state 22
-	char           shift, and enter state 23
-	double         shift, and enter state 24
-	string         shift, and enter state 25
-
-	LowIdent       goto state 3
-	Var            goto state 4
-	Con            goto state 5
-	Exp            goto state 184
-	Application    goto state 7
-	AppLeft        goto state 8
-	Lit            goto state 9
-	Integer        goto state 10
-	Double         goto state 11
-
-State 158
+State 159
 
 	Binding -> Var '`' Var . '`' Params '=' Exp         (rule 52)
 
-	'`'            shift, and enter state 183
-
-
-State 159
-
-	Binding -> Var Op Params . '=' Exp                  (rule 51)
-
-	'='            shift, and enter state 182
+	'`'            shift, and enter state 184
 
 
 State 160
 
-	LayoutInside__Binding__ -> Binding ';' LayoutInside__Binding__ .    (rule 100)
+	Binding -> Var Op Params . '=' Exp                  (rule 51)
 
-	in             reduce using rule 100
+	'='            shift, and enter state 183
 
 
 State 161
 
-	Binding -> rec Var Op . Params '=' Exp              (rule 54)
+	LayoutInside__Binding__ -> Binding ';' LayoutInside__Binding__ .    (rule 98)
 
-	'='            reduce using rule 91
-	varid          shift, and enter state 17
+	in             reduce using rule 98
 
-	Params         goto state 181
-	Var            goto state 70
-	NoneOrMany__Var__goto state 71
 
 State 162
+
+	Binding -> rec Var Op . Params '=' Exp              (rule 54)
+
+	'='            reduce using rule 90
+	varid          shift, and enter state 17
+
+	Params         goto state 182
+	Var            goto state 69
+	NoneOrMany__Var__goto state 70
+
+State 163
 
 	Binding -> rec Var '`' . Var '`' Params '=' Exp     (rule 55)
 
 	varid          shift, and enter state 17
 
-	Var            goto state 180
-
-State 163
-
-	Binding -> rec LowIdent Params . '=' Exp            (rule 53)
-
-	'='            shift, and enter state 179
-
+	Var            goto state 181
 
 State 164
 
-	AppLeft -> letrec LowIdent Params '=' Exp . in Exp    (rule 44)
+	Binding -> rec LowIdent Params . '=' Exp            (rule 53)
 
-	in             shift, and enter state 178
+	'='            shift, and enter state 180
 
 
 State 165
+
+	AppLeft -> letrec LowIdent Params '=' Exp . in Exp    (rule 44)
+
+	in             shift, and enter state 179
+
+
+State 166
 
 	AppLeft -> '(' Exp '::' Type ')' .                  (rule 48)
 
@@ -3592,21 +3544,21 @@ State 165
 	%eof           reduce using rule 48
 
 
-State 166
-
-	CommaSeparated__Exp__ -> ',' Exp CommaSeparated__Exp__ .    (rule 82)
-
-	')'            reduce using rule 82
-
-
 State 167
 
-	CommaSeparated__Type__ -> ',' Type CommaSeparated__Type__ .    (rule 84)
+	CommaSeparated__Exp__ -> ',' Exp CommaSeparated__Exp__ .    (rule 81)
 
-	')'            reduce using rule 84
+	')'            reduce using rule 81
 
 
 State 168
+
+	CommaSeparated__Type__ -> ',' Type CommaSeparated__Type__ .    (rule 83)
+
+	')'            reduce using rule 83
+
+
+State 169
 
 	Data -> data UpIdent Params Constructors .          (rule 7)
 
@@ -3614,7 +3566,7 @@ State 168
 	';'            reduce using rule 7
 
 
-State 169
+State 170
 
 	Constructors -> '=' . Constr NoneOrMany__ConstrOther__    (rule 9)
 
@@ -3623,18 +3575,18 @@ State 169
 	'('            shift, and enter state 34
 	unit           shift, and enter state 35
 
-	Constr         goto state 175
+	Constr         goto state 176
 	LowIdent       goto state 26
-	UpIdent        goto state 176
+	UpIdent        goto state 177
 	Var            goto state 4
 	Con            goto state 28
-	Type           goto state 177
+	Type           goto state 56
 	TyArr          goto state 30
 	TyTuple        goto state 31
 	TyApp          goto state 32
-	TyAppLeft      goto state 33
+	TyAppLeft      goto state 178
 
-State 170
+State 171
 
 	GlobalBinding -> Var Op Params '=' . Exp            (rule 57)
 
@@ -3656,25 +3608,25 @@ State 170
 	LowIdent       goto state 3
 	Var            goto state 4
 	Con            goto state 5
-	Exp            goto state 174
+	Exp            goto state 175
 	Application    goto state 7
 	AppLeft        goto state 8
 	Lit            goto state 9
 	Integer        goto state 10
 	Double         goto state 11
 
-State 171
+State 172
 
 	GlobalBinding -> Var '`' Var '`' . Params '=' Exp    (rule 58)
 
-	'='            reduce using rule 91
+	'='            reduce using rule 90
 	varid          shift, and enter state 17
 
-	Params         goto state 173
-	Var            goto state 70
-	NoneOrMany__Var__goto state 71
+	Params         goto state 174
+	Var            goto state 69
+	NoneOrMany__Var__goto state 70
 
-State 172
+State 173
 
 	GlobalBinding -> LowIdent Params '=' Exp .          (rule 56)
 
@@ -3682,14 +3634,14 @@ State 172
 	';'            reduce using rule 56
 
 
-State 173
+State 174
 
 	GlobalBinding -> Var '`' Var '`' Params . '=' Exp    (rule 58)
 
-	'='            shift, and enter state 200
+	'='            shift, and enter state 202
 
 
-State 174
+State 175
 
 	GlobalBinding -> Var Op Params '=' Exp .            (rule 57)
 
@@ -3697,24 +3649,24 @@ State 174
 	';'            reduce using rule 57
 
 
-State 175
+State 176
 
 	Constructors -> '=' Constr . NoneOrMany__ConstrOther__    (rule 9)
 
-	'|'            shift, and enter state 199
-	'}'            reduce using rule 87
-	';'            reduce using rule 87
+	'|'            shift, and enter state 201
+	'}'            reduce using rule 86
+	';'            reduce using rule 86
 
-	ConstrOther    goto state 197
-	NoneOrMany__ConstrOther__goto state 198
+	ConstrOther    goto state 199
+	NoneOrMany__ConstrOther__goto state 200
 
-State 176
+State 177
 
-	Constr -> UpIdent . NoneOrMany__TyAppRight__        (rule 12)
+	Constr -> UpIdent . NoneOrMany__TyAppLeft__         (rule 12)
 	TyAppLeft -> UpIdent .                              (rule 75)
 
 	'->'           reduce using rule 75
-	'|'            reduce using rule 89
+	'|'            reduce using rule 88
 	varid          shift, and enter state 17
 			(reduce using rule 75)
 
@@ -3726,8 +3678,8 @@ State 176
 			(reduce using rule 75)
 
 	'`'            reduce using rule 75
-	'}'            reduce using rule 89
-	';'            reduce using rule 89
+	'}'            reduce using rule 88
+	';'            reduce using rule 88
 	unit           shift, and enter state 35
 			(reduce using rule 75)
 
@@ -3740,25 +3692,68 @@ State 176
 	TyArr          goto state 30
 	TyTuple        goto state 31
 	TyApp          goto state 32
-	TyAppLeft      goto state 57
-	TyAppRight     goto state 109
-	NoneOrMany__TyAppRight__goto state 196
-
-State 177
-
-	Constr -> Type . ConName OneOrMany__Type__          (rule 13)
-	TyArr -> Type . '->' Type                           (rule 71)
-
-	'->'           shift, and enter state 60
-	opcon          shift, and enter state 194
-	'`'            shift, and enter state 195
-
-	ConName        goto state 192
-	OpCon          goto state 193
+	TyAppLeft      goto state 197
+	NoneOrMany__TyAppLeft__goto state 198
 
 State 178
 
+	Constr -> TyAppLeft . ConName OneOrMany__TyAppLeft__    (rule 13)
+	Type -> TyAppLeft .                                 (rule 68)
+	TyApp -> TyAppLeft . OneOrMany__TyAppLeft__         (rule 73)
+
+	'->'           reduce using rule 68
+	varid          shift, and enter state 17
+	conid          shift, and enter state 18
+	opcon          shift, and enter state 195
+	'('            shift, and enter state 34
+	'`'            shift, and enter state 196
+	unit           shift, and enter state 35
+
+	ConName        goto state 193
+	LowIdent       goto state 26
+	UpIdent        goto state 27
+	Var            goto state 4
+	Con            goto state 28
+	OpCon          goto state 194
+	Type           goto state 56
+	TyArr          goto state 30
+	TyTuple        goto state 31
+	TyApp          goto state 32
+	TyAppLeft      goto state 57
+	OneOrMany__TyAppLeft__goto state 58
+
+State 179
+
 	AppLeft -> letrec LowIdent Params '=' Exp in . Exp    (rule 44)
+
+	if             shift, and enter state 12
+	let            shift, and enter state 13
+	lambda         shift, and enter state 14
+	fix            shift, and enter state 15
+	letrec         shift, and enter state 16
+	varid          shift, and enter state 17
+	conid          shift, and enter state 18
+	symid          shift, and enter state 19
+	'('            shift, and enter state 20
+	'['            shift, and enter state 21
+	integer        shift, and enter state 22
+	char           shift, and enter state 23
+	double         shift, and enter state 24
+	string         shift, and enter state 25
+
+	LowIdent       goto state 3
+	Var            goto state 4
+	Con            goto state 5
+	Exp            goto state 192
+	Application    goto state 7
+	AppLeft        goto state 8
+	Lit            goto state 9
+	Integer        goto state 10
+	Double         goto state 11
+
+State 180
+
+	Binding -> rec LowIdent Params '=' . Exp            (rule 53)
 
 	if             shift, and enter state 12
 	let            shift, and enter state 13
@@ -3785,50 +3780,21 @@ State 178
 	Integer        goto state 10
 	Double         goto state 11
 
-State 179
-
-	Binding -> rec LowIdent Params '=' . Exp            (rule 53)
-
-	if             shift, and enter state 12
-	let            shift, and enter state 13
-	lambda         shift, and enter state 14
-	fix            shift, and enter state 15
-	letrec         shift, and enter state 16
-	varid          shift, and enter state 17
-	conid          shift, and enter state 18
-	symid          shift, and enter state 19
-	'('            shift, and enter state 20
-	'['            shift, and enter state 21
-	integer        shift, and enter state 22
-	char           shift, and enter state 23
-	double         shift, and enter state 24
-	string         shift, and enter state 25
-
-	LowIdent       goto state 3
-	Var            goto state 4
-	Con            goto state 5
-	Exp            goto state 190
-	Application    goto state 7
-	AppLeft        goto state 8
-	Lit            goto state 9
-	Integer        goto state 10
-	Double         goto state 11
-
-State 180
+State 181
 
 	Binding -> rec Var '`' Var . '`' Params '=' Exp     (rule 55)
 
-	'`'            shift, and enter state 189
-
-
-State 181
-
-	Binding -> rec Var Op Params . '=' Exp              (rule 54)
-
-	'='            shift, and enter state 188
+	'`'            shift, and enter state 190
 
 
 State 182
+
+	Binding -> rec Var Op Params . '=' Exp              (rule 54)
+
+	'='            shift, and enter state 189
+
+
+State 183
 
 	Binding -> Var Op Params '=' . Exp                  (rule 51)
 
@@ -3850,25 +3816,25 @@ State 182
 	LowIdent       goto state 3
 	Var            goto state 4
 	Con            goto state 5
-	Exp            goto state 187
+	Exp            goto state 188
 	Application    goto state 7
 	AppLeft        goto state 8
 	Lit            goto state 9
 	Integer        goto state 10
 	Double         goto state 11
 
-State 183
+State 184
 
 	Binding -> Var '`' Var '`' . Params '=' Exp         (rule 52)
 
-	'='            reduce using rule 91
+	'='            reduce using rule 90
 	varid          shift, and enter state 17
 
-	Params         goto state 186
-	Var            goto state 70
-	NoneOrMany__Var__goto state 71
+	Params         goto state 187
+	Var            goto state 69
+	NoneOrMany__Var__goto state 70
 
-State 184
+State 185
 
 	Binding -> LowIdent Params '=' Exp .                (rule 50)
 
@@ -3876,7 +3842,7 @@ State 184
 	';'            reduce using rule 50
 
 
-State 185
+State 186
 
 	AppLeft -> if Exp then Exp else Exp .               (rule 42)
 
@@ -3909,14 +3875,14 @@ State 185
 	%eof           reduce using rule 42
 
 
-State 186
+State 187
 
 	Binding -> Var '`' Var '`' Params . '=' Exp         (rule 52)
 
-	'='            shift, and enter state 209
+	'='            shift, and enter state 211
 
 
-State 187
+State 188
 
 	Binding -> Var Op Params '=' Exp .                  (rule 51)
 
@@ -3924,7 +3890,7 @@ State 187
 	';'            reduce using rule 51
 
 
-State 188
+State 189
 
 	Binding -> rec Var Op Params '=' . Exp              (rule 54)
 
@@ -3946,25 +3912,25 @@ State 188
 	LowIdent       goto state 3
 	Var            goto state 4
 	Con            goto state 5
-	Exp            goto state 208
+	Exp            goto state 210
 	Application    goto state 7
 	AppLeft        goto state 8
 	Lit            goto state 9
 	Integer        goto state 10
 	Double         goto state 11
 
-State 189
+State 190
 
 	Binding -> rec Var '`' Var '`' . Params '=' Exp     (rule 55)
 
-	'='            reduce using rule 91
+	'='            reduce using rule 90
 	varid          shift, and enter state 17
 
-	Params         goto state 207
-	Var            goto state 70
-	NoneOrMany__Var__goto state 71
+	Params         goto state 209
+	Var            goto state 69
+	NoneOrMany__Var__goto state 70
 
-State 190
+State 191
 
 	Binding -> rec LowIdent Params '=' Exp .            (rule 53)
 
@@ -3972,7 +3938,7 @@ State 190
 	';'            reduce using rule 53
 
 
-State 191
+State 192
 
 	AppLeft -> letrec LowIdent Params '=' Exp in Exp .    (rule 44)
 
@@ -4005,9 +3971,9 @@ State 191
 	%eof           reduce using rule 44
 
 
-State 192
+State 193
 
-	Constr -> Type ConName . OneOrMany__Type__          (rule 13)
+	Constr -> TyAppLeft ConName . OneOrMany__TyAppLeft__    (rule 13)
 
 	varid          shift, and enter state 17
 	conid          shift, and enter state 18
@@ -4018,14 +3984,14 @@ State 192
 	UpIdent        goto state 27
 	Var            goto state 4
 	Con            goto state 28
-	Type           goto state 205
+	Type           goto state 56
 	TyArr          goto state 30
 	TyTuple        goto state 31
 	TyApp          goto state 32
-	TyAppLeft      goto state 33
-	OneOrMany__Type__goto state 206
+	TyAppLeft      goto state 57
+	OneOrMany__TyAppLeft__goto state 208
 
-State 193
+State 194
 
 	ConName -> OpCon .                                  (rule 10)
 
@@ -4035,7 +4001,7 @@ State 193
 	unit           reduce using rule 10
 
 
-State 194
+State 195
 
 	OpCon -> opcon .                                    (rule 24)
 
@@ -4045,35 +4011,62 @@ State 194
 	unit           reduce using rule 24
 
 
-State 195
+State 196
 
 	ConName -> '`' . Con '`'                            (rule 11)
 
 	conid          shift, and enter state 18
 
-	Con            goto state 204
+	Con            goto state 207
 
-State 196
+State 197
 
-	Constr -> UpIdent NoneOrMany__TyAppRight__ .        (rule 12)
+	Type -> TyAppLeft .                                 (rule 68)
+	TyApp -> TyAppLeft . OneOrMany__TyAppLeft__         (rule 73)
+	NoneOrMany__TyAppLeft__ -> TyAppLeft . NoneOrMany__TyAppLeft__    (rule 89)
+
+	'->'           reduce using rule 68
+	'|'            reduce using rule 88
+	varid          shift, and enter state 17
+	conid          shift, and enter state 18
+	'('            shift, and enter state 34
+	'}'            reduce using rule 88
+	';'            reduce using rule 88
+	unit           shift, and enter state 35
+
+	LowIdent       goto state 26
+	UpIdent        goto state 27
+	Var            goto state 4
+	Con            goto state 28
+	Type           goto state 56
+	TyArr          goto state 30
+	TyTuple        goto state 31
+	TyApp          goto state 32
+	TyAppLeft      goto state 108
+	NoneOrMany__TyAppLeft__goto state 206
+	OneOrMany__TyAppLeft__goto state 58
+
+State 198
+
+	Constr -> UpIdent NoneOrMany__TyAppLeft__ .         (rule 12)
 
 	'|'            reduce using rule 12
 	'}'            reduce using rule 12
 	';'            reduce using rule 12
 
 
-State 197
+State 199
 
-	NoneOrMany__ConstrOther__ -> ConstrOther . NoneOrMany__ConstrOther__    (rule 88)
+	NoneOrMany__ConstrOther__ -> ConstrOther . NoneOrMany__ConstrOther__    (rule 87)
 
-	'|'            shift, and enter state 199
-	'}'            reduce using rule 87
-	';'            reduce using rule 87
+	'|'            shift, and enter state 201
+	'}'            reduce using rule 86
+	';'            reduce using rule 86
 
-	ConstrOther    goto state 197
-	NoneOrMany__ConstrOther__goto state 203
+	ConstrOther    goto state 199
+	NoneOrMany__ConstrOther__goto state 205
 
-State 198
+State 200
 
 	Constructors -> '=' Constr NoneOrMany__ConstrOther__ .    (rule 9)
 
@@ -4081,7 +4074,7 @@ State 198
 	';'            reduce using rule 9
 
 
-State 199
+State 201
 
 	ConstrOther -> '|' . Constr                         (rule 14)
 
@@ -4090,18 +4083,18 @@ State 199
 	'('            shift, and enter state 34
 	unit           shift, and enter state 35
 
-	Constr         goto state 202
+	Constr         goto state 204
 	LowIdent       goto state 26
-	UpIdent        goto state 176
+	UpIdent        goto state 177
 	Var            goto state 4
 	Con            goto state 28
-	Type           goto state 177
+	Type           goto state 56
 	TyArr          goto state 30
 	TyTuple        goto state 31
 	TyApp          goto state 32
-	TyAppLeft      goto state 33
+	TyAppLeft      goto state 178
 
-State 200
+State 202
 
 	GlobalBinding -> Var '`' Var '`' Params '=' . Exp    (rule 58)
 
@@ -4123,14 +4116,14 @@ State 200
 	LowIdent       goto state 3
 	Var            goto state 4
 	Con            goto state 5
-	Exp            goto state 201
+	Exp            goto state 203
 	Application    goto state 7
 	AppLeft        goto state 8
 	Lit            goto state 9
 	Integer        goto state 10
 	Double         goto state 11
 
-State 201
+State 203
 
 	GlobalBinding -> Var '`' Var '`' Params '=' Exp .    (rule 58)
 
@@ -4138,7 +4131,7 @@ State 201
 	';'            reduce using rule 58
 
 
-State 202
+State 204
 
 	ConstrOther -> '|' Constr .                         (rule 14)
 
@@ -4147,63 +4140,47 @@ State 202
 	';'            reduce using rule 14
 
 
-State 203
+State 205
 
-	NoneOrMany__ConstrOther__ -> ConstrOther NoneOrMany__ConstrOther__ .    (rule 88)
+	NoneOrMany__ConstrOther__ -> ConstrOther NoneOrMany__ConstrOther__ .    (rule 87)
 
-	'}'            reduce using rule 88
-	';'            reduce using rule 88
+	'}'            reduce using rule 87
+	';'            reduce using rule 87
 
 
-State 204
+State 206
+
+	NoneOrMany__TyAppLeft__ -> TyAppLeft NoneOrMany__TyAppLeft__ .    (rule 89)
+
+	'|'            reduce using rule 89
+	'}'            reduce using rule 89
+	';'            reduce using rule 89
+
+
+State 207
 
 	ConName -> '`' Con . '`'                            (rule 11)
 
 	'`'            shift, and enter state 214
 
 
-State 205
+State 208
 
-	TyArr -> Type . '->' Type                           (rule 71)
-	OneOrMany__Type__ -> Type . NoneOrMany__Type__      (rule 98)
-
-	'->'           shift, and enter state 60
-	'|'            reduce using rule 105
-	varid          shift, and enter state 17
-	conid          shift, and enter state 18
-	'('            shift, and enter state 34
-	'}'            reduce using rule 105
-	';'            reduce using rule 105
-	unit           shift, and enter state 35
-
-	LowIdent       goto state 26
-	UpIdent        goto state 27
-	Var            goto state 4
-	Con            goto state 28
-	Type           goto state 212
-	TyArr          goto state 30
-	TyTuple        goto state 31
-	TyApp          goto state 32
-	TyAppLeft      goto state 33
-	NoneOrMany__Type__goto state 213
-
-State 206
-
-	Constr -> Type ConName OneOrMany__Type__ .          (rule 13)
+	Constr -> TyAppLeft ConName OneOrMany__TyAppLeft__ .    (rule 13)
 
 	'|'            reduce using rule 13
 	'}'            reduce using rule 13
 	';'            reduce using rule 13
 
 
-State 207
+State 209
 
 	Binding -> rec Var '`' Var '`' Params . '=' Exp     (rule 55)
 
-	'='            shift, and enter state 211
+	'='            shift, and enter state 213
 
 
-State 208
+State 210
 
 	Binding -> rec Var Op Params '=' Exp .              (rule 54)
 
@@ -4211,7 +4188,7 @@ State 208
 	';'            reduce using rule 54
 
 
-State 209
+State 211
 
 	Binding -> Var '`' Var '`' Params '=' . Exp         (rule 52)
 
@@ -4233,14 +4210,14 @@ State 209
 	LowIdent       goto state 3
 	Var            goto state 4
 	Con            goto state 5
-	Exp            goto state 210
+	Exp            goto state 212
 	Application    goto state 7
 	AppLeft        goto state 8
 	Lit            goto state 9
 	Integer        goto state 10
 	Double         goto state 11
 
-State 210
+State 212
 
 	Binding -> Var '`' Var '`' Params '=' Exp .         (rule 52)
 
@@ -4248,7 +4225,7 @@ State 210
 	';'            reduce using rule 52
 
 
-State 211
+State 213
 
 	Binding -> rec Var '`' Var '`' Params '=' . Exp     (rule 55)
 
@@ -4270,46 +4247,12 @@ State 211
 	LowIdent       goto state 3
 	Var            goto state 4
 	Con            goto state 5
-	Exp            goto state 216
+	Exp            goto state 215
 	Application    goto state 7
 	AppLeft        goto state 8
 	Lit            goto state 9
 	Integer        goto state 10
 	Double         goto state 11
-
-State 212
-
-	TyArr -> Type . '->' Type                           (rule 71)
-	NoneOrMany__Type__ -> Type . NoneOrMany__Type__     (rule 106)
-
-	'->'           shift, and enter state 60
-	'|'            reduce using rule 105
-	varid          shift, and enter state 17
-	conid          shift, and enter state 18
-	'('            shift, and enter state 34
-	'}'            reduce using rule 105
-	';'            reduce using rule 105
-	unit           shift, and enter state 35
-
-	LowIdent       goto state 26
-	UpIdent        goto state 27
-	Var            goto state 4
-	Con            goto state 28
-	Type           goto state 212
-	TyArr          goto state 30
-	TyTuple        goto state 31
-	TyApp          goto state 32
-	TyAppLeft      goto state 33
-	NoneOrMany__Type__goto state 215
-
-State 213
-
-	OneOrMany__Type__ -> Type NoneOrMany__Type__ .      (rule 98)
-
-	'|'            reduce using rule 98
-	'}'            reduce using rule 98
-	';'            reduce using rule 98
-
 
 State 214
 
@@ -4323,15 +4266,6 @@ State 214
 
 State 215
 
-	NoneOrMany__Type__ -> Type NoneOrMany__Type__ .     (rule 106)
-
-	'|'            reduce using rule 106
-	'}'            reduce using rule 106
-	';'            reduce using rule 106
-
-
-State 216
-
 	Binding -> rec Var '`' Var '`' Params '=' Exp .     (rule 55)
 
 	'}'            reduce using rule 55
@@ -4341,7 +4275,7 @@ State 216
 -----------------------------------------------------------------------------
 Grammar Totals
 -----------------------------------------------------------------------------
-Number of rules: 107
+Number of rules: 103
 Number of terminals: 42
-Number of non-terminals: 50
-Number of states: 217
+Number of non-terminals: 47
+Number of states: 216

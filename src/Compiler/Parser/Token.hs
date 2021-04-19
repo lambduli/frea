@@ -12,10 +12,10 @@ data Token
   = TokMatch
   | TokWith
   | TokData -- data
-  | TokEliminator String -- ~Foo
-  | TokIf
-  | TokThen
-  | TokElse
+  | TokEliminator String -- which-_
+  | TokIf -- if
+  | TokThen -- then
+  | TokElse -- else
   | TokLet  -- let
   | TokIn -- in
 
@@ -48,7 +48,7 @@ data Token
   | TokSemicolon -- ;
   | TokLeftBrace -- {
   | TokRightBrace -- }
-  | TokHasType
+  | TokHasType -- ::
 
 
   -- literals
