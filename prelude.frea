@@ -7,13 +7,15 @@ a && b = (which-Bool a
           False)
 
 ;
-
+(&&) :: Bool -> Bool -> Bool
+;
 a || b = (which-Bool a
           True
           b)
 
 ;
-
+(==) :: a -> a -> Bool
+;
 a == b  = (#= (a, b))
 ;
 a < b  = (#< (a, b))
@@ -85,7 +87,7 @@ data Bool
   = True
   | False
 ;
-data Test a b c = One
+data Test a b c = One -- (a b c)
 ;
 data Either a b
   = Left a
@@ -98,4 +100,7 @@ data Maybe a
 data List a
   = []
   | a : (List a)
+;
+data ConContainer a b
+  = Container (a b)
 }
