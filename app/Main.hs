@@ -7,6 +7,8 @@ import System.Environment (getArgs)
 import System.Directory (getCurrentDirectory)
 import System.FilePath.Posix ((</>))
 import Control.Monad (forM_)
+import Control.Monad.Reader
+import Control.Monad.Except
 import qualified Data.Map.Strict as Map
 import Data.Bifunctor (second)
 import Control.Monad.State.Lazy
@@ -14,7 +16,7 @@ import Control.Monad.State.Lazy
 import Data.List (intercalate, reverse)
 import Data.List.Extra
 
-import Compiler.Parser.Parser (parse'expr)
+import Compiler.Parser.Parser (parse'expr, parse'type)
 import Compiler.Parser.Lexer (readToken)
 
 import Compiler.Parser.Token (Token (..))
@@ -34,6 +36,8 @@ import Compiler.TypeChecker.Inference.TypeEnv
 import Compiler.KindChecker.KindEnv
 import Compiler.KindChecker.KindError
 import qualified Interpreter.Print as IP
+import Compiler.KindChecker.Inference
+import Compiler.KindChecker.InferState
 
 
 main :: IO ()
@@ -117,17 +121,32 @@ repl env t'env k'env mem = do
               -- loop
               repl env t'env k'env mem
             Right type' -> do
-              putStrLn $ "frea λ > " ++ show expression ++ " :: " ++ show type'
+              putStrLn $ "          " ++ show expression ++ " :: " ++ show type'
 
               -- loop
               repl env t'env k'env mem
 
     -- COMMAND :k(ind)
     ':' : 'k' : line -> do
-      putStrLn "Sorry, I can't parse type expressions yet.\n"
+      let t = parse'type line
+      let error'or'kind = infer'kind k'env t -- runExcept $ evalStateT (runReaderT (infer'kind t) k'env) init'infer
+      case error'or'kind of
+        Left err -> do
+          putStrLn $ "Kind Error: " ++ show err
+
+          -- loop
+          repl env t'env k'env mem
+
+        Right kind' -> do
+          putStrLn $ "         " ++ show t ++ " :: " ++ show kind'
+
+          -- loop
+          repl env t'env k'env mem
+
+      -- putStrLn "Sorry, I can't parse type expressions yet.\n"
       -- NOTE: for now, just print all the known type constructors with their kinds
-      putStrLn $ intercalate "\n" $ map (\ (name, kind) -> name ++ " :: " ++ show kind) $ Map.toList k'env
-      repl env t'env k'env mem
+      -- putStrLn $ intercalate "\n" $ map (\ (name, kind) -> name ++ " :: " ++ show kind) $ Map.toList k'env
+      -- repl env t'env k'env mem
 
     -- EXPRESSION to typecheck and evaluate
     _ -> do

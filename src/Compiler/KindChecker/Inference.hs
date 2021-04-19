@@ -62,50 +62,65 @@ infer (DataDecl t'name t'params constructors) = do
         constrs'rest <- infer'constrs cons
         return $ constraints ++ constrs ++ constrs'rest
 
-      combine'inference :: ([Kind], [Constraint]) -> Type -> Infer ([Kind], [Constraint])
-      combine'inference (kinds, constrs) t = do
-        (k, cs) <- infer'type t
-        return (k : kinds, constrs ++ cs)
 
-      infer'type :: Type -> Infer (Kind, [Constraint])
-      infer'type type' =
-        case type' of
-          TyVar name -> do
-            k' <- lookup'env name
-            return (k', [])
-          TyCon name -> do
-            k' <- lookup'env name
-            return (k', [])
-          TyTuple types -> do
-            -- nez ale reknu ze ten tuple je v poradku
-            -- musim projit vsechny types a zkontrolovat, ze jsou kindu *
-            -- to se udela tak, ze projdu vsechny types, infernu jim kindy
-            -- a pak je zase zipnu se Starem
-            (kinds, constrs) <- foldM combine'inference ([], []) types
-            let len = length types
-            let constraints = zip (replicate len Star) kinds
+combine'inference :: ([Kind], [Constraint]) -> Type -> Infer ([Kind], [Constraint])
+combine'inference (kinds, constrs) t = do
+  (k, cs) <- infer'type t
+  return (k : kinds, constrs ++ cs)
 
-            return (Star, constraints)
-          TyArr left right -> do
-            -- tady prijde na radu rekurze
-            -- tohle by zrovna melo bejt jednoduchy
-            -- left i right musi bejt *
-            -- takze je infernu a pak jim priradim v constraintu *
-            (k'l, cs'l) <- infer'type left
-            (k'r, cs'r) <- infer'type right
 
-            return (Star, [(Star, k'l), (Star, k'r)] ++ cs'l ++ cs'r)
-          TyApp left right -> do
-            -- tohle bude malinko komplikovanejsi
-            -- infernu left a infernu right
-            -- vytvorim constraint, ze to nalevo musi bejt KArr
-            -- ktera bere to napravo a vraci cokoliv - fresh
-            (k'l, cs'l) <- infer'type left
-            (k'r, cs'r) <- infer'type right
-            var <- fresh
-            let constraint = (k'l, k'r `KArr` var)
+infer'kind :: KindEnv -> Type -> Either KindError Kind
+infer'kind k'env t = do
+  case run'infer' k'env (infer'type t) of
+    Left err -> Left err
+    Right (k, constraints) ->  
+      case runSolve constraints of
+        Left err -> Left err
+        Right subst -> do
+          return $ apply subst k
+          -- let env' = apply subst $ environment `Map.union` Map.fromList kind'bindings
+          -- let env'' = assume'star env'
+          -- return env''
 
-            return (var, constraint : cs'l ++ cs'r)
+infer'type :: Type -> Infer (Kind, [Constraint])
+infer'type type' =
+  case type' of
+    TyVar name -> do
+      k' <- lookup'env name
+      return (k', [])
+    TyCon name -> do
+      k' <- lookup'env name
+      return (k', [])
+    TyTuple types -> do
+      -- nez ale reknu ze ten tuple je v poradku
+      -- musim projit vsechny types a zkontrolovat, ze jsou kindu *
+      -- to se udela tak, ze projdu vsechny types, infernu jim kindy
+      -- a pak je zase zipnu se Starem
+      (kinds, constrs) <- foldM combine'inference ([], []) types
+      let len = length types
+      let constraints = zip (replicate len Star) kinds
+
+      return (Star, constraints)
+    TyArr left right -> do
+      -- tady prijde na radu rekurze
+      -- tohle by zrovna melo bejt jednoduchy
+      -- left i right musi bejt *
+      -- takze je infernu a pak jim priradim v constraintu *
+      (k'l, cs'l) <- infer'type left
+      (k'r, cs'r) <- infer'type right
+
+      return (Star, [(Star, k'l), (Star, k'r)] ++ cs'l ++ cs'r)
+    TyApp left right -> do
+      -- tohle bude malinko komplikovanejsi
+      -- infernu left a infernu right
+      -- vytvorim constraint, ze to nalevo musi bejt KArr
+      -- ktera bere to napravo a vraci cokoliv - fresh
+      (k'l, cs'l) <- infer'type left
+      (k'r, cs'r) <- infer'type right
+      var <- fresh
+      let constraint = (k'l, k'r `KArr` var)
+
+      return (var, constraint : cs'l ++ cs'r)
 
 
 infer'data :: KindEnv -> [(String, Declaration )] -> Either KindError KindEnv
@@ -132,6 +147,10 @@ assume'star env = Map.map assume'star' env
 
 run'infer :: KindEnv -> Infer ([(String, Kind)], [Constraint]) -> Either KindError ([(String, Kind)], [Constraint])
 run'infer env m = runExcept $ evalStateT (runReaderT m env) init'infer
+
+
+run'infer' :: KindEnv -> Infer (Kind, [Constraint]) -> Either KindError (Kind, [Constraint])
+run'infer' env m = runExcept $ evalStateT (runReaderT m env) init'infer
 
 
 infer'datas :: [(String, Declaration)] -> Infer ([(String, Kind)], [Constraint])
