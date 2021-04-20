@@ -1,106 +1,105 @@
-{
+module Main where
 
-(&&) :: Bool -> Bool -> Bool
-;
-a && b = (which-Bool a
-          b
-          False)
+{ data () = ()
 
-;
-(&&) :: Bool -> Bool -> Bool
-;
-a || b = (which-Bool a
-          True
-          b)
+; data Bool
+    = True
+    | False
 
-;
-(==) :: a -> a -> Bool
-;
-a == b  = (#= (a, b))
-;
-a < b  = (#< (a, b))
-;
-a > b  = (#> (a, b))
-;
-a + b  = (#+ (a, b))
-;
-a +. b  = (#+. (a, b))
-;
-a - b  = (#- (a, b))
-;
-a -. b  = (#-. (a, b))
-;
-a * b  = (#* (a, b))
-;
-a *. b  = (#*. (a, b))
-;
-a `div` b = (#div (a, b))
-;
-a / b  = (#/ (a, b))
-;
-nil? a  = (which-List a
+; data Either a b
+    = Left a
+    | Right b
+
+; data Maybe a
+    = Nothing
+    | Just a
+
+; data List a
+    = []
+    | a : (List a)
+
+-- ; data Test a b c = One -- (a b c)
+
+-- ; data ConContainer a b
+--    = Container (a b)
+
+
+; (&&) :: Bool -> Bool -> Bool
+
+; a && b = (which-Bool a
+            b
+            False)
+
+; (&&) :: Bool -> Bool -> Bool
+
+; a || b = (which-Bool a
             True
-            (\ h t -> False))
-;
-show a = ((#show) a)
-;
-undefined = undefined
-;
-lst !! ix = if (ix == 0)
-            then (which-List lst Nothing (\ h t -> (Just h)))
-            else (which-List lst Nothing (\ h t -> (t !! (ix - 1))))
-;
-fst a  = (#fst a)
-;
-snd a  = (#snd a)
-;
-la ++ lb = (which-List la
-            lb
-            (\ ha ta -> (ha : (ta ++ lb))))
-;
-head lst = (which-List lst
-            Nothing
-            (\ h t -> (Just h)))
-;
-tail lst = (which-List lst
-            Nothing
-            (\ h t -> (Just t)))
-;
-show-List list = (which-List list
+            b)
+
+; (==) :: a -> a -> Bool
+
+; a == b  = (#= (a, b))
+
+; a < b  = (#< (a, b))
+
+; a > b  = (#> (a, b))
+
+; a + b  = (#+ (a, b))
+
+; a +. b  = (#+. (a, b))
+
+; a - b  = (#- (a, b))
+
+; a -. b  = (#-. (a, b))
+
+; a * b  = (#* (a, b))
+
+; a *. b  = (#*. (a, b))
+
+; a `div` b = (#div (a, b))
+
+; a / b  = (#/ (a, b))
+
+; nil? a  = (which-List a
+              True
+              (\ h t -> False))
+
+; show a = ((#show) a)
+
+; undefined = undefined
+
+; lst !! ix = if (ix == 0)
+              then (which-List lst Nothing (\ h t -> (Just h)))
+              else (which-List lst Nothing (\ h t -> (t !! (ix - 1))))
+
+; fst a  = (#fst a)
+
+; snd a  = (#snd a)
+
+; la ++ lb = (which-List la
+              lb
+              (\ ha ta -> (ha : (ta ++ lb))))
+
+; head lst = (which-List lst
+              Nothing
+              (\ h t -> (Just h)))
+
+; tail lst = (which-List lst
+              Nothing
+              (\ h t -> (Just t)))
+
+; show-List list = (which-List list
                     "[]"
                     ( \ head tail -> ( ((show head) ++ " : ") ++ (show-List tail) ) ))
-;
-map fn lst = (which-List lst
+
+; map fn lst = (which-List lst
               []
               (\ h t -> ((fn h) : (map fn t)) ))
-;
-show-Maybe m = (which-Maybe m
+
+; show-Maybe m = (which-Maybe m
                 "Nothing"
                 (\ v -> (show v)))
-;
 
-fact n = if (n == 0) then 1 else (n * (fact (n - 1)))
-;
-data () = ()
-;
-data Bool
-  = True
-  | False
-;
-data Test a b c = One -- (a b c)
-;
-data Either a b
-  = Left a
-  | Right b
-;
-data Maybe a
-  = Nothing
-  | Just a
-;
-data List a
-  = []
-  | a : (List a)
-;
-data ConContainer a b
-  = Container (a b)
+; fact n = if n == 0 then 1 else n * (fact (n - 1))
+
 }
