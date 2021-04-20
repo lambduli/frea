@@ -61,6 +61,8 @@ token :-
 <0>         lambda          { plainTok TokLambda }
 <0>         "\"             { plainTok TokLambda }
 <0>         fix             { plainTok $ TokFix }
+<0>         module          { plainTok $ TokModule }
+<0>         where           { plainTok $ TokWhere }
 
 
 -- special symbols
