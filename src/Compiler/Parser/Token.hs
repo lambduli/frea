@@ -61,5 +61,8 @@ data Token
   | TokAssume -- assume
   | TokRec    -- rec
 
+  | TokModule -- module
+  | TokWhere -- where
+
   | TokEOF
   deriving (Eq, Show)

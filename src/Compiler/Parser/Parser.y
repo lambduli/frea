@@ -81,13 +81,16 @@ import Compiler.Syntax.Type
   assume        { TokAssume }
   rec           { TokRec }
 
+  module        { TokModule }
+  where         { TokWhere }
+
 %%
 Program         ::  { Either [Declaration] Expression }
                 :   Exp                                             { Right $1 }
-                |   Declarations                                    { Left $1 }
+                |   Module                                          { Left $1 }
 
-Declarations    ::  { [Declaration] }
-                :   Layout(Declaration)                             { $1 }
+Module          ::  { [Declaration] }
+                :   module UpIdent where Layout(Declaration)        { $4 }
 
 Declaration     ::  { Declaration }
                 :   Decl                                            { $1 }
