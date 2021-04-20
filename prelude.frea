@@ -25,13 +25,11 @@ module Main where
 
 
 ; (&&) :: Bool -> Bool -> Bool
-
 ; a && b = (which-Bool a
             b
             False)
 
 ; (&&) :: Bool -> Bool -> Bool
-
 ; a || b = (which-Bool a
             True
             b)
