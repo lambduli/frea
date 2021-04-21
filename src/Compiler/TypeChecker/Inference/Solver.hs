@@ -69,7 +69,7 @@ occurs'in :: String -> Type -> Bool
 name `occurs'in` (TyVar varname)
   = name == varname
 name `occurs'in` (TyCon conname)
-  = False
+  = name == conname -- TODO: So I think I can do that safely. Consider if TyCon didn't exist and everything would just be a TyVar. You would do this check and by the fact that constructors start with upper case letter it wouldn't break anything. 
 name `occurs'in` (TyTuple ts)
   = any (name `occurs'in`) ts
 name `occurs'in` (TyArr left right)

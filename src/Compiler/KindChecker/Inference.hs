@@ -176,3 +176,7 @@ infer'datas' ((name, d@(DataDecl _ t'pars _)) : decls) = do
   orig'kind <- lookup'env name
   (kinds, constrs') <- infer'datas' decls
   return ((name, kind') : kinds, (orig'kind, kind') : constraints ++ constrs')
+infer'datas' ((name, a@(TypeAlias _ type')) : decls) = do
+  (k', constrs') <- put'in'env (name, Star) (infer'type type')
+  (ks', constrs) <- put'in'env (name, Star) (infer'datas' decls)
+  return ((name, Star) : ks', (k', Star) : constrs' ++ constrs)

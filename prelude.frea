@@ -20,6 +20,10 @@ module Main where
 
 ; type String = List Char
 
+-- ; type Foo = Foo -- cycle
+
+-- ; type Bar = Either Bar Int -- cycle
+
 ; type Foo a b = Either b a
 
 -- ; data Test a b c = One -- (a b c)
@@ -28,12 +32,15 @@ module Main where
 --    = Container (a b)
 
 
+; concat :: String -> String -> String
+; concat left right = left ++ right
+
 ; (&&) :: Bool -> Bool -> Bool
 ; a && b = (which-Bool a
             b
             False)
 
-; (&&) :: Bool -> Bool -> Bool
+; (||) :: Bool -> Bool -> Bool
 ; a || b = (which-Bool a
             True
             b)

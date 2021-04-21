@@ -8,6 +8,7 @@ import Data.Map.Strict ((!), (!?))
 import Data.Bifunctor
 import Control.Monad
 import Control.Monad.Reader
+import Data.List (partition)
 
 import Compiler.Syntax.Declaration
 import Compiler.Syntax.Type
@@ -24,14 +25,23 @@ import Compiler.TypeChecker.Inference.InferUtils
 import Compiler.KindChecker.KindEnv
 import Compiler.KindChecker.Inference hiding (infer)
 import Compiler.KindChecker.KindError
+import qualified Compiler.TypeChecker.Inference.Normalize as N
 
 import Debug.Trace
 
 
 infer'env :: [Declaration] -> TypeEnv -> Either TypeError TypeEnv
 infer'env binds t'env = do
-  let only'funs = filter is'fun binds
-      pairs = map to'pair only'funs
+  let 
+      (only'aliases, rest) = partition is'alias binds
+      -- get all the aliases
+      only'funs = filter is'fun rest
+      -- take only functions
+
+      -- ted z tech aliasu udelam kontext a normalizuju typy v only'funs
+      -- NOW, map all Bindings and Annotated -> expand the aliases
+      expanded = map (expand'aliases $ make'alias'env only'aliases) only'funs
+      pairs = map to'pair expanded
   infer'top t'env pairs
     where
       is'fun :: Declaration -> Bool
@@ -39,25 +49,96 @@ infer'env binds t'env = do
       is'fun (Annotated _ _ _) = True
       is'fun _ = False
 
+      -- DUPLICATION
+      expand'aliases :: Map.Map String Type -> Declaration -> Declaration
+      expand'aliases ali'env (Binding name expr) = Binding name $ expand'expr ali'env expr
+      expand'aliases  ali'env (Annotated name type' expr) = Annotated name (N.normalize ali'env type') (expand'expr ali'env expr)
+      expand'aliases _ impossible = impossible
+
+      -- DUPLICATION
+      is'alias (TypeAlias _ _) = True
+      is'alias _ = False
+
+      -- DUPLICATION
+      make'alias'env decls = Map.fromList $ map (\ (TypeAlias name type') -> (name, type')) decls
+
       to'pair :: Declaration -> (String, Expression)
       to'pair (Binding name expr) = (name, expr)
       to'pair (Annotated name type' expr) = (name, Ann type' expr)
 
 
-infer'decls :: [Declaration]  -> KindEnv -> Either KindError KindEnv
+expand'expr :: Map.Map String Type -> Expression -> Expression
+expand'expr ali'env expr =
+  case expr of
+    Var name -> Var name
+    Op name -> Op name
+    Lit lit -> Lit lit
+    Lam par body -> Lam par $ expand'expr ali'env body
+    App left right -> App (expand'expr ali'env left) (expand'expr ali'env right)
+    Tuple exprs -> Tuple $ map (expand'expr ali'env) exprs
+    If cond' then' else' -> If (expand'expr ali'env cond') (expand'expr ali'env then') (expand'expr ali'env else')
+    Let name value expr -> Let name (expand'expr ali'env value) (expand'expr ali'env expr)
+    Fix expr -> Fix $ expand'expr ali'env expr
+    Ann type' expr -> Ann (N.normalize ali'env type') (expand'expr ali'env expr)
+    Intro name exprs -> Intro name exprs -- NOTE: I can safely do that - this is generated, no type annotations can get there
+    Elim cons'decls val destrs -> Elim cons'decls val destrs -- NOTE: I can safely do that - this is generated, no type annotations can get there
+
+
+infer'decls :: [Declaration] -> KindEnv -> Either KindError KindEnv
 infer'decls binds k'env = do
-  let only'data = filter is'data binds
-      data'pairs = map to'pair only'data
+  let 
+      (only'aliases, rest) = partition is'alias binds
+      -- get all the aliases
+
+  mapM check'for'cycles only'aliases
+  
+  let only'types = filter is'type'decl rest
+      -- take only type declarations
+      -- ted z tech aliasu udelam kontext a normalizuju typy v only'types
+      -- NOW, map all DataDecls and TypeAlias -> expand the aliases
+      expanded = map (expand'aliases $ make'alias'env only'aliases) only'types
+
+      data'pairs = map to'pair expanded ++ map to'pair only'aliases
 
   infer'data k'env data'pairs
   
     where
-      is'data :: Declaration -> Bool
-      is'data (DataDecl _ _ _) = True
-      is'data _ = False
+      is'type'decl :: Declaration -> Bool
+      is'type'decl (DataDecl _ _ _) = True
+      is'type'decl (TypeAlias _ _) = True
+      is'type'decl _ = False
+
+      check'for'cycles :: Declaration -> Either KindError ()
+      check'for'cycles (TypeAlias name type')
+        = when (name `occurs'in` type') $ Left $ SynonymCycle name type'
+        -- = if name `occurs'in` type'
+        --   then Left $ SynonymCycle name
+        --   else return ()
+
+      -- DUPLICATION
+      expand'aliases :: Map.Map String Type -> Declaration -> Declaration
+      expand'aliases ali'env (DataDecl name params constructors)
+        = DataDecl name params $ map (expand'constr ali'env) constructors
+      -- expand'aliases ali'env (TypeAlias name type')
+        -- = TypeAlias name $ N.normalize ali'env type'
+        -- = if trace ("testuju jestli " ++ name ++ " se nachazi v " ++ show type' ) $ name `occurs'in` type'
+        --   then Left $ SynonymCycle name
+        --   else return $  -- TODO: this may lead to type error - synonym cycle
+      expand'aliases _ impossible = impossible
+
+      expand'constr :: Map.Map String Type -> ConstrDecl -> ConstrDecl
+      expand'constr ali'env (ConDecl name param'types) = ConDecl name $ map (N.normalize ali'env) param'types
+
+      -- DUPLICATION
+      is'alias (TypeAlias _ _) = True
+      is'alias _ = False
+
+      -- DUPLICATION
+      make'alias'env decls = Map.fromList $ map (\ (TypeAlias name type') -> (name, type')) decls
 
       to'pair :: Declaration -> (String, Declaration)
       to'pair d@(DataDecl name _ _) = (name, d)
+      to'pair a@(TypeAlias name type') = (name, a)
 
 
 infer'top :: TypeEnv -> [(String, Expression)] -> Either TypeError TypeEnv
@@ -65,7 +146,7 @@ infer'top environment bindings =
   case run'infer'many environment (infer'many bindings) of
     Left err -> Left err
     Right (type'bindings, constraints) -> -- ([(String, Type)], [Constraint])
-        case runSolve constraints of
+        case runSolve constraints  of
           Left err -> Left err
           Right subst -> do
             let scheme'bindings = map (second (closeOver . apply subst)) type'bindings
@@ -88,7 +169,7 @@ infer'many bindings = do
   let solved = stronglyConnComp graph
   -- let ss = trace ("solved  " ++ show solved) solved
   -- ted to mam vyreseny a co musim udelat je
-  -- ze projdu celej ten solve list a pro kazdy CyclicSCC [(String, Expression)]
+  -- ze projdu celej ten   list a pro kazdy CyclicSCC [(String, Expression)]
     -- priradim kazdymu jmenu Forall [] <$> fresh
     -- pak vlastne provedu posbirani constraintu
     -- pak je vratim nekam
