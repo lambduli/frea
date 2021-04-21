@@ -18,6 +18,10 @@ module Main where
     = []
     | a : (List a)
 
+; type String = List Char
+
+; type Foo a b = Either b a
+
 -- ; data Test a b c = One -- (a b c)
 
 -- ; data ConContainer a b
