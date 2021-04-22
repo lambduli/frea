@@ -145,7 +145,7 @@ infer expr = case expr of
     let scheme = generalize empty't'env type'
     t' <- instantiate scheme
     (_, constrs) <- check t' expr
-    return (type', constrs)
+    return (t', constrs)
 
     -- co ted?
     -- expr vlastne muze bejt uplne cokoliv
