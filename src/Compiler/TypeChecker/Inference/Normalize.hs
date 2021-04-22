@@ -14,7 +14,7 @@ class Normalizing a where
 instance Normalizing Type where
   normalize ali'env (TyVar name) =
     case ali'env Map.!? name of
-      Nothing -> TyCon name
+      Nothing -> TyVar name
       Just t -> normalize ali'env t
   normalize ali'env (TyCon name) =
     case ali'env Map.!? name of
