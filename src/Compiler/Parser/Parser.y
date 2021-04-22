@@ -95,8 +95,7 @@ Module          ::  { [Declaration] }
 Declaration     ::  { Declaration }
                 :   Fun                                             { $1 }
                 |   Data                                            { $1 }
-                |   TypeAlias                                       { $1 }
-                |   TypeOp                                          { $1 }
+                |   TypeSynonym                                     { $1 }
 
 Data            ::  { Declaration }
                 :   data UpIdent Params Constructors                { DataDecl $2 $3 $4 }
@@ -116,11 +115,8 @@ Constr          ::  { ConstrDecl }
 ConstrOther     ::  { ConstrDecl }
                 :   '|' Constr                                      { $2 }
 
-TypeAlias       ::  { Declaration }
-                :   type Con '=' Type                               { TypeAlias $2 $4 }
-
-TypeOp          ::  { Declaration }
-                :   type Con OneOrMany(Var) '=' Type                { TypeAlias $2 (foldr TyOp $5 $3) }
+TypeSynonym     ::  { Declaration }
+                :   type Con NoneOrMany(Var) '=' Type                { TypeAlias $2 (foldr TyOp $5 $3) }
 
 Params          ::  { [String] }
                 :   NoneOrMany(Var)                                 { $1 }
