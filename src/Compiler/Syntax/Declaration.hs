@@ -13,7 +13,6 @@ data Declaration
   | Signature Sig                     -- Type signature
   | DataDecl String [String] [ConstrDecl] -- Data type declaration -- name type'params list'of'consturctors'with'params
   | TypeAlias String Type             -- type String = List Char
-  | TypeFun String [String] Type      -- Type operator/function
 
 
 instance Show Declaration where
@@ -27,8 +26,6 @@ instance Show Declaration where
     = "data " ++ name ++ " " ++ unwords params ++ " = " ++ intercalate " | " (map show constrs)
   show (TypeAlias name type')
     = "type " ++ name ++ " = " ++ show type'
-  show (TypeFun name params type')
-    = "type " ++ name ++ intercalate " " params ++ " = " ++ show type'
 
 
 data ConstrDecl
