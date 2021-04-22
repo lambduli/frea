@@ -12,15 +12,20 @@ data Declaration
   | Annotated String Type Expression  -- annotated function declaration
   | Signature Sig                     -- Type signature
   | DataDecl String [String] [ConstrDecl] -- Data type declaration -- name type'params list'of'consturctors'with'params
-  | TypeDecl String [String] Type        -- Type declaration -- only single constructor -- basically alias
+  | TypeAlias String Type             -- type String = List Char
 
 
 instance Show Declaration where
-  show (Binding name expr) = name ++ " = " ++ show expr
-  show (Signature sig) = "<|signature|>"
+  show (Binding name expr)
+    = name ++ " = " ++ show expr
+  show (Annotated name type' expr)
+    = name ++ " :: " ++ show type' ++ "\n" ++ name ++ " = " ++ show expr
+  show (Signature sig)
+    = show sig
   show (DataDecl name params constrs)
     = "data " ++ name ++ " " ++ unwords params ++ " = " ++ intercalate " | " (map show constrs)
-  show (TypeDecl name params type') = "<|typedecl|>"
+  show (TypeAlias name type')
+    = "type " ++ name ++ " = " ++ show type'
 
 
 data ConstrDecl

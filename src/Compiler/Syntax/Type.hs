@@ -9,6 +9,8 @@ data Type
   | TyTuple [Type]
   | TyArr Type Type
   | TyApp Type Type
+
+  | TyOp String Type -- type operator/function
   deriving (Eq)
 
 
@@ -27,6 +29,9 @@ instance Show Type where
     = show t'left ++ " (" ++ show t'right ++ ")"
   show (TyApp t'left t'right)
     = show t'left ++ " " ++ show t'right
+
+  show (TyOp var type')
+    = "(λ " ++ var ++ " . " ++ show type' ++ ")"
 
 
 data Scheme

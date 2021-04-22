@@ -93,8 +93,9 @@ Module          ::  { [Declaration] }
                 :   module UpIdent where Layout(Declaration)        { $4 }
 
 Declaration     ::  { Declaration }
-                :   Decl                                            { $1 }
+                :   Fun                                             { $1 }
                 |   Data                                            { $1 }
+                |   TypeSynonym                                     { $1 }
 
 Data            ::  { Declaration }
                 :   data UpIdent Params Constructors                { DataDecl $2 $3 $4 }
@@ -113,6 +114,9 @@ Constr          ::  { ConstrDecl }
 
 ConstrOther     ::  { ConstrDecl }
                 :   '|' Constr                                      { $2 }
+
+TypeSynonym     ::  { Declaration }
+                :   type Con NoneOrMany(Var) '=' Type                { TypeAlias $2 (foldr TyOp $5 $3) }
 
 Params          ::  { [String] }
                 :   NoneOrMany(Var)                                 { $1 }
@@ -195,7 +199,7 @@ GlobalBinding   ::  { (String, Expression) }
                 |   Var Op Params '=' Exp                           { ($2, foldr Lam $5 ($1 : $3)) }
                 |   Var '`' Var '`' Params '=' Exp                  { ($3, foldr Lam $7 ($1 : $5)) }
 
-Decl            ::  { Declaration }
+Fun             ::  { Declaration }
                 :   GlobalBinding                                   { Binding (fst $1) (snd $1) }
                 |   Annotation ';' GlobalBinding                    { Annotated (fst $3) (snd $1) (snd $3) }
 

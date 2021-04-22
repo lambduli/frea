@@ -18,24 +18,53 @@ module Main where
     = []
     | a : (List a)
 
+-- ; type String = List Char
+
+-- ; type A = B -- BAD CYCLE
+-- ; type B = A -- BAD CYCLE
+
+-- ; type Foo = Foo -- cycle
+
+-- ; type Bar = Either Bar Int -- cycle
+
+-- ; type Rehtie a b = Either b a
+
+-- ; type Identity a = a
+
+-- ; type AAA a b = BBB b a -- BAD CYCLE
+-- ; type BBB x y = AAA y x -- BAD CYCLE
+
 -- ; data Test a b c = One -- (a b c)
 
 -- ; data ConContainer a b
 --    = Container (a b)
 
+-- ; int :: Identity Int
+-- ; int = 23
+
+-- ; str :: String
+-- ; str = "hello world!"
+
+-- ; foobar :: Rehtie Int Char
+-- ; foobar = bar
+-- ; bar :: Either Char Int
+-- ; bar = Left 'a'
+
+
+-- ; concat :: String -> String -> String
+-- ; concat left right = left ++ right
 
 ; (&&) :: Bool -> Bool -> Bool
 ; a && b = (which-Bool a
             b
             False)
 
-; (&&) :: Bool -> Bool -> Bool
+; (||) :: Bool -> Bool -> Bool
 ; a || b = (which-Bool a
             True
             b)
 
-; (==) :: a -> a -> Bool
-
+; (==) :: h -> h -> Bool
 ; a == b  = (#= (a, b))
 
 ; a < b  = (#< (a, b))
@@ -99,5 +128,14 @@ module Main where
                 (\ v -> (show v)))
 
 ; fact n = if n == 0 then 1 else n * (fact (n - 1))
+
+; test = 'c' == 'a' -- just for the future "regression prevention"
+
+-- I would like to fix the following bug in the future
+
+; wrong :: Int -> a
+; wrong n = badbad n
+
+; badbad o = 23
 
 }

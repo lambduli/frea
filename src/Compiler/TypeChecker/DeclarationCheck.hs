@@ -122,6 +122,10 @@ process'declarations declarations env t'env k'env mem = do
             let addr = Addr $ Map.size env
             in Map.insert name addr env
 
+          Annotated name type' expr ->
+            let addr = Addr $ Map.size env
+            in Map.insert name addr env
+
           DataDecl name _ constrs ->
             let env'  = register'constr'insts constrs env
                 env'' = register'elim'insts name constrs env'
@@ -134,10 +138,16 @@ process'declarations declarations env t'env k'env mem = do
       construct'declarations env mem decl =
         case decl of
           Binding name expr ->
-            let addr = env Map.! name
-                val  = Val.Thunk (\ env -> force expr env) env addr
-                mem' = Map.insert addr val mem
+            let addr  = env Map.! name
+                val   = Val.Thunk (\ env -> force expr env) env addr
+                mem'  = Map.insert addr val mem
             in  mem'
+
+          Annotated name type' expr ->
+            let addr  = env Map.! name
+                val   = Val.Thunk (\ env -> force expr env) env addr
+                mem'  = Map.insert addr val mem
+            in mem'
 
           DataDecl name _ constrs ->
             -- [ConstrDecl] -> Val.Env -> Val.Memory -> Val.Memory

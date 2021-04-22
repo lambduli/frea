@@ -121,10 +121,29 @@ repl env t'env k'env mem = do
               -- loop
               repl env t'env k'env mem
             Right type' -> do
-              putStrLn $ "          " ++ show expression ++ " :: " ++ show type'
+              -- let error'or'expr'n'state = runState (IP.print $ expression en) mem
+              -- case error'or'expr'n'state of
+                -- (Left err, mem') -> do
+                --   putStrLn $ "Evaluation Error when Printing the value: " ++ show err
+
+                --   -- loop
+                --   repl env t'env k'env mem
+
+                -- (Right str', mem') -> do
+                  -- TODO: this is WRONG! present for whatever reason doesn't work well
+                  -- so when you try to force the value for printing it doesn't update the memory or smth
+                  -- so it breaks
+                  putStrLn $ "         " ++ trim line ++ " :: " ++ show type'
+
+                  -- putStrLn $ "         " ++ str'
+
+                  -- loop
+                  repl env t'env k'env mem
+
+
 
               -- loop
-              repl env t'env k'env mem
+              -- repl env t'env k'env mem
 
     -- COMMAND :k(ind)
     ':' : 'k' : line -> do
