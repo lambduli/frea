@@ -122,6 +122,20 @@ infer'type type' =
 
       return (var, constraint : cs'l ++ cs'r)
 
+    TyOp par t@(TyOp par' type') -> do
+      -- tady udelam jenom to, ze reknu, TOHLE je fresh -> to co vypadne z t
+      var <- fresh
+      (k', cs) <- put'in'env (par, var) (infer'type t)
+      
+      return (var `KArr` k', cs)
+
+    TyOp par t -> do
+      -- t must be :: *
+      var <- fresh
+      (k', cs) <- put'in'env (par, var) (infer'type t)
+
+      return (var `KArr` k', (k', Star) : cs)
+
 
 infer'data :: KindEnv -> [(String, Declaration )] -> Either KindError KindEnv
 infer'data environment bindings =
@@ -167,6 +181,7 @@ infer'datas bindings = do
 infer'datas' :: [(String, Declaration)] -> Infer ([(String, Kind)], [Constraint])
 infer'datas' [] = do
   return ([], [])
+
 infer'datas' ((name, d@(DataDecl _ t'pars _)) : decls) = do
   let gener _ = fresh
   fresh'vars <- mapM gener t'pars
@@ -176,7 +191,19 @@ infer'datas' ((name, d@(DataDecl _ t'pars _)) : decls) = do
   orig'kind <- lookup'env name
   (kinds, constrs') <- infer'datas' decls
   return ((name, kind') : kinds, (orig'kind, kind') : constraints ++ constrs')
+
 infer'datas' ((name, a@(TypeAlias _ type')) : decls) = do
-  (k', constrs') <- put'in'env (name, Star) (infer'type type')
-  (ks', constrs) <- put'in'env (name, Star) (infer'datas' decls)
-  return ((name, Star) : ks', (k', Star) : constrs' ++ constrs)
+  (k', constrs') <- infer'type type' -- put'in'env (name, Star) (infer'type type')
+  -- jakej kind to bude se pozna podle poctu lambd v type'
+  -- ale ja to tam pridavat vubec nemusim, vim jiste, ze jsou acyklicky
+  -- takze samotnej type' nepotrebuje vedet jakej kind on sam je
+  (ks', constrs) <- put'in'env (name, k') (infer'datas' decls)
+  -- a ted uz bych mel vedet jakej kind to je - uvnitr k' by ta informace mela bejt
+  -- takze zbytek typu muzu odvodit s touhle vedomosti
+  return ((name, k') : ks', constrs' ++ constrs)
+  -- name nebude Star celkem urcite (vetsinou)
+  -- k' taky ne
+  -- aby ale telo te type funkce bylo :: *
+  -- o to se postara konkretni pravidlo kind'check resp type'infer tady v tom modulu
+  -- to pravidlo muze bejt tak, ze pokud telem TyOp je TyOp tak ok - muze to bejt k -> k
+  -- ale pokud to je cokoliv jineho, tak to musi bejt *

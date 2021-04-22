@@ -18,7 +18,7 @@ module Main where
     = []
     | a : (List a)
 
-; type String = List Char
+-- ; type String = List Char
 
 -- ; type A = B -- BAD CYCLE
 -- ; type B = A -- BAD CYCLE
@@ -27,20 +27,32 @@ module Main where
 
 -- ; type Bar = Either Bar Int -- cycle
 
-; type Foo a b = Either b a
+-- ; type Rehtie a b = Either b a
 
-; type AAA a b = BBB b a
+-- ; type Identity a = a
 
-; type BBB x y = AAA y x
+-- ; type AAA a b = BBB b a -- BAD CYCLE
+-- ; type BBB x y = AAA y x -- BAD CYCLE
 
 -- ; data Test a b c = One -- (a b c)
 
 -- ; data ConContainer a b
 --    = Container (a b)
 
+-- ; int :: Identity Int
+-- ; int = 23
 
-; concat :: String -> String -> String
-; concat left right = left ++ right
+-- ; str :: String
+-- ; str = "hello world!"
+
+-- ; foobar :: Rehtie Int Char
+-- ; foobar = bar
+-- ; bar :: Either Char Int
+-- ; bar = Left 'a'
+
+
+-- ; concat :: String -> String -> String
+-- ; concat left right = left ++ right
 
 ; (&&) :: Bool -> Bool -> Bool
 ; a && b = (which-Bool a
@@ -84,9 +96,9 @@ module Main where
 
 ; undefined = undefined
 
-; lst !! ix = if (ix == 0)
-              then (which-List lst Nothing (\ h t -> (Just h)))
-              else (which-List lst Nothing (\ h t -> (t !! (ix - 1))))
+-- ; lst !! ix = if (ix == 0)
+--               then (which-List lst Nothing (\ h t -> (Just h)))
+--               else (which-List lst Nothing (\ h t -> (t !! (ix - 1))))
 
 ; fst a  = (#fst a)
 
@@ -116,6 +128,8 @@ module Main where
                 "Nothing"
                 (\ v -> (show v)))
 
-; fact n = if n == 0 then 1 else n * (fact (n - 1))
+-- ; fact n = if n == 0 then 1 else n * (fact (n - 1))
+
+; test = 'c' == 'a'
 
 }

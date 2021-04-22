@@ -19,6 +19,8 @@ data Declaration
 instance Show Declaration where
   show (Binding name expr)
     = name ++ " = " ++ show expr
+  show (Annotated name type' expr)
+    = name ++ " :: " ++ show type' ++ "\n" ++ name ++ " = " ++ show expr
   show (Signature sig)
     = show sig
   show (DataDecl name params constrs)

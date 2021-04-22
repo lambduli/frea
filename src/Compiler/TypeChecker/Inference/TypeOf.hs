@@ -40,8 +40,13 @@ infer'env binds t'env = do
 
       -- ted z tech aliasu udelam kontext a normalizuju typy v only'funs
       -- NOW, map all Bindings and Annotated -> expand the aliases
-      expanded = map (expand'aliases $ make'alias'env only'aliases) only'funs
+      ali'env = make'alias'env only'aliases
+      aa = trace ("ali'env   " ++ show ali'env) ali'env
+      expanded = map (expand'aliases aa) only'funs
+      -- kk = trace ("expanded the fuq  " ++ show expanded) expanded
       pairs = map to'pair expanded
+      -- ee = trace ("original  " ++ show rest) pairs
+      -- aa = trace ("pairs  " ++ show pairs) ee
   infer'top t'env pairs
     where
       is'fun :: Declaration -> Bool
@@ -52,12 +57,15 @@ infer'env binds t'env = do
       -- DUPLICATION
       expand'aliases :: Map.Map String Type -> Declaration -> Declaration
       expand'aliases ali'env (Binding name expr) = Binding name $ expand'expr ali'env expr
-      expand'aliases  ali'env (Annotated name type' expr) = Annotated name (N.normalize ali'env type') (expand'expr ali'env expr)
+      expand'aliases ali'env (Annotated name type' expr) =
+        let f = (N.normalize ali'env type')
+            k = (expand'expr ali'env expr)
+            a = trace ("  jedu  " ++ name ++ "  old type'  " ++ show type' ++  "  normalized type' " ++ show f ++ "   expr  " ++ show expr ++ "\n\n") f
+        in Annotated name a k
       expand'aliases _ impossible = impossible
 
       -- DUPLICATION
       is'alias (TypeAlias _ _) = True
-      -- is'alias (TypeFun _ _ _) = True
       is'alias _ = False
 
       -- DUPLICATION
@@ -98,13 +106,19 @@ infer'decls binds k'env = do
     -- pridat typovy operatory do tohohle celyho kolotoce
 
 
-  let only'types = filter is'type'decl rest
+  let only'types = filter is'type'decl binds
       -- take only type declarations
       -- ted z tech aliasu udelam kontext a normalizuju typy v only'types
       -- NOW, map all DataDecls and TypeAlias -> expand the aliases
       expanded = map (expand'aliases $ make'alias'env only'aliases) only'types
 
-      data'pairs = map to'pair expanded ++ map to'pair only'aliases
+      data'pairs = map to'pair expanded -- ++ map to'pair only'aliases
+
+      -- aa = trace ("original partition " ++ show binds) data'pairs
+
+      -- ii = trace ("all before " ++ show only'types) aa
+
+      -- ee = trace ("expanded " ++ show expanded) ii
 
   infer'data k'env data'pairs
   
@@ -145,6 +159,7 @@ infer'decls binds k'env = do
                     TyTuple types -> foldl (\ deps'acc expr -> deps'acc `Set.union` get'deps expr) Set.empty types
                     TyArr t'from t'to -> get'deps t'from `Set.union` get'deps t'to
                     TyApp t'left t'right -> get'deps t'left `Set.union` get'deps t'right
+                    TyOp par t' -> get'deps t'
 
                 dependencies = map (get'deps . snd) bindings
 
@@ -166,11 +181,8 @@ infer'decls binds k'env = do
       expand'aliases :: Map.Map String Type -> Declaration -> Declaration
       expand'aliases ali'env (DataDecl name params constructors)
         = DataDecl name params $ map (expand'constr ali'env) constructors
-      -- expand'aliases ali'env (TypeAlias name type')
-        -- = TypeAlias name $ N.normalize ali'env type'
-        -- = if trace ("testuju jestli " ++ name ++ " se nachazi v " ++ show type' ) $ name `occurs'in` type'
-        --   then Left $ SynonymCycle name
-        --   else return $  -- TODO: this may lead to type error - synonym cycle
+      expand'aliases ali'env (TypeAlias name type')
+        = TypeAlias name $ N.normalize ali'env type'
       expand'aliases _ impossible = impossible
 
       expand'constr :: Map.Map String Type -> ConstrDecl -> ConstrDecl
