@@ -57,6 +57,7 @@ infer'env binds t'env = do
 
       -- DUPLICATION
       is'alias (TypeAlias _ _) = True
+      -- is'alias (TypeFun _ _ _) = True
       is'alias _ = False
 
       -- DUPLICATION
@@ -90,8 +91,13 @@ infer'decls binds k'env = do
       (only'aliases, rest) = partition is'alias binds
       -- get all the aliases
 
-  mapM check'for'cycles only'aliases
-  
+  check'for'cycles only'aliases -- TODO: tohle se zahodi, je to blbe, nestaci to
+  -- TODO: takze zbyva:
+    -- prepsat kontrolovani cyklu
+    -- pridat do jazyka typu typove funkce/operatory a pridat je do normalizace typu
+    -- pridat typovy operatory do tohohle celyho kolotoce
+
+
   let only'types = filter is'type'decl rest
       -- take only type declarations
       -- ted z tech aliasu udelam kontext a normalizuju typy v only'types
@@ -108,9 +114,50 @@ infer'decls binds k'env = do
       is'type'decl (TypeAlias _ _) = True
       is'type'decl _ = False
 
-      check'for'cycles :: Declaration -> Either KindError ()
-      check'for'cycles (TypeAlias name type')
-        = when (name `occurs'in` type') $ Left $ SynonymCycle name type'
+      check'for'cycles :: [Declaration] -> Either KindError ()
+      check'for'cycles decls = do
+        let ds = map to'pair decls
+            indexed = index'bindings ds
+            graph = build'ali'graph ds indexed
+            solved = stronglyConnComp graph
+        all'acyclic solved
+
+          where
+            -- DUPLICATION
+            to'pair :: Declaration -> (String, Type)
+            to'pair (TypeAlias name type') = (name, type')
+
+            all'acyclic :: [SCC (String, Type)] -> Either KindError ()
+            all'acyclic [] = return ()
+            all'acyclic ((AcyclicSCC bind) : sccs) =
+              all'acyclic sccs
+            all'acyclic ((CyclicSCC aliases) : sccs) =
+              Left $ SynonymCycle aliases
+
+            build'ali'graph :: [(String, Type)] -> Map.Map String Int -> [((String, Type), Int, [Int])]
+            build'ali'graph bindings indexer = graph
+              where
+                get'deps :: Type -> Set.Set Int
+                get'deps expr =
+                  case expr of
+                    TyVar name -> Set.empty
+                    TyCon name -> maybe Set.empty Set.singleton (indexer !? name)
+                    TyTuple types -> foldl (\ deps'acc expr -> deps'acc `Set.union` get'deps expr) Set.empty types
+                    TyArr t'from t'to -> get'deps t'from `Set.union` get'deps t'to
+                    TyApp t'left t'right -> get'deps t'left `Set.union` get'deps t'right
+
+                dependencies = map (get'deps . snd) bindings
+
+                graph = zipWith (\ (name, expr) deps -> ((name, expr), indexer ! name, Set.toList deps)) bindings dependencies
+
+
+        -- musim sestavit graf
+        -- takze nejdriv ocislovat jednotlivy aliasy
+        -- pak sestavit graf
+        -- pak ho projit a checknout ze nic neni Cyclic
+
+
+        -- = when (name `occurs'in` type') $ Left $ SynonymCycle name type'
         -- = if name `occurs'in` type'
         --   then Left $ SynonymCycle name
         --   else return ()
@@ -201,10 +248,10 @@ infer'group bindings = do
   merge'into'env (zip names fresh'vars) $ infer'many' bindings
 
 
-index'bindings :: [(String, Expression)] -> Map.Map String Int -- [((String, Expression), Int)]
+index'bindings :: [(String, a)] -> Map.Map String Int -- [((String, Expression), Int)]
 index'bindings = enumerate'bindings 0
   where
-    enumerate'bindings :: Int -> [(String, Expression)] -> Map.Map String Int
+    enumerate'bindings :: Int -> [(String, a)] -> Map.Map String Int
     enumerate'bindings _ [] = Map.empty
     enumerate'bindings n ((name, expr) : bs) = Map.insert name n $ enumerate'bindings (n + 1) bs
 

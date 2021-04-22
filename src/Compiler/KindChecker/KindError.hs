@@ -1,5 +1,7 @@
 module Compiler.KindChecker.KindError where
 
+import Data.List
+
 import Compiler.Syntax.Kind
 import Compiler.Syntax.Type
 
@@ -10,7 +12,7 @@ data KindError
   | UnboundVariable String
   | UnifShapeMismatch Kind Kind
   | UnifCountMismatch [Kind] [Kind]
-  | SynonymCycle String Type
+  | SynonymCycle [(String, Type)]
   deriving (Eq)
 
 instance Show KindError where
@@ -25,5 +27,7 @@ instance Show KindError where
     = "[Kind][Shape] Couldn't match kind `" ++ show kind'l ++ "` with `" ++ show kind'r ++ "`"
   show (UnifCountMismatch left right)
     = "[Kind][Count] Couldn't unify  " ++ show left ++ " ~/~  " ++ show right
-  show (SynonymCycle name type')
-    = "[Kind] Found a cycle in the type synonym declaration of\n  " ++ name ++ " = " ++ show type'
+  show (SynonymCycle aliases)
+    = "[Kind] Found a cycle in the type synonym declaration(s) of\n" ++ intercalate "\n" (map prnt aliases)
+      where
+        prnt (name, type') = "  type " ++ name ++ " = " ++ show type'

@@ -20,11 +20,18 @@ module Main where
 
 ; type String = List Char
 
+-- ; type A = B -- BAD CYCLE
+-- ; type B = A -- BAD CYCLE
+
 -- ; type Foo = Foo -- cycle
 
 -- ; type Bar = Either Bar Int -- cycle
 
 ; type Foo a b = Either b a
+
+; type AAA a b = BBB b a
+
+; type BBB x y = AAA y x
 
 -- ; data Test a b c = One -- (a b c)
 
