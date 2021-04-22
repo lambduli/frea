@@ -64,8 +64,7 @@ module Main where
             True
             b)
 
-; (==) :: a -> a -> Bool
-
+; (==) :: h -> h -> Bool
 ; a == b  = (#= (a, b))
 
 ; a < b  = (#< (a, b))
@@ -96,9 +95,9 @@ module Main where
 
 ; undefined = undefined
 
--- ; lst !! ix = if (ix == 0)
---               then (which-List lst Nothing (\ h t -> (Just h)))
---               else (which-List lst Nothing (\ h t -> (t !! (ix - 1))))
+; lst !! ix = if (ix == 0)
+              then (which-List lst Nothing (\ h t -> (Just h)))
+              else (which-List lst Nothing (\ h t -> (t !! (ix - 1))))
 
 ; fst a  = (#fst a)
 
@@ -128,8 +127,15 @@ module Main where
                 "Nothing"
                 (\ v -> (show v)))
 
--- ; fact n = if n == 0 then 1 else n * (fact (n - 1))
+; fact n = if n == 0 then 1 else n * (fact (n - 1))
 
-; test = 'c' == 'a'
+; test = 'c' == 'a' -- just for the future "regression prevention"
+
+-- I would like to fix the following bug in the future
+
+; wrong :: Int -> a
+; wrong n = badbad n
+
+; badbad o = 23
 
 }
