@@ -147,6 +147,7 @@ infer expr = case expr of
     (_, constrs) <- check t' expr
     return (t', constrs)
 
+  -- COMMENT
     -- co ted?
     -- expr vlastne muze bejt uplne cokoliv
     -- type' taky libovolny type

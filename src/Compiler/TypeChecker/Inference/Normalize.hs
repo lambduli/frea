@@ -26,7 +26,5 @@ instance Normalizing Type where
   normalize ali'env (TyOp par t') = TyOp par $ normalize ali'env t'
 
 ty'app :: Map.Map String Type -> Type -> Type -> Type
-ty'app ali'env (TyOp par t'body) t'arg =
-  let aa = normalize (Map.insert par t'arg ali'env) t'body
-  in trace ("..\n  " ++ show (TyOp par t'body) ++ " @ " ++ show t'arg ++ "   -> > >  " ++ show aa) aa
+ty'app ali'env (TyOp par t'body) t'arg = normalize (Map.insert par t'arg ali'env) t'body
 ty'app _ t'left t'right = TyApp t'left t'right

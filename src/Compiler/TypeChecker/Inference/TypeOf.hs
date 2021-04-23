@@ -41,12 +41,8 @@ infer'env binds t'env = do
       -- ted z tech aliasu udelam kontext a normalizuju typy v only'funs
       -- NOW, map all Bindings and Annotated -> expand the aliases
       ali'env = make'alias'env only'aliases
-      aa = trace ("ali'env   " ++ show ali'env) ali'env
-      expanded = map (expand'aliases aa) only'funs
-      -- kk = trace ("expanded the fuq  " ++ show expanded) expanded
+      expanded = map (expand'aliases ali'env) only'funs
       pairs = map to'pair expanded
-      -- ee = trace ("original  " ++ show rest) pairs
-      -- aa = trace ("pairs  " ++ show pairs) ee
   infer'top t'env pairs
     where
       is'fun :: Declaration -> Bool
@@ -58,10 +54,9 @@ infer'env binds t'env = do
       expand'aliases :: Map.Map String Type -> Declaration -> Declaration
       expand'aliases ali'env (Binding name expr) = Binding name $ expand'expr ali'env expr
       expand'aliases ali'env (Annotated name type' expr) =
-        let f = (N.normalize ali'env type')
-            k = (expand'expr ali'env expr)
-            a = trace ("  jedu  " ++ name ++ "  old type'  " ++ show type' ++  "  normalized type' " ++ show f ++ "   expr  " ++ show expr ++ "\n\n") f
-        in Annotated name a k
+        let expanded'type = N.normalize ali'env type'
+            expanded'expr = expand'expr ali'env expr
+        in Annotated name expanded'type expanded'expr
       expand'aliases _ impossible = impossible
 
       -- DUPLICATION
@@ -113,12 +108,6 @@ infer'decls binds k'env = do
       expanded = map (expand'aliases $ make'alias'env only'aliases) only'types
 
       data'pairs = map to'pair expanded -- ++ map to'pair only'aliases
-
-      -- aa = trace ("original partition " ++ show binds) data'pairs
-
-      -- ii = trace ("all before " ++ show only'types) aa
-
-      -- ee = trace ("expanded " ++ show expanded) ii
 
   infer'data k'env data'pairs
   
@@ -226,7 +215,6 @@ infer'many bindings = do
   let indexed = index'bindings bindings
   let graph = build'graph bindings indexed
   let solved = stronglyConnComp graph
-  -- let ss = trace ("solved  " ++ show solved) solved
   -- ted to mam vyreseny a co musim udelat je
   -- ze projdu celej ten   list a pro kazdy CyclicSCC [(String, Expression)]
     -- priradim kazdymu jmenu Forall [] <$> fresh
