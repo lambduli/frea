@@ -153,14 +153,18 @@ Which value corresponds to which constructor is determined by the order.
 It works like this:
 
 ```haskell
+module Maybe where
 { data Maybe a = Nothing | Just a
+
 ; data List a
     = []
     | a : (List a)
+
 ; head lst =  which-List
                 lst
                 Nothing
-                \ head tail -> Just head }
+                \ head tail -> Just head
+}
 ```
 
 Thanks to the evaluation strategy of the Frea you don't need to worry about evaluation of the expressions, which won't be selected, they will never be evaluated.
@@ -255,8 +259,8 @@ let
   ; dec n = n - 1
   ; rec fact n =  if zero n
                   then 1
-                  else n * (fact (dec n)) }
-in fact 5
+                  else n * (fact (dec n))
+  } in fact 5
 ```
 
 ___
@@ -290,27 +294,32 @@ You can just write a list of bindings as in `let in` expression but dropping the
 You can write stuff like:
 
 ```haskell
-a == b  = (#=) (a, b)
-a < b   = (#<) (a, b)
-a > b   = (#>) (a, b)
-
-a + b   = (#+) (a, b)
-a +. b  = (#+.) (a, b)
+module Module where
+{ a == b  = (#=) (a, b)
+; a < b   = (#<) (a, b)
+; a > b   = (#>) (a, b)
+; a + b   = (#+) (a, b)
+; a +. b  = (#+.) (a, b)
+}
 ```
+
+> For various reasons if you want to submit new global bindings you must write it like a module definition. The name of the module does not matter currently.
 
 ### Typ Annotations
 
 You can optionally add type annotations to your top level declarations.
 
 ```haskell
-foo :: a -> Bool
-foo n = True
+module Module where
+{ foo :: a -> Bool
+; foo n = True
+}
 ```
 
 You can also annotate expressions.
 
 ```haskell
-let id = (\ i -> i) in [((id 42) :: Int), id 23]
+let { id = (\ i -> i) } in [((id 42) :: Int), id 23]
 ```
 
 > As of now, type annotations inside the expression needs to be wrapped in set of parentheses.
