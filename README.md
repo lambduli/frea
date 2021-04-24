@@ -19,7 +19,7 @@ let
                       \ h t -> (fn h) : (map fn t) }
 in map double list
 ```
-### Factorial of 5
+### Computing Factorial
 ```haskell
 let
   { zero n = n == 0
