@@ -33,12 +33,17 @@ instance Substitutable Type where
   apply s (TyApp t'left t'right)
     = TyApp (apply s t'left) (apply s t'right)
 
+  apply (Sub s) (TyOp par t'body)
+    = TyOp par $ apply (Sub $ Map.delete par s) t'body
+
   ftv type' = case type' of
     TyVar name -> Set.singleton name
     TyCon name -> Set.empty
     TyTuple ts -> foldl (\ set' t' -> Set.union set' (ftv t')) Set.empty ts
     TyArr left right -> ftv left `Set.union` ftv right
     TyApp left right -> ftv left `Set.union` ftv right
+
+    TyOp par body -> Set.delete par $ ftv body
 
 
 instance Substitutable Scheme where

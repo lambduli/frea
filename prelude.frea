@@ -18,7 +18,7 @@ module Main where
     = []
     | a : (List a)
 
--- ; type String = List Char
+; type String = List Char
 
 -- ; type A = B -- BAD CYCLE
 -- ; type B = A -- BAD CYCLE
@@ -33,6 +33,14 @@ module Main where
 
 -- ; type AAA a b = BBB b a -- BAD CYCLE
 -- ; type BBB x y = AAA y x -- BAD CYCLE
+
+; type Klo a b = Pop (Eith a) b
+
+; type Pop t p = t p
+
+; type Eith a b = Either a b
+
+-- ; type Eith g h = Either g h
 
 -- ; data Test a b c = One -- (a b c)
 
@@ -51,8 +59,15 @@ module Main where
 -- ; bar = Left 'a'
 
 
--- ; concat :: String -> String -> String
--- ; concat left right = left ++ right
+; concat :: String -> String -> String
+; concat left right = left ++ right
+
+; tt :: Klo Char Int
+; tt = Left 'a'
+; oo :: Klo Char String
+; oo = ll
+; ll :: Either Char String
+; ll = Right "hello"
 
 ; (&&) :: Bool -> Bool -> Bool
 ; a && b = (which-Bool a

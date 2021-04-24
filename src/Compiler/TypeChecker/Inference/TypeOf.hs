@@ -26,6 +26,7 @@ import Compiler.KindChecker.KindEnv
 import Compiler.KindChecker.Inference hiding (infer)
 import Compiler.KindChecker.KindError
 import qualified Compiler.TypeChecker.Inference.Normalize as N
+import Compiler.TypeChecker.Inference.Norm
 
 import Debug.Trace
 
@@ -53,8 +54,9 @@ infer'env binds t'env = do
       -- DUPLICATION
       expand'aliases :: Map.Map String Type -> Declaration -> Declaration
       expand'aliases ali'env (Binding name expr) = Binding name $ expand'expr ali'env expr
-      expand'aliases ali'env (Annotated name type' expr) =
-        let expanded'type = N.normalize ali'env type'
+      expand'aliases ali'env a@(Annotated name type' expr) =
+        let Right norm'type' = run'norm ali'env (N.normalize type')
+            expanded'type = norm'type'
             expanded'expr = expand'expr ali'env expr
         in Annotated name expanded'type expanded'expr
       expand'aliases _ impossible = impossible
@@ -83,7 +85,9 @@ expand'expr ali'env expr =
     If cond' then' else' -> If (expand'expr ali'env cond') (expand'expr ali'env then') (expand'expr ali'env else')
     Let name value expr -> Let name (expand'expr ali'env value) (expand'expr ali'env expr)
     Fix expr -> Fix $ expand'expr ali'env expr
-    Ann type' expr -> Ann (N.normalize ali'env type') (expand'expr ali'env expr)
+    Ann type' expr ->
+      let Right norm'type = run'norm ali'env (N.normalize type')
+      in Ann norm'type (expand'expr ali'env expr)
     Intro name exprs -> Intro name exprs -- NOTE: I can safely do that - this is generated, no type annotations can get there
     Elim cons'decls val destrs -> Elim cons'decls val destrs -- NOTE: I can safely do that - this is generated, no type annotations can get there
 
@@ -94,20 +98,15 @@ infer'decls binds k'env = do
       (only'aliases, rest) = partition is'alias binds
       -- get all the aliases
 
-  check'for'cycles only'aliases -- TODO: tohle se zahodi, je to blbe, nestaci to
-  -- TODO: takze zbyva:
-    -- prepsat kontrolovani cyklu
-    -- pridat do jazyka typu typove funkce/operatory a pridat je do normalizace typu
-    -- pridat typovy operatory do tohohle celyho kolotoce
-
+  check'for'cycles only'aliases
 
   let only'types = filter is'type'decl binds
       -- take only type declarations
       -- ted z tech aliasu udelam kontext a normalizuju typy v only'types
       -- NOW, map all DataDecls and TypeAlias -> expand the aliases
-      expanded = map (expand'aliases $ make'alias'env only'aliases) only'types
-
-      data'pairs = map to'pair expanded -- ++ map to'pair only'aliases
+      -- expanded = map (expand'aliases $ make'alias'env only'aliases) only'types
+      Right expanded = run'norm (make'alias'env only'aliases) (expand'aliases only'types)
+      data'pairs = map to'pair expanded
 
   infer'data k'env data'pairs
   
@@ -167,15 +166,27 @@ infer'decls binds k'env = do
         --   else return ()
 
       -- DUPLICATION
-      expand'aliases :: Map.Map String Type -> Declaration -> Declaration
-      expand'aliases ali'env (DataDecl name params constructors)
-        = DataDecl name params $ map (expand'constr ali'env) constructors
-      expand'aliases ali'env (TypeAlias name type')
-        = TypeAlias name $ N.normalize ali'env type'
-      expand'aliases _ impossible = impossible
+      expand'aliases :: [Declaration] -> Norm [Declaration]
+      expand'aliases [] = return []
+      expand'aliases ((DataDecl name params constructors) : decls) = do
+        constrs <- mapM expand'constr constructors
+        rest <- expand'aliases decls
+        return $ DataDecl name params constrs : rest
+      expand'aliases ((TypeAlias name type') : decls) = do
+        n'type <- N.normalize type'
+        rest <- expand'aliases decls
+        return $ TypeAlias name n'type : rest
+      -- expand'aliases :: Map.Map String Type -> Declaration -> Declaration
+      -- expand'aliases ali'env (DataDecl name params constructors)
+      --   = DataDecl name params $ map (expand'constr ali'env) constructors
+      -- expand'aliases ali'env (TypeAlias name type')
+      --   = TypeAlias name $ N.normalize ali'env type'
+      -- expand'aliases _ impossible = impossible
 
-      expand'constr :: Map.Map String Type -> ConstrDecl -> ConstrDecl
-      expand'constr ali'env (ConDecl name param'types) = ConDecl name $ map (N.normalize ali'env) param'types
+      expand'constr :: ConstrDecl -> Norm ConstrDecl
+      expand'constr (ConDecl name param'types) = do
+        par't <- mapM N.normalize param'types
+        return $ ConDecl name par't
 
       -- DUPLICATION
       is'alias (TypeAlias _ _) = True
