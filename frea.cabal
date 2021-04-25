@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 4266860d54546d4fc3a6450e4f204489f5f0ad184aa29255cf1715b627dcba59
+-- hash: d1ee9e2b95faeb8ea87f0913ea08a2630c9d7cde848bc45a91d13a450e3f4ae5
 
 name:           frea
 version:        0.1.0.0
@@ -28,15 +28,6 @@ source-repository head
 
 library
   exposed-modules:
-      Compiler.KindChecker.Constraint
-      Compiler.KindChecker.Infer
-      Compiler.KindChecker.Inference
-      Compiler.KindChecker.InferState
-      Compiler.KindChecker.InferUtils
-      Compiler.KindChecker.KindEnv
-      Compiler.KindChecker.KindError
-      Compiler.KindChecker.Solver
-      Compiler.KindChecker.Substituable
       Compiler.Parser.Lexer
       Compiler.Parser.Parser
       Compiler.Parser.Token
@@ -51,20 +42,7 @@ library
       Compiler.Syntax.Pattern
       Compiler.Syntax.Signature
       Compiler.Syntax.Type
-      Compiler.TypeChecker.DeclarationCheck
-      Compiler.TypeChecker.Inference
-      Compiler.TypeChecker.Inference.Constraint
-      Compiler.TypeChecker.Inference.Infer
-      Compiler.TypeChecker.Inference.InferState
-      Compiler.TypeChecker.Inference.InferUtils
-      Compiler.TypeChecker.Inference.Norm
-      Compiler.TypeChecker.Inference.Normalize
-      Compiler.TypeChecker.Inference.Solver
-      Compiler.TypeChecker.Inference.Substituable
-      Compiler.TypeChecker.Inference.TypeEnv
-      Compiler.TypeChecker.Inference.TypeOf
-      Compiler.TypeChecker.Type
-      Compiler.TypeChecker.TypeError
+      Compiler.TypeChecker.Error
       Interpreter.Address
       Interpreter.Evaluate
       Interpreter.Print
