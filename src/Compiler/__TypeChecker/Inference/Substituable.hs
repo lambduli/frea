@@ -81,5 +81,18 @@ instance Substitutable TypeEnv where
         type'env
 
 
+instance Substitutable KindEnv where
+  apply subst kind'env
+    = Map.map
+        (apply subst)
+        kind'env
+
+  ftv kind'env
+    = Map.foldr
+        (\ kind' free'set -> free'set `Set.union` ftv kind')
+        Set.empty
+        kind'env
+
+
 empty'subst :: Subst
 empty'subst = Sub Map.empty

@@ -7,5 +7,5 @@ newtype AnalizeState
 
 
 -- initial inference state
-init'analize :: InferState
+init'analize :: AnalizeState
 init'analize = AnalizeState { count = 0 }

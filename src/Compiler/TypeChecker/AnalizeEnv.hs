@@ -1,6 +1,14 @@
 module Compiler.TypeChecker.AnalizeEnv where
 
 
+import qualified Data.Map.Strict as Map
+
+import Compiler.Syntax.Type
+import Compiler.Syntax.Kind
+
+import Compiler.TypeChecker.Types
+
+
 type AnalizeEnv = (KindEnv, TypeEnv)
 
 

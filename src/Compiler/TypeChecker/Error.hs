@@ -1,5 +1,7 @@
 module Compiler.TypeChecker.Error where
 
+import Compiler.Syntax (Type(..), Scheme(..))
+
 
 data Error a
   = Occurs a a
