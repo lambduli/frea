@@ -20,5 +20,5 @@ type Analize a
       (StateT           -- | Inference state
         AnalizeState
         (Except         -- | Inference errors
-          (Error a)))
+          Error))
       a                 -- | Result
