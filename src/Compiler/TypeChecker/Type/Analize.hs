@@ -68,14 +68,14 @@ check t (If cond tr fl) = do
 
 check t (Let x ex'val ex'body) = do
   -- assume t :: *
-  (_, t'env) <- ask
+  (_, t'env, _) <- ask
   (t'val, cs'val) <- infer ex'val
   case runSolve cs'val of
       Left err -> throwError err
       Right sub -> do
           let sc = generalize (apply sub t'env) (apply sub t'val)
-          ((), cs'body) <- put'in't'env (x, sc) $ local (second (apply sub)) (check t ex'body)
-          return ((), cs'val ++ cs'body)
+          ((), cs'body) <- put'in't'env (x, sc) $ local (\ (a, b, c) -> (a, apply sub b, c)) (check t ex'body)
+          return ((), cs'val ++ cs'body) --             ^^^ terrible : TODO: fix pls
 
 check (TyTuple types') (Tuple exprs) = do
   -- assume each type :: * where type isfrom types'
@@ -123,14 +123,14 @@ infer expr = case expr of
     return (t2, (t1, t'Bool) : (t2, t3) : c1 ++ c2 ++ c3)
   
   Let x ex'val ex'body -> do
-    (_, t'env) <- ask
+    (_, t'env, _) <- ask
     (t'val, cs'val) <- infer ex'val
     case runSolve cs'val of
         Left err -> throwError err
         Right sub -> do
             let sc = generalize (apply sub t'env) (apply sub t'val)
-            (t'body, cs'body) <- put'in't'env (x, sc) $ local (second (apply sub)) (infer ex'body)
-            return (t'body, cs'val ++ cs'body)
+            (t'body, cs'body) <- put'in't'env (x, sc) $ local (\ (a, b, c) -> (a, apply sub b, c)) (infer ex'body)
+            return (t'body, cs'val ++ cs'body) --             ^^^ terrible : TODO: fix pls
 
   Fix expr -> do
     (type', cs) <- infer expr

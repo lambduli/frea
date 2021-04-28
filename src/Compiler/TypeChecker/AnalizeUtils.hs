@@ -49,22 +49,20 @@ remove env var = Map.delete var env
 
 merge'into't'env :: [(String, Scheme)] -> Analize a -> Analize a
 merge'into't'env bindings m = do
-  let scope (k'env, t'env) = (k'env, Map.fromList bindings `Map.union` t'env)
+  let scope (k'env, t'env, ali'env) = (k'env, Map.fromList bindings `Map.union` t'env, ali'env)
   local scope m
 
 
--- | OK?
 put'in't'env :: (String, Scheme) -> Analize a -> Analize a
 put'in't'env (var, scheme) m = do
   -- (k'env, _) <- ask
-  let scope (k'env, t'env) = (k'env, remove t'env var `extend` (var, scheme))
+  let scope (k'env, t'env, ali'env) = (k'env, remove t'env var `extend` (var, scheme), ali'env)
   local scope m
 
 
--- | OK?
 lookup't'env :: String -> Analize Type
 lookup't'env var = do
-  (_, env) <- ask
+  (_, env, _) <- ask
   case Map.lookup var env of
     Nothing     ->  throwError $ UnboundVar var
     Just scheme ->  instantiate scheme
@@ -72,19 +70,19 @@ lookup't'env var = do
 
 merge'into'k'env :: [(String, Kind)] -> Analize a -> Analize a
 merge'into'k'env bindings m = do
-  let scope (k'env, t'env) = (Map.fromList bindings `Map.union` k'env, t'env)
+  let scope (k'env, t'env, ali'env) = (Map.fromList bindings `Map.union` k'env, t'env, ali'env)
   local scope m
 
 
 put'in'k'env :: (String, Kind) -> Analize a -> Analize a
 put'in'k'env (var, kind') m = do
-  let scope (k'env, t'env) = (remove k'env var `extend` (var, kind'), t'env)
+  let scope (k'env, t'env, ali'env) = (remove k'env var `extend` (var, kind'), t'env, ali'env)
   local scope m
 
 
 lookup'k'env :: String -> Analize Kind
 lookup'k'env var = do
-  (k'env, _) <- ask
+  (k'env, _, _) <- ask
   case Map.lookup var k'env of
     Nothing     -> throwError $ UnboundVar var
     Just kind'  -> return kind' -- we don't instantiate kinds
@@ -92,10 +90,8 @@ lookup'k'env var = do
     -- change all the free variables in the kind into *
 
 
-
-
-
-
+put'in'ali'env :: (String, Type) -> Analize a -> Analize a
+put'in'ali'env = undefined
 
 
 instantiate :: Scheme -> Analize Type

@@ -9,13 +9,18 @@ import Compiler.Syntax.Kind
 import Compiler.TypeChecker.Types
 
 
-type AnalizeEnv = (KindEnv, TypeEnv)
+-- TODO: refactor to:
+-- data AnalizeEnv = AEnv { kind'env :: KindEnv, type'env :: TypeEnv, ali'env :: AliEnv }
+type AnalizeEnv = (KindEnv, TypeEnv, AliEnv)
 
 
 type KindEnv = Map.Map String Kind
 
 
 type TypeEnv = Map.Map String Scheme
+
+
+type AliEnv = Map.Map String Type
 
 
 -- not really empty

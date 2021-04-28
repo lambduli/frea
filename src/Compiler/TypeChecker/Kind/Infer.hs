@@ -72,8 +72,8 @@ combine'inference (kinds, constrs) t = do
 
 
 infer'kind :: AnalizeEnv -> Type -> Either Error Kind
-infer'kind (k'env, t'env) t = do
-  case run'infer' (k'env, t'env) (infer'type t) of
+infer'kind (k'env, t'env, ali'env) t = do
+  case run'infer' (k'env, t'env, ali'env) (infer'type t) of
     Left err -> Left err
     Right (k, constraints) ->  
       case runSolve constraints of
@@ -143,8 +143,8 @@ infer'type type' =
 
 
 infer'data :: AnalizeEnv -> [(String, Declaration )] -> Either Error KindEnv
-infer'data (k'env, t'env) bindings =
-  case run'infer (k'env, t'env) (infer'datas bindings) of
+infer'data (k'env, t'env, ali'env) bindings =
+  case run'infer (k'env, t'env, ali'env) (infer'datas bindings) of
     Left err -> Left err
     Right (kind'bindings, constraints) ->
       case runSolve constraints of
