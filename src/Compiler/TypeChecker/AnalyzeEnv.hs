@@ -1,4 +1,4 @@
-module Compiler.TypeChecker.AnalizeEnv where
+module Compiler.TypeChecker.AnalyzeEnv where
 
 
 import qualified Data.Map.Strict as Map

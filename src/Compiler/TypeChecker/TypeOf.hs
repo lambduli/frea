@@ -22,8 +22,9 @@ import Compiler.TypeChecker.Analize
 import Compiler.TypeChecker.Solver
 import Compiler.TypeChecker.Substituable
 import Compiler.TypeChecker.Constraint
-import Compiler.TypeChecker.AnalizeEnv
-import Compiler.TypeChecker.AnalizeUtils
+import Compiler.TypeChecker.AnalyzeEnv
+import Compiler.TypeChecker.AnalyzeUtils
+import Compiler.TypeChecker.Dependency
 import qualified Compiler.TypeChecker.Type.Evaluate as E
 
 import Interpreter.Value (Env, Memory)
@@ -64,11 +65,27 @@ analyze'module decls = do
         check'for'synonym'cycles only'aliases
         -- TODO: maybe collect some constraints from unevaluated type annotations?
         expanded'funs <- mapM expand'aliases only'funs
-        let pairs = map to'pair expanded'funs
+        let fun'pairs = map to'pair expanded'funs
 
         -- TODO: maybe collect some constraints from unevaluated type declarations?
         expanded'types <- mapM expand'aliases only'types
         let type'pairs = map to'pair expanded'types
+
+        -- to co musim udelat je ekvivalentni infer'top + infer'data
+
+        f'res <- infer'many fun'pairs
+        case f'res of
+          Left err -> Left err
+          Right (type'bindings, t'constrs) ->
+              case runSolve t'constrs  of
+                Left err -> Left err
+                Right subst -> do
+                  let scheme'bindings = map (second (closeOver . apply subst)) type'bindings
+                      env' = apply subst $ environment `Map.union` Map.fromList scheme'bindings
+                  return env'
+
+        t'res <- infer'data type'pairs
+
 
         return undefined
 
@@ -116,87 +133,6 @@ analyze'module decls = do
         return $ ConDecl name par't
 
 
-check'for'synonym'cycles :: [Declaration] -> Analize ()
-check'for'synonym'cycles decls = do
-  let ds = map to'pair decls
-      indexed = index'bindings ds
-      graph = build'ali'graph ds indexed
-      solved = stronglyConnComp graph
-  all'acyclic solved
-
-    where
-      -- DUPLICATION
-      to'pair :: Declaration -> (String, Type)
-      to'pair (TypeAlias name type') = (name, type')
-
-      all'acyclic :: [SCC (String, Type)] -> Analize ()
-      all'acyclic [] = return ()
-      all'acyclic ((AcyclicSCC bind) : sccs) =
-        all'acyclic sccs
-      all'acyclic ((CyclicSCC aliases) : sccs) =
-        throwError $ SynonymCycle aliases
-
-      build'ali'graph :: [(String, Type)] -> Map.Map String Int -> [((String, Type), Int, [Int])]
-      build'ali'graph bindings indexer = graph
-        where
-          get'deps :: Type -> Set.Set Int
-          get'deps expr =
-            case expr of
-              TyVar name -> Set.empty
-              TyCon name -> maybe Set.empty Set.singleton (indexer !? name)
-              TyTuple types -> foldl (\ deps'acc expr -> deps'acc `Set.union` get'deps expr) Set.empty types
-              TyArr t'from t'to -> get'deps t'from `Set.union` get'deps t'to
-              TyApp t'left t'right -> get'deps t'left `Set.union` get'deps t'right
-              TyOp par t' -> get'deps t'
-
-          dependencies = map (get'deps . snd) bindings
-
-          graph = zipWith (\ (name, expr) deps -> ((name, expr), indexer ! name, Set.toList deps)) bindings dependencies
-
-
-{-  This function does the type analysis on the whole module represented as a list of Declarations -}
--- infer'env :: [Declaration] -> TypeEnv -> Either Error TypeEnv
--- infer'env binds t'env = do
---   let 
---       (only'aliases, rest) = partition is'alias binds
---       -- get all the aliases
---       only'funs = filter is'fun rest
---       -- take only functions
-
---       -- ted z tech aliasu udelam kontext a normalizuju typy v only'funs
---       -- NOW, map all Bindings and Annotated -> expand the aliases
---       ali'env = make'alias'env only'aliases
---       expanded = map (expand'aliases ali'env) only'funs
---       pairs = map to'pair expanded
---   infer'top t'env pairs
---     where
---       is'fun :: Declaration -> Bool
---       is'fun (Binding _ _) = True
---       is'fun (Annotated _ _ _) = True
---       is'fun _ = False
-
---       -- DUPLICATION
---       expand'aliases :: Map.Map String Type -> Declaration -> Declaration
---       expand'aliases ali'env (Binding name expr) = Binding name $ expand'expr ali'env expr
---       expand'aliases ali'env a@(Annotated name type' expr) =
---         let Right norm'type' = run'norm ali'env (E.evaluate type')
---             expanded'type = norm'type'
---             expanded'expr = expand'expr ali'env expr
---         in Annotated name expanded'type expanded'expr
---       expand'aliases _ impossible = impossible
-
---       -- DUPLICATION
---       is'alias (TypeAlias _ _) = True
---       is'alias _ = False
-
---       -- DUPLICATION
---       make'alias'env decls = Map.fromList $ map (\ (TypeAlias name type') -> (name, type')) decls
-
---       to'pair :: Declaration -> (String, Expression)
---       to'pair (Binding name expr) = (name, expr)
---       to'pair (Annotated name type' expr) = (name, Ann type' expr)
-
-
 {-  This function finds all type annotations in the given Expression
     and evaluates them.
     UPDATED
@@ -239,133 +175,7 @@ expand'expr expr =
       return $ Elim cons'decls val destrs -- NOTE: I can safely do that - this is generated, no type annotations can get there
 
 
-{-  This function 
-
--}
--- infer'decls :: [Declaration] -> KindEnv -> Either Error KindEnv
--- infer'decls binds k'env = do
---   let 
---       (only'aliases, rest) = partition is'alias binds
---       -- get all the aliases
-
---   check'for'cycles only'aliases
-
---   let only'types = filter is'type'decl binds
---       -- take only type declarations
---       -- ted z tech aliasu udelam kontext a normalizuju typy v only'types
---       -- NOW, map all DataDecls and TypeAlias -> expand the aliases
---       -- expanded = map (expand'aliases $ make'alias'env only'aliases) only'types
---       Right expanded = run'norm (make'alias'env only'aliases) (expand'aliases only'types)
---       data'pairs = map to'pair expanded
-
---   infer'data k'env data'pairs
-  
---     where
---       is'type'decl :: Declaration -> Bool
---       is'type'decl (DataDecl _ _ _) = True
---       is'type'decl (TypeAlias _ _) = True
---       is'type'decl _ = False
-
---       -- check'for'cycles :: [Declaration] -> Either Error ()
---       -- check'for'cycles decls = do
---       --   let ds = map to'pair decls
---       --       indexed = index'bindings ds
---       --       graph = build'ali'graph ds indexed
---       --       solved = stronglyConnComp graph
---       --   all'acyclic solved
-
---       --     where
---       --       -- DUPLICATION
---       --       to'pair :: Declaration -> (String, Type)
---       --       to'pair (TypeAlias name type') = (name, type')
-
---       --       all'acyclic :: [SCC (String, Type)] -> Either Error ()
---       --       all'acyclic [] = return ()
---       --       all'acyclic ((AcyclicSCC bind) : sccs) =
---       --         all'acyclic sccs
---       --       all'acyclic ((CyclicSCC aliases) : sccs) =
---       --         Left $ SynonymCycle aliases
-
---       --       build'ali'graph :: [(String, Type)] -> Map.Map String Int -> [((String, Type), Int, [Int])]
---       --       build'ali'graph bindings indexer = graph
---       --         where
---       --           get'deps :: Type -> Set.Set Int
---       --           get'deps expr =
---       --             case expr of
---       --               TyVar name -> Set.empty
---       --               TyCon name -> maybe Set.empty Set.singleton (indexer !? name)
---       --               TyTuple types -> foldl (\ deps'acc expr -> deps'acc `Set.union` get'deps expr) Set.empty types
---       --               TyArr t'from t'to -> get'deps t'from `Set.union` get'deps t'to
---       --               TyApp t'left t'right -> get'deps t'left `Set.union` get'deps t'right
---       --               TyOp par t' -> get'deps t'
-
---       --           dependencies = map (get'deps . snd) bindings
-
---       --           graph = zipWith (\ (name, expr) deps -> ((name, expr), indexer ! name, Set.toList deps)) bindings dependencies
-
-
---       --   -- musim sestavit graf
---       --   -- takze nejdriv ocislovat jednotlivy aliasy
---       --   -- pak sestavit graf
---       --   -- pak ho projit a checknout ze nic neni Cyclic
-
-
---       --   -- = when (name `occurs'in` type') $ Left $ SynonymCycle name type'
---       --   -- = if name `occurs'in` type'
---       --   --   then Left $ SynonymCycle name
---       --   --   else return ()
-
---       -- DUPLICATION
---       expand'aliases :: [Declaration] -> Analize [Declaration]
---       expand'aliases [] = return []
---       expand'aliases ((DataDecl name params constructors) : decls) = do
---         constrs <- mapM expand'constr constructors
---         rest <- expand'aliases decls
---         return $ DataDecl name params constrs : rest
---       expand'aliases ((TypeAlias name type') : decls) = do
---         n'type <- E.evaluate type'
---         rest <- expand'aliases decls
---         return $ TypeAlias name n'type : rest
---       -- expand'aliases :: Map.Map String Type -> Declaration -> Declaration
---       -- expand'aliases ali'env (DataDecl name params constructors)
---       --   = DataDecl name params $ map (expand'constr ali'env) constructors
---       -- expand'aliases ali'env (TypeAlias name type')
---       --   = TypeAlias name $ N.normalize ali'env type'
---       -- expand'aliases _ impossible = impossible
-
---       expand'constr :: ConstrDecl -> Analize ConstrDecl
---       expand'constr (ConDecl name param'types) = do
---         par't <- mapM E.evaluate param'types
---         return $ ConDecl name par't
-
---       -- DUPLICATION
---       is'alias (TypeAlias _ _) = True
---       is'alias _ = False
-
---       -- DUPLICATION
---       make'alias'env decls = Map.fromList $ map (\ (TypeAlias name type') -> (name, type')) decls
-
---       to'pair :: Declaration -> (String, Declaration)
---       to'pair d@(DataDecl name _ _) = (name, d)
---       to'pair a@(TypeAlias name type') = (name, a)
-
-
-{-  This function -}
-infer'top :: TypeEnv -> [(String, Expression)] -> Either Error TypeEnv
-infer'top environment bindings =
-  case run'infer'many environment (infer'many bindings) of
-    Left err -> Left err
-    Right (type'bindings, constraints) -> -- ([(String, Type)], [Constraint])
-        case runSolve constraints  of
-          Left err -> Left err
-          Right subst -> do
-            let scheme'bindings = map (second (closeOver . apply subst)) type'bindings
-                env' = apply subst $ environment `Map.union` Map.fromList scheme'bindings
-            return env'
-
-
-
-
+-- | NOTE: this can stay like this for now
 infer'many :: [(String, Expression)] -> Analize ([(String, Type)], [Constraint Type])
 infer'many bindings = do
   let indexed = index'bindings bindings
@@ -385,17 +195,18 @@ infer'many bindings = do
       infer'groups [] = return ([], [])
       infer'groups ((AcyclicSCC bind) : sccs) = do
         (t'binds, constrs) <- infer'group [bind]
-        t'env <- ask
+        (k'env, t'env, ali'env) <- ask
         (t'binds', constrs') <- merge'into't'env (map (\ (n, t) -> (n, generalize t'env t)) t'binds) $ infer'groups sccs
         return (t'binds ++ t'binds', constrs ++ constrs')
 
       infer'groups ((CyclicSCC bindings) : sccs) = do
         (t'binds, constrs) <- infer'group bindings
-        t'env <- ask
+        (k'env, t'env, ali'ev) <- ask
         (t'binds', constrs') <- merge'into't'env (map (\ (n, t) -> (n, generalize t'env t)) t'binds) $ infer'groups sccs
         return (t'binds ++ t'binds', constrs ++ constrs')
 
 
+-- | NOTE: this can stay like this for now
 infer'group :: [(String, Expression)] -> Analize ([(String, Type)], [Constraint Type])
 infer'group bindings = do
   let names = map fst bindings
@@ -404,66 +215,7 @@ infer'group bindings = do
   merge'into't'env (zip names fresh'vars) $ infer'many' bindings
 
 
-index'bindings :: [(String, a)] -> Map.Map String Int -- [((String, Expression), Int)]
-index'bindings = enumerate'bindings 0
-  where
-    enumerate'bindings :: Int -> [(String, a)] -> Map.Map String Int
-    enumerate'bindings _ [] = Map.empty
-    enumerate'bindings n ((name, expr) : bs) = Map.insert name n $ enumerate'bindings (n + 1) bs
-
-
-build'graph :: [(String, Expression)] -> Map.Map String Int -> [((String, Expression), Int, [Int])]
-build'graph bindings indexer = graph
-  where
-    get'deps :: Expression -> Set.Set Int
-    get'deps expr =
-      case expr of
-        Var name ->
-          maybe Set.empty Set.singleton (indexer !? name)
-
-        Op _ -> Set.empty
-
-        Lit _ -> Set.empty
-
-        Lam par body ->
-          case indexer !? par of
-            Nothing -> get'deps body
-            Just ix -> Set.delete ix $ get'deps body
-
-        App left right ->
-          get'deps left `Set.union` get'deps right
-
-        Tuple exprs ->
-          foldl (\ deps'acc expr -> deps'acc `Set.union` get'deps expr) Set.empty exprs
-
-        If b'expr then'expr else'expr ->
-          let b'deps = get'deps b'expr
-              t'deps = get'deps then'expr
-              e'deps = get'deps else'expr
-          in  b'deps `Set.union` t'deps `Set.union` e'deps
-
-        Let name val'expr body'expr ->
-          let v'deps = get'deps val'expr
-              b'deps = get'deps body'expr
-          in  v'deps `Set.union` b'deps
-
-        Fix expr -> get'deps expr
-
-        -- this should always yield an empty Set, but just to be sure
-        Intro _ exprs -> foldl (\ deps'acc expr -> deps'acc `Set.union` get'deps expr) Set.empty exprs
-
-        Elim _ expr exprs ->
-          foldl (\ deps'acc expr -> deps'acc `Set.union` get'deps expr) Set.empty (expr : exprs)
-
-        Ann _ expr ->
-          get'deps expr
-
-
-    dependencies = map (get'deps . snd) bindings
-
-    graph = zipWith (\ (name, expr) deps -> ((name, expr), indexer ! name, Set.toList deps)) bindings dependencies
-
-
+-- | NOTE: this can stay like this for now
 infer'many' :: [(String, Expression)] -> Analize ([(String, Type)], [Constraint Type])
 infer'many' [] = do
   return ([], [])
@@ -473,7 +225,11 @@ infer'many' ((name, expr) : exprs) = do
   orig'type <- lookup't'env name
   (types, constrs') <- infer'many' exprs
   return ((name, type') : types, (orig'type, type') : constraints ++ constrs')
-  
-  -- this should actually work
-  -- instantiate should do nothing to the fresh type variable because the ForAll
-  -- has an empty list of type parameters
+
+
+runInfer :: TypeEnv -> Analyze (Type, [Constraint]) -> Either Error (Type, [Constraint])
+runInfer env m = runExcept $ evalStateT (runReaderT m env) init'infer
+
+
+run'infer'many :: TypeEnv -> Analyze ([(String, Type)], [Constraint]) -> Either Error ([(String, Type)], [Constraint])
+run'infer'many env m = runExcept $ evalStateT (runReaderT m env) init'infer

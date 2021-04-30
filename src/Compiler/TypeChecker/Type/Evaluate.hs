@@ -10,10 +10,10 @@ import Control.Monad.State
 
 import Compiler.Syntax.Type
 import Compiler.TypeChecker.Substituable
-import Compiler.TypeChecker.Analize
-import Compiler.TypeChecker.AnalizeEnv
-import Compiler.TypeChecker.AnalizeState
-import Compiler.TypeChecker.AnalizeUtils
+import Compiler.TypeChecker.Analyze
+import Compiler.TypeChecker.AnalyzeEnv
+import Compiler.TypeChecker.AnalyzeState
+import Compiler.TypeChecker.AnalyzeUtils
 
 
 class Normalizing a where

@@ -1,4 +1,4 @@
-module Compiler.TypeChecker.Type.Analize where
+module Compiler.TypeChecker.Type.Analyze where
 
 
 import qualified Data.Map.Strict as Map
@@ -17,20 +17,20 @@ import Compiler.Syntax.Literal
 
 import Compiler.TypeChecker.Types
 import Compiler.TypeChecker.Error
-import Compiler.TypeChecker.Analize
+import Compiler.TypeChecker.Analyze
 import Compiler.TypeChecker.Solver
 import Compiler.TypeChecker.Substituable
-import Compiler.TypeChecker.AnalizeEnv
+import Compiler.TypeChecker.AnalyzeEnv
 import Compiler.TypeChecker.Constraint
-import Compiler.TypeChecker.AnalizeState
-import Compiler.TypeChecker.AnalizeUtils
+import Compiler.TypeChecker.AnalyzeState
+import Compiler.TypeChecker.AnalyzeUtils
 
 
 
 -- | TODO: once I merge the kind checking into the same process as type checking
 -- | I will be able to create two types of constraints, for types and for kinds
 -- | that will allow me easily assert that some specific type should be of some specific kind
-check :: Type -> Expression -> Analize ((), [Constraint Type])
+check :: Type -> Expression -> Analyze ((), [Constraint Type])
 -- check (TyVar n) e@(Lit _) = undefined
 check t'Int (Lit (LitInt i)) = return ((), [])
 check t'Double (Lit (LitDouble i)) = return ((), [])
@@ -89,7 +89,7 @@ check (TyTuple types') (Tuple exprs) = do
 check _ (Fix _) = throwError $ Unexpected "I am not type checking Fix expressions right now."
 
 
-infer :: Expression -> Analize (Type, [Constraint Type])
+infer :: Expression -> Analyze (Type, [Constraint Type])
 infer expr = case expr of  
   Lit (LitInt i) -> return (t'Int, [])
   Lit (LitDouble d) -> return (t'Double, [])

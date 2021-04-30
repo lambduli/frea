@@ -11,7 +11,7 @@ import qualified Data.Set as Set
 
 import Compiler.Syntax.Type
 import Compiler.Syntax.Kind
-import Compiler.TypeChecker.AnalizeEnv
+import Compiler.TypeChecker.AnalyzeEnv
 import Compiler.TypeChecker.Constraint
 
 

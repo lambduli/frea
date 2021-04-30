@@ -1,4 +1,4 @@
-module Compiler.TypeChecker.AnalizeUtils where
+module Compiler.TypeChecker.AnalyzeUtils where
 
 
 import qualified Data.Set as Set
@@ -12,9 +12,9 @@ import Compiler.Syntax.Kind
 import Compiler.Syntax.Type
 
 import Compiler.TypeChecker.Substituable
-import Compiler.TypeChecker.AnalizeEnv
-import Compiler.TypeChecker.Analize
-import Compiler.TypeChecker.AnalizeState
+import Compiler.TypeChecker.AnalyzeEnv
+import Compiler.TypeChecker.Analyze
+import Compiler.TypeChecker.AnalyzeState
 import Compiler.TypeChecker.Error
 
 

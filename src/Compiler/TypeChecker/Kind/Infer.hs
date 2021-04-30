@@ -18,14 +18,15 @@ import Compiler.TypeChecker.Error
 import Compiler.TypeChecker.Analize
 import Compiler.TypeChecker.Solver
 import Compiler.TypeChecker.Substituable
-import Compiler.TypeChecker.AnalizeEnv
+import Compiler.TypeChecker.AnalyzeEnv
 import Compiler.TypeChecker.Constraint
-import Compiler.TypeChecker.AnalizeState
-import Compiler.TypeChecker.AnalizeUtils
+import Compiler.TypeChecker.AnalyzeState
+import Compiler.TypeChecker.AnalyzeUtils
 
 
-infer :: Declaration -> Analize (Kind, [Constraint Kind])
-infer (DataDecl t'name t'params constructors) = do
+
+analyze :: Declaration -> Analize (Kind, [Constraint Kind])
+analyze (DataDecl t'name t'params constructors) = do
   -- vsechny t'params uz jsou v envu jako fresh vars
   -- t'name uz tam je jako fresh kind var
   -- ale ted uz navic vim, ze t'name -> fresh -> fresh -> ... -> fresh -> *
@@ -67,13 +68,13 @@ infer (DataDecl t'name t'params constructors) = do
 
 combine'inference :: ([Kind], [Constraint Kind]) -> Type -> Analize ([Kind], [Constraint Kind])
 combine'inference (kinds, constrs) t = do
-  (k, cs) <- infer'type t
+  (k, cs) <- infer'kind t
   return (k : kinds, constrs ++ cs)
 
 
-infer'kind :: AnalizeEnv -> Type -> Either Error Kind
-infer'kind (k'env, t'env, ali'env) t = do
-  case run'infer' (k'env, t'env, ali'env) (infer'type t) of
+kind'of :: AnalizeEnv -> Type -> Either Error Kind
+kind'of (k'env, t'env, ali'env) t = do
+  case run'infer' (k'env, t'env, ali'env) (infer'kind t) of
     Left err -> Left err
     Right (k, constraints) ->  
       case runSolve constraints of
@@ -84,8 +85,8 @@ infer'kind (k'env, t'env, ali'env) t = do
           -- let env'' = assume'star env'
           -- return env''
 
-infer'type :: Type -> Analize (Kind, [Constraint Kind])
-infer'type type' =
+infer'kind :: Type -> Analize (Kind, [Constraint Kind])
+infer'kind type' =
   case type' of
     TyVar name -> do
       k' <- lookup'k'env name
@@ -108,8 +109,8 @@ infer'type type' =
       -- tohle by zrovna melo bejt jednoduchy
       -- left i right musi bejt *
       -- takze je infernu a pak jim priradim v constraintu *
-      (k'l, cs'l) <- infer'type left
-      (k'r, cs'r) <- infer'type right
+      (k'l, cs'l) <- infer'kind left
+      (k'r, cs'r) <- infer'kind right
 
       return (Star, [(Star, k'l), (Star, k'r)] ++ cs'l ++ cs'r)
     TyApp left right -> do
@@ -117,8 +118,8 @@ infer'type type' =
       -- infernu left a infernu right
       -- vytvorim constraint, ze to nalevo musi bejt KArr
       -- ktera bere to napravo a vraci cokoliv - fresh
-      (k'l, cs'l) <- infer'type left
-      (k'r, cs'r) <- infer'type right
+      (k'l, cs'l) <- infer'kind left
+      (k'r, cs'r) <- infer'kind right
       fresh'name <- fresh
       let var = KVar fresh'name
       let constraint = (k'l, k'r `KArr` var)
@@ -129,7 +130,7 @@ infer'type type' =
       -- tady udelam jenom to, ze reknu, TOHLE je fresh -> to co vypadne z t
       fresh'name <- fresh
       let var = KVar fresh'name
-      (k', cs) <- put'in'k'env (par, var) (infer'type t)
+      (k', cs) <- put'in'k'env (par, var) (infer'kind t)
       
       return (var `KArr` k', cs)
 
@@ -137,13 +138,13 @@ infer'type type' =
       -- t must be :: *
       fresh'name <- fresh
       let var = KVar fresh'name
-      (k', cs) <- put'in'k'env (par, var) (infer'type t)
+      (k', cs) <- put'in'k'env (par, var) (infer'kind t)
 
       return (var `KArr` k', (k', Star) : cs)
 
 
-infer'data :: AnalizeEnv -> [(String, Declaration )] -> Either Error KindEnv
-infer'data (k'env, t'env, ali'env) bindings =
+analyze'types :: AnalizeEnv -> [(String, Declaration )] -> Either Error KindEnv
+analyze'types (k'env, t'env, ali'env) bindings =
   case run'infer (k'env, t'env, ali'env) (infer'datas bindings) of
     Left err -> Left err
     Right (kind'bindings, constraints) ->
@@ -193,14 +194,14 @@ infer'datas' ((name, d@(DataDecl _ t'pars _)) : decls) = do
   fresh'names <- mapM gener t'pars
   let fresh'vars = map KVar fresh'names
   let pairs = zip t'pars fresh'vars
-  (kind', constraints) <- merge'into'k'env pairs $ infer d
+  (kind', constraints) <- merge'into'k'env pairs $ analyze d
 
   orig'kind <- lookup'k'env name
   (kinds, constrs') <- infer'datas' decls
   return ((name, kind') : kinds, (orig'kind, kind') : constraints ++ constrs')
 
 infer'datas' ((name, a@(TypeAlias _ type')) : decls) = do
-  (k', constrs') <- infer'type type' -- put'in'env (name, Star) (infer'type type')
+  (k', constrs') <- infer'kind type' -- put'in'env (name, Star) (infer'kind type')
   -- jakej kind to bude se pozna podle poctu lambd v type'
   -- ale ja to tam pridavat vubec nemusim, vim jiste, ze jsou acyklicky
   -- takze samotnej type' nepotrebuje vedet jakej kind on sam je

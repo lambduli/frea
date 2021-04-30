@@ -1,4 +1,4 @@
-module Compiler.TypeChecker.Analize where
+module Compiler.TypeChecker.Analyze where
 
 
 import qualified Data.Map.Strict as Map
@@ -8,8 +8,8 @@ import Control.Monad.State
 import Control.Monad.Except
 
 
-import Compiler.TypeChecker.AnalizeEnv
-import Compiler.TypeChecker.AnalizeState
+import Compiler.TypeChecker.AnalyzeEnv
+import Compiler.TypeChecker.AnalyzeState
 import Compiler.TypeChecker.Error
 
 
@@ -18,7 +18,7 @@ type Analize a
   = ReaderT
       AnalizeEnv        -- | Typing environment
       (StateT           -- | Inference state
-        AnalizeState
+        AnalyzeState
         (Except         -- | Inference errors
           Error))
       a                 -- | Result

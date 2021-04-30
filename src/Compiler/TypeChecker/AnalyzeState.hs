@@ -1,11 +1,11 @@
-module Compiler.TypeChecker.AnalizeState where
+module Compiler.TypeChecker.AnalyzeState where
 
 
 -- Inference state
-newtype AnalizeState
+newtype AnalyzeState
   = AnalizeState { count :: Int }
 
 
 -- initial inference state
-init'analize :: AnalizeState
+init'analize :: AnalyzeState
 init'analize = AnalizeState { count = 0 }
