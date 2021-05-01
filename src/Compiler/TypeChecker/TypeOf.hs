@@ -53,22 +53,21 @@ pak je teprve vyhodnotit, znova vygenerovat dalsi synonyma spojit dohromady a pa
 
 -}
 
+
+-- TODO: add the implementation from the DeclarationCheck module
 analyze'module :: [Declaration] -> Analyze (KindEnv, TypeEnv, AliEnv, Env, Memory)
 analyze'module decls = do
   -- (k'env, t'env, ali'env, env, mem)
-  local (\ (k, t, a) -> (k, t, ali'env)) analyze'
+  local (\ (k, t, a) -> (k, t, ali'env a)) analyze'
 
     where
       only'aliases  = filter is'alias decls
       only'funs     = filter is'fun decls
       only'types    = filter is'type decls
-      ali'env'      = make'alias'env only'aliases
-      ali'env       = Map.union ali'env ali'env'
+      ali'env a     = Map.union a $ make'alias'env only'aliases -- TODO: this is awkward, pls fix
 
       analyze' :: Analyze (KindEnv, TypeEnv, AliEnv, Env, Memory)
       analyze' = do
-        (k'env, t'env, ali'env) <- ask
-
         check'for'synonym'cycles only'aliases
         -- TODO: maybe collect some constraints from unevaluated type annotations?
         expanded'funs <- mapM expand'aliases only'funs
@@ -80,15 +79,9 @@ analyze'module decls = do
 
         -- to co musim udelat je ekvivalentni infer'top + infer'data
 
-        (type'bindings, t'constrs) <- infer'many fun'pairs
-        case runSolve t'constrs  of
-          Left err -> throwError err
-          Right subst -> do
-            let scheme'bindings = map (second (closeOver . apply subst)) type'bindings
-                env' = apply subst $ t'env `Map.union` Map.fromList scheme'bindings
-            return env'
+        t'env <- analyze'top'decls fun'pairs
         
-        t'res <- analyze'type'decls type'pairs
+        k'env <- analyze'type'decls type'pairs
 
 
         return undefined
@@ -139,6 +132,19 @@ analyze'module decls = do
       expand'constr (ConDecl name param'types) = do
         par't <- mapM E.evaluate param'types
         return $ ConDecl name par't
+
+
+-- | This functions is the counterpart of the analyze'type'decls
+analyze'top'decls :: [(String, Expression)] -> Analyze TypeEnv
+analyze'top'decls fun'pairs = do
+  (type'bindings, t'constrs) <- infer'many fun'pairs
+  case runSolve t'constrs  of
+    Left err -> throwError err
+    Right subst -> do
+      (_, t'env, _) <- ask
+      let scheme'bindings = map (second (closeOver . apply subst)) type'bindings
+          env' = apply subst $ t'env `Map.union` Map.fromList scheme'bindings
+      return env'
 
 
 {-  This function finds all type annotations in the given Expression
