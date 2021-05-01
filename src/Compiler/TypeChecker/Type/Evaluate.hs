@@ -17,7 +17,7 @@ import Compiler.TypeChecker.AnalyzeUtils
 
 
 class Normalizing a where
-  evaluate :: a -> Analize a
+  evaluate :: a -> Analyze a
 
 
 instance Normalizing Type where
@@ -52,7 +52,7 @@ instance Normalizing Type where
     ty'app nt'l nt'r
   
 
-ty'app :: Type -> Type -> Analize Type
+ty'app :: Type -> Type -> Analyze Type
 ty'app op@(TyOp par t'body) t'arg = do
   let free't'vars = free'vars t'arg
       bound'vars = collect'bound'vars op
@@ -75,7 +75,7 @@ collect'bound'vars (TyApp t'left t'right) = Set.union (collect'bound'vars t'left
 collect'bound'vars (TyOp par type') = Set.insert par $ collect'bound'vars type'
 
 
-rename :: Set.Set String -> Type -> Analize Type
+rename :: Set.Set String -> Type -> Analyze Type
 rename ftvs (TyOp par body) = do
   new <- real'fresh (Set.toList ftvs) ()
   renamed'body <- rename ftvs body

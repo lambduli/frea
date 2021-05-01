@@ -11,7 +11,7 @@ import Compiler.TypeChecker.Types
 
 -- TODO: refactor to:
 -- data AnalizeEnv = AEnv { kind'env :: KindEnv, type'env :: TypeEnv, ali'env :: AliEnv }
-type AnalizeEnv = (KindEnv, TypeEnv, AliEnv)
+type AnalyzeEnv = (KindEnv, TypeEnv, AliEnv)
 
 
 type KindEnv = Map.Map String Kind

@@ -11,6 +11,8 @@ import Data.Bifunctor
 import Control.Monad
 import Control.Monad.Reader
 import Control.Monad.Except
+import Control.Monad.State
+
 
 import Compiler.Syntax.Declaration
 import Compiler.Syntax.Type
@@ -26,6 +28,9 @@ import Compiler.TypeChecker.AnalyzeEnv
 import Compiler.TypeChecker.AnalyzeUtils
 import Compiler.TypeChecker.Dependency
 import qualified Compiler.TypeChecker.Type.Evaluate as E
+
+import Compiler.TypeChecker.Type.Analyze
+import Compiler.TypeChecker.Kind.KindOf
 
 import Interpreter.Value (Env, Memory)
 
@@ -48,7 +53,7 @@ pak je teprve vyhodnotit, znova vygenerovat dalsi synonyma spojit dohromady a pa
 
 -}
 
-analyze'module :: [Declaration] -> Analize (KindEnv, TypeEnv, AliEnv, Env, Memory)
+analyze'module :: [Declaration] -> Analyze (KindEnv, TypeEnv, AliEnv, Env, Memory)
 analyze'module decls = do
   -- (k'env, t'env, ali'env, env, mem)
   local (\ (k, t, a) -> (k, t, ali'env)) analyze'
@@ -60,39 +65,42 @@ analyze'module decls = do
       ali'env'      = make'alias'env only'aliases
       ali'env       = Map.union ali'env ali'env'
 
-      analyze' :: Analize (KindEnv, TypeEnv, AliEnv, Env, Memory)
+      analyze' :: Analyze (KindEnv, TypeEnv, AliEnv, Env, Memory)
       analyze' = do
+        (k'env, t'env, ali'env) <- ask
+
         check'for'synonym'cycles only'aliases
         -- TODO: maybe collect some constraints from unevaluated type annotations?
         expanded'funs <- mapM expand'aliases only'funs
-        let fun'pairs = map to'pair expanded'funs
+        let fun'pairs = map name'expr expanded'funs
 
         -- TODO: maybe collect some constraints from unevaluated type declarations?
         expanded'types <- mapM expand'aliases only'types
-        let type'pairs = map to'pair expanded'types
+        let type'pairs = map lift'name expanded'types
 
         -- to co musim udelat je ekvivalentni infer'top + infer'data
 
-        f'res <- infer'many fun'pairs
-        case f'res of
-          Left err -> Left err
-          Right (type'bindings, t'constrs) ->
-              case runSolve t'constrs  of
-                Left err -> Left err
-                Right subst -> do
-                  let scheme'bindings = map (second (closeOver . apply subst)) type'bindings
-                      env' = apply subst $ environment `Map.union` Map.fromList scheme'bindings
-                  return env'
-
-        t'res <- infer'data type'pairs
+        (type'bindings, t'constrs) <- infer'many fun'pairs
+        case runSolve t'constrs  of
+          Left err -> throwError err
+          Right subst -> do
+            let scheme'bindings = map (second (closeOver . apply subst)) type'bindings
+                env' = apply subst $ t'env `Map.union` Map.fromList scheme'bindings
+            return env'
+        
+        t'res <- analyze'type'decls type'pairs
 
 
         return undefined
 
 
-      to'pair :: Declaration -> (String, Expression)
-      to'pair (Binding name expr) = (name, expr)
-      to'pair (Annotated name type' expr) = (name, Ann type' expr)
+      name'expr :: Declaration -> (String, Expression)
+      name'expr (Binding name expr) = (name, expr)
+      name'expr (Annotated name type' expr) = (name, Ann type' expr)
+
+      lift'name :: Declaration -> (String, Declaration)
+      lift'name d@(TypeAlias name _) = (name, d)
+      lift'name d@(DataDecl name _ _) = (name, d)
 
       make'alias'env :: [Declaration] -> AliEnv
       make'alias'env decls
@@ -111,7 +119,7 @@ analyze'module decls = do
       is'type (TypeAlias _ _) = True
       is'type _ = False
 
-      expand'aliases :: Declaration -> Analize Declaration
+      expand'aliases :: Declaration -> Analyze Declaration
       expand'aliases (Binding name expr) = do
         ex'expr <- expand'expr expr
         return $ Binding name ex'expr
@@ -127,7 +135,7 @@ analyze'module decls = do
         return $ TypeAlias name n'type
       expand'aliases impossible = return impossible
 
-      expand'constr :: ConstrDecl -> Analize ConstrDecl
+      expand'constr :: ConstrDecl -> Analyze ConstrDecl
       expand'constr (ConDecl name param'types) = do
         par't <- mapM E.evaluate param'types
         return $ ConDecl name par't
@@ -137,7 +145,7 @@ analyze'module decls = do
     and evaluates them.
     UPDATED
 -}
-expand'expr :: Expression -> Analize Expression
+expand'expr :: Expression -> Analyze Expression
 expand'expr expr =
   case expr of
     Var name -> return $ Var name
@@ -176,7 +184,7 @@ expand'expr expr =
 
 
 -- | NOTE: this can stay like this for now
-infer'many :: [(String, Expression)] -> Analize ([(String, Type)], [Constraint Type])
+infer'many :: [(String, Expression)] -> Analyze ([(String, Type)], [Constraint Type])
 infer'many bindings = do
   let indexed = index'bindings bindings
   let graph = build'graph bindings indexed
@@ -191,7 +199,7 @@ infer'many bindings = do
     -- jenom to infernu -> posbiram constrainty a type a vratim je nekam vejs
   infer'groups solved
     where
-      infer'groups :: [SCC (String, Expression)] -> Analize ([(String, Type)], [Constraint Type])
+      infer'groups :: [SCC (String, Expression)] -> Analyze ([(String, Type)], [Constraint Type])
       infer'groups [] = return ([], [])
       infer'groups ((AcyclicSCC bind) : sccs) = do
         (t'binds, constrs) <- infer'group [bind]
@@ -207,7 +215,7 @@ infer'many bindings = do
 
 
 -- | NOTE: this can stay like this for now
-infer'group :: [(String, Expression)] -> Analize ([(String, Type)], [Constraint Type])
+infer'group :: [(String, Expression)] -> Analyze ([(String, Type)], [Constraint Type])
 infer'group bindings = do
   let names = map fst bindings
       gener name = do ForAll [] <$> (TyVar <$> fresh)
@@ -216,7 +224,7 @@ infer'group bindings = do
 
 
 -- | NOTE: this can stay like this for now
-infer'many' :: [(String, Expression)] -> Analize ([(String, Type)], [Constraint Type])
+infer'many' :: [(String, Expression)] -> Analyze ([(String, Type)], [Constraint Type])
 infer'many' [] = do
   return ([], [])
 infer'many' ((name, expr) : exprs) = do
@@ -227,9 +235,9 @@ infer'many' ((name, expr) : exprs) = do
   return ((name, type') : types, (orig'type, type') : constraints ++ constrs')
 
 
-runInfer :: TypeEnv -> Analyze (Type, [Constraint]) -> Either Error (Type, [Constraint])
-runInfer env m = runExcept $ evalStateT (runReaderT m env) init'infer
+-- runInfer :: AnalyzeEnv -> Analyze (Type, [Constraint Type]) -> Either Error (Type, [Constraint  Type])
+-- runInfer env m = runExcept $ evalStateT (runReaderT m env) init'infer
 
 
-run'infer'many :: TypeEnv -> Analyze ([(String, Type)], [Constraint]) -> Either Error ([(String, Type)], [Constraint])
-run'infer'many env m = runExcept $ evalStateT (runReaderT m env) init'infer
+-- run'infer'many :: AnalyzeEnv -> Analyze ([(String, Type)], [Constraint  Type]) -> Either Error ([(String, Type)], [Constraint  Type])
+-- run'infer'many env m = runExcept $ evalStateT (runReaderT m env) init'infer

@@ -14,9 +14,9 @@ import Compiler.TypeChecker.Error
 
 
 -- Inference monad
-type Analize a
+type Analyze a
   = ReaderT
-      AnalizeEnv        -- | Typing environment
+      AnalyzeEnv        -- | Typing environment
       (StateT           -- | Inference state
         AnalyzeState
         (Except         -- | Inference errors

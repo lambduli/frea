@@ -22,14 +22,14 @@ letters :: [String]
 letters = [1..] >>= flip replicateM ['a'..'z']
 
 
-fresh :: Analize String
+fresh :: Analyze String
 fresh = do
   AnalizeState { count = counter } <- get
   put $ AnalizeState { count = counter + 1 }
   return (letters !! counter)
 
 
-real'fresh :: [String] -> a -> Analize String
+real'fresh :: [String] -> a -> Analyze String
 real'fresh vars var = do
   AnalizeState { count = counter } <- get
   put $ AnalizeState { count = counter + 1 }
@@ -47,20 +47,20 @@ remove :: (Ord a) => Map.Map a b -> a -> Map.Map a b
 remove env var = Map.delete var env
 
 
-merge'into't'env :: [(String, Scheme)] -> Analize a -> Analize a
+merge'into't'env :: [(String, Scheme)] -> Analyze a -> Analyze a
 merge'into't'env bindings m = do
   let scope (k'env, t'env, ali'env) = (k'env, Map.fromList bindings `Map.union` t'env, ali'env)
   local scope m
 
 
-put'in't'env :: (String, Scheme) -> Analize a -> Analize a
+put'in't'env :: (String, Scheme) -> Analyze a -> Analyze a
 put'in't'env (var, scheme) m = do
   -- (k'env, _) <- ask
   let scope (k'env, t'env, ali'env) = (k'env, remove t'env var `extend` (var, scheme), ali'env)
   local scope m
 
 
-lookup't'env :: String -> Analize Type
+lookup't'env :: String -> Analyze Type
 lookup't'env var = do
   (_, env, _) <- ask
   case Map.lookup var env of
@@ -68,19 +68,19 @@ lookup't'env var = do
     Just scheme ->  instantiate scheme
 
 
-merge'into'k'env :: [(String, Kind)] -> Analize a -> Analize a
+merge'into'k'env :: [(String, Kind)] -> Analyze a -> Analyze a
 merge'into'k'env bindings m = do
   let scope (k'env, t'env, ali'env) = (Map.fromList bindings `Map.union` k'env, t'env, ali'env)
   local scope m
 
 
-put'in'k'env :: (String, Kind) -> Analize a -> Analize a
+put'in'k'env :: (String, Kind) -> Analyze a -> Analyze a
 put'in'k'env (var, kind') m = do
   let scope (k'env, t'env, ali'env) = (remove k'env var `extend` (var, kind'), t'env, ali'env)
   local scope m
 
 
-lookup'k'env :: String -> Analize Kind
+lookup'k'env :: String -> Analyze Kind
 lookup'k'env var = do
   (k'env, _, _) <- ask
   case Map.lookup var k'env of
@@ -90,11 +90,11 @@ lookup'k'env var = do
     -- change all the free variables in the kind into *
 
 
-put'in'ali'env :: (String, Type) -> Analize a -> Analize a
+put'in'ali'env :: (String, Type) -> Analyze a -> Analyze a
 put'in'ali'env = undefined
 
 
-instantiate :: Scheme -> Analize Type
+instantiate :: Scheme -> Analyze Type
 instantiate (ForAll args type') = do
   fresh'strs <- mapM (real'fresh args) args
   let ty'vars = map TyVar fresh'strs

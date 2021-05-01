@@ -91,7 +91,7 @@ build'graph bindings indexer = graph
 
 
 -- | Type synonym dependency analysis
-check'for'synonym'cycles :: [Declaration] -> Analize ()
+check'for'synonym'cycles :: [Declaration] -> Analyze ()
 check'for'synonym'cycles decls = do
   let ds = map to'pair decls
       indexed = index'bindings ds
@@ -104,7 +104,7 @@ check'for'synonym'cycles decls = do
       to'pair :: Declaration -> (String, Type)
       to'pair (TypeAlias name type') = (name, type')
 
-      all'acyclic :: [SCC (String, Type)] -> Analize ()
+      all'acyclic :: [SCC (String, Type)] -> Analyze ()
       all'acyclic [] = return ()
       all'acyclic ((AcyclicSCC bind) : sccs) =
         all'acyclic sccs
