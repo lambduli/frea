@@ -13,7 +13,7 @@ import Compiler.Syntax.Type
 import Compiler.Syntax.Kind
 
 import Compiler.TypeChecker.Error
-import Compiler.TypeChecker.Analize
+import Compiler.TypeChecker.Analyze
 import Compiler.TypeChecker.Substituable
 import Compiler.TypeChecker.Constraint
 import Compiler.TypeChecker.AnalyzeEnv

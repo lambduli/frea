@@ -18,7 +18,7 @@ import Compiler.Syntax.Kind
 import Compiler.Syntax.Expression
 
 import Compiler.TypeChecker.Error
-import Compiler.TypeChecker.Analize
+import Compiler.TypeChecker.Analyze
 import Compiler.TypeChecker.Solver
 import Compiler.TypeChecker.Substituable
 import Compiler.TypeChecker.Constraint

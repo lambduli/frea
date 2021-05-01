@@ -3,22 +3,22 @@ module Compiler.TypeChecker.Dependency where
 
 import qualified Data.Set as Set
 import qualified Data.Map.Strict as Map
--- import Data.Graph (SCC(..), stronglyConnComp)
+import Data.Graph (SCC(..), stronglyConnComp)
 import Data.Map.Strict ((!), (!?))
 -- import Data.List (partition)
 -- import Data.Bifunctor
 
 -- import Control.Monad
 -- import Control.Monad.Reader
--- import Control.Monad.Except
+import Control.Monad.Except
 
--- import Compiler.Syntax.Declaration
--- import Compiler.Syntax.Type
+import Compiler.Syntax.Declaration
+import Compiler.Syntax.Type
 -- import Compiler.Syntax.Kind
 import Compiler.Syntax.Expression
 
--- import Compiler.TypeChecker.Error
-import Compiler.TypeChecker.Analize
+import Compiler.TypeChecker.Error
+import Compiler.TypeChecker.Analyze
 -- import Compiler.TypeChecker.Solver
 -- import Compiler.TypeChecker.Substituable
 -- import Compiler.TypeChecker.Constraint

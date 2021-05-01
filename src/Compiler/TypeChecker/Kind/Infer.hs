@@ -82,7 +82,7 @@ kind'of (k'env, t'env, ali'env) t = do
         Right subst -> do
           return $ apply subst k
           -- let env' = apply subst $ environment `Map.union` Map.fromList kind'bindings
-          -- let env'' = assume'star env'
+          -- let env'' = specify'k'vars env'
           -- return env''
 
 infer'kind :: Type -> Analize (Kind, [Constraint Kind])
@@ -152,17 +152,17 @@ analyze'types (k'env, t'env, ali'env) bindings =
         Left err -> Left err
         Right subst -> do
           let env' = apply subst $ k'env `Map.union` Map.fromList kind'bindings
-          let env'' = assume'star env'
+          let env'' = specify'k'vars env'
           return env''
 
 
-assume'star :: KindEnv -> KindEnv
-assume'star env = Map.map assume'star' env
+specify'k'vars :: KindEnv -> KindEnv
+specify'k'vars env = Map.map specify'k'vars' env
   where
-    assume'star' :: Kind -> Kind
-    assume'star' Star = Star
-    assume'star' (KVar _) = Star
-    assume'star' (KArr left right) = KArr (assume'star' left) (assume'star' right)
+    specify'k'vars' :: Kind -> Kind
+    specify'k'vars' Star = Star
+    specify'k'vars' (KVar _) = Star
+    specify'k'vars' (KArr left right) = KArr (specify'k'vars' left) (specify'k'vars' right)
 
 
 run'infer :: AnalizeEnv -> Analize ([(String, Kind)], [Constraint Kind]) -> Either Error ([(String, Kind)], [Constraint Kind])
