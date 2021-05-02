@@ -1,4 +1,4 @@
-module Compiler.TypeChecker.Type where
+module Compiler.TypeAnalyzer.Types where
 
 
 import Compiler.Syntax (Type(..))

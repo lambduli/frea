@@ -1,58 +1,62 @@
-module Compiler.TypeChecker.Inference where
+module Compiler.TypeAnalyzer.Type.Analyze where
+
 
 import qualified Data.Map.Strict as Map
-import Data.List (elem, foldl)
 import qualified Data.Set as Set
+import Data.List
+import Data.Functor.Identity
+import Data.Bifunctor (second)
+
 import Control.Monad.State
 import Control.Monad.Reader
 import Control.Monad.Except
-import Data.Bifunctor (second)
-import Data.Functor.Identity
 
-import Compiler.TypeChecker.Type 
-import Compiler.Syntax.Declaration
-import Compiler.Syntax.Literal
-import Compiler.Syntax.Type
 import Compiler.Syntax.Expression
-import Compiler.TypeChecker.TypeError
-import Compiler.TypeChecker.Inference.Infer
-import Compiler.TypeChecker.Inference.Solver
-import Compiler.TypeChecker.Inference.Substituable
-import Compiler.TypeChecker.Inference.TypeEnv
-import Compiler.TypeChecker.Inference.Constraint
-import Compiler.TypeChecker.Inference.InferState
-import Compiler.TypeChecker.Inference.InferUtils
+import Compiler.Syntax.Type
+import Compiler.Syntax.Literal
+
+import Compiler.TypeAnalyzer.Types
+import Compiler.TypeAnalyzer.Error
+import Compiler.TypeAnalyzer.Analyze
+import Compiler.TypeAnalyzer.Solver
+import Compiler.TypeAnalyzer.Substituable
+import Compiler.TypeAnalyzer.AnalyzeEnv
+import Compiler.TypeAnalyzer.Constraint
+import Compiler.TypeAnalyzer.AnalyzeState
+import Compiler.TypeAnalyzer.AnalyzeUtils
+
 
 
 -- | TODO: once I merge the kind checking into the same process as type checking
 -- | I will be able to create two types of constraints, for types and for kinds
 -- | that will allow me easily assert that some specific type should be of some specific kind
-check :: Type -> Expression -> Infer ((), [Constraint])
-check (TyVar n) e@(Lit _) = throwError $ TEMismatch (TyVar n) (show e)
+check :: Type -> Expression -> Analyze ((), [Constraint Type])
+-- check (TyVar n) e@(Lit _) = undefined
 check t'Int (Lit (LitInt i)) = return ((), [])
 check t'Double (Lit (LitDouble i)) = return ((), [])
 check t'Char (Lit (LitChar i)) = return ((), [])
 
 check t (Var x) = do
   -- for now just assume t is valid type of kind *
-  type' <- lookup'env x
+  type' <- lookup't'env x
   return ((), [(t, type')])
 
 check t (Op x) = do
   -- assume t :: *
-  type' <- lookup'env x
+  type' <- lookup't'env x
   return ((), [(t, type')])
 
 check (from `TyArr` to) (Lam x body) = do
   -- assume from :: * and to :: *
-  (t, constrs) <- put'in'env (x, ForAll [] from) (check to body)
+  (t, constrs) <- put'in't'env (x, ForAll [] from) (check to body)
   return ((), constrs)
 
 check t (App left right) = do
   -- assume t :: *
   (t'l, cs'l) <- infer left
   (t'r, cs'r) <- infer right
-  t'var <- fresh
+  fresh'name <- fresh 
+  let t'var = TyVar fresh'name
   return ((), (t, t'var) : (t'l, t'r `TyArr` t'var) : cs'l ++ cs'r)
 
 check t (If cond tr fl) = do
@@ -64,15 +68,14 @@ check t (If cond tr fl) = do
 
 check t (Let x ex'val ex'body) = do
   -- assume t :: *
-  env <- ask
+  (_, t'env, _) <- ask
   (t'val, cs'val) <- infer ex'val
   case runSolve cs'val of
       Left err -> throwError err
       Right sub -> do
-          let sc = generalize (apply sub env) (apply sub t'val)
-          ((), cs'body) <- put'in'env (x, sc) $ local (apply sub) (check t ex'body)
-          return ((), cs'val ++ cs'body)
-
+          let sc = generalize (apply sub t'env) (apply sub t'val)
+          ((), cs'body) <- put'in't'env (x, sc) $ local (\ (a, b, c) -> (a, apply sub b, c)) (check t ex'body)
+          return ((), cs'val ++ cs'body) --             ^^^ terrible : TODO: fix pls
 
 check (TyTuple types') (Tuple exprs) = do
   -- assume each type :: * where type isfrom types'
@@ -83,33 +86,34 @@ check (TyTuple types') (Tuple exprs) = do
         ((), cs) <- check ty expr
         return (cs ++ constrs)
 
-
 check _ (Fix _) = throwError $ Unexpected "I am not type checking Fix expressions right now."
 
 
-infer :: Expression -> Infer (Type, [Constraint])
+infer :: Expression -> Analyze (Type, [Constraint Type])
 infer expr = case expr of  
   Lit (LitInt i) -> return (t'Int, [])
   Lit (LitDouble d) -> return (t'Double, [])
   Lit (LitChar ch) -> return (t'Char, [])
 
   (Var x) -> do
-    type' <- lookup'env x
+    type' <- lookup't'env x
     return (type', [])
 
   Op x -> do
-    type' <- lookup'env x
+    type' <- lookup't'env x
     return (type', [])
 
   Lam x body -> do
-    t'var <- fresh
-    (t, constrs) <- put'in'env (x, ForAll [] t'var) (infer body)
+    fresh'name <- fresh
+    let t'var = TyVar fresh'name
+    (t, constrs) <- put'in't'env (x, ForAll [] t'var) (infer body)
     return (t'var `TyArr` t, constrs)
 
   App left right -> do
     (t'l, cs'l) <- infer left
     (t'r, cs'r) <- infer right
-    t'var <- fresh
+    fresh'name <- fresh
+    let t'var = TyVar fresh'name
     return (t'var, cs'l ++ cs'r ++ [(t'l, t'r `TyArr` t'var)])
 
   If cond tr fl -> do
@@ -119,18 +123,19 @@ infer expr = case expr of
     return (t2, (t1, t'Bool) : (t2, t3) : c1 ++ c2 ++ c3)
   
   Let x ex'val ex'body -> do
-    env <- ask
+    (_, t'env, _) <- ask
     (t'val, cs'val) <- infer ex'val
     case runSolve cs'val of
         Left err -> throwError err
         Right sub -> do
-            let sc = generalize (apply sub env) (apply sub t'val)
-            (t'body, cs'body) <- put'in'env (x, sc) $ local (apply sub) (infer ex'body)
-            return (t'body, cs'val ++ cs'body)
+            let sc = generalize (apply sub t'env) (apply sub t'val)
+            (t'body, cs'body) <- put'in't'env (x, sc) $ local (\ (a, b, c) -> (a, apply sub b, c)) (infer ex'body)
+            return (t'body, cs'val ++ cs'body) --             ^^^ terrible : TODO: fix pls
 
   Fix expr -> do
     (type', cs) <- infer expr
-    t'var <- fresh
+    fresh'name <- fresh
+    let t'var = TyVar fresh'name
     return (t'var, cs ++ [(t'var `TyArr` t'var, type')])
 
   Tuple exprs -> do
@@ -172,15 +177,3 @@ infer expr = case expr of
     -- je mozny, ze existuje pravidlo, ktery rika, ze rigid type variable se muze
     -- unifikovat jenom s jinou type variable?
     -- 
-
-
--- Return the internal constraints used in solving for the type of an expression
--- for debugging ?
-constraintsExpr :: TypeEnv -> Expression -> Either TypeError ([Constraint], Subst, Type, Scheme)
-constraintsExpr env expr = case runInfer env (infer expr) of
-  Left err -> Left err
-  Right (type', constraints) -> case runSolve constraints of
-    Left err -> Left err
-    Right subst -> Right (constraints, subst, type', scheme)
-      where
-        scheme = closeOver $ apply subst type'

@@ -18,6 +18,8 @@ module Main where
     = []
     | a : (List a)
 
+-- ; type Infinite a = a a
+
 ; type String = List Char
 
 -- ; type A = B -- BAD CYCLE
