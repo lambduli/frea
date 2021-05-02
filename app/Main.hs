@@ -35,19 +35,6 @@ import Interpreter.Value
 import qualified Interpreter.Print as IP
 
 
--- import Compiler.TypeChecker.Inference
--- import Compiler.TypeChecker.TypeError
--- import Compiler.TypeChecker.Type
--- import Compiler.TypeChecker.DeclarationCheck
--- import Compiler.TypeChecker.Inference.TypeOf
--- import Compiler.TypeChecker.Inference.Infer
-
--- import Compiler.KindChecker.KindEnv
--- import Compiler.KindChecker.KindError
--- import Compiler.KindChecker.Inference
--- import Compiler.KindChecker.InferState
-
-
 main :: IO ()
 main = do
   putStrLn "Glamorous Frea REPL."
@@ -129,29 +116,10 @@ repl env t'env k'env ali'env mem = do
               -- loop
               repl env t'env k'env ali'env mem
             Right scheme -> do
-              -- let error'or'expr'n'state = runState (IP.print $ expression en) mem
-              -- case error'or'expr'n'state of
-                -- (Left err, mem') -> do
-                --   putStrLn $ "Evaluation Error when Printing the value: " ++ show err
-
-                --   -- loop
-                --   repl env t'env k'env mem
-
-                -- (Right str', mem') -> do
-                  -- TODO: this is WRONG! present for whatever reason doesn't work well
-                  -- so when you try to force the value for printing it doesn't update the memory or smth
-                  -- so it breaks
-                  putStrLn $ "         " ++ trim line ++ " :: " ++ show scheme
-
-                  -- putStrLn $ "         " ++ str'
-
-                  -- loop
-                  repl env t'env k'env ali'env mem
-
-
+              putStrLn $ "         " ++ trim line ++ " :: " ++ show scheme
 
               -- loop
-              -- repl env t'env k'env mem
+              repl env t'env k'env ali'env mem
 
     -- COMMAND :k(ind)
     ':' : 'k' : line -> do
@@ -170,11 +138,6 @@ repl env t'env k'env ali'env mem = do
           -- loop
           repl env t'env k'env ali'env mem
 
-      -- putStrLn "Sorry, I can't parse type expressions yet.\n"
-      -- NOTE: for now, just print all the known type constructors with their kinds
-      -- putStrLn $ intercalate "\n" $ map (\ (name, kind) -> name ++ " :: " ++ show kind) $ Map.toList k'env
-      -- repl env t'env k'env mem
-
     -- EXPRESSION to typecheck and evaluate
     _ -> do
       case parse'expr line of
@@ -185,20 +148,6 @@ repl env t'env k'env ali'env mem = do
               return ()
             Right (k'e, t'e, a'e, e, m) ->
               repl e t'e k'e a'e m
-
-
-          -- case process'declarations declarations env t'env k'env mem of
-          --   Left err -> do
-          --     putStrLn err
-          --     repl env t'env k'env ali'env mem
-          --   Right (env', t'env', k'env', mem') -> do
-          --     case infer'env declarations t'env' of
-          --       Left err -> do
-          --         putStrLn $ "Type Error in the declaration list: " ++ show err
-          --         return ()
-          --       Right mp -> do
-          --         let t'env' = mp `Map.union` t'env
-          --         repl env' t'env' k'env' ali'env mem'
 
         Right expression -> do
           let error'or'scheme = run'analyze (k'env, t'env, ali'env) (infer'expression expression)
@@ -219,9 +168,6 @@ repl env t'env k'env ali'env mem = do
                   repl env t'env k'env ali'env mem
 
                 (Right str', mem') -> do
-                  -- TODO: this is WRONG! present for whatever reason doesn't work well
-                  -- so when you try to force the value for printing it doesn't update the memory or smth
-                  -- so it breaks
                   putStrLn $ "         " ++ str'
 
                   -- loop
@@ -240,21 +186,6 @@ load file'name env t'env k'env ali'env mem = do
           return ()
         Right (k'e, t'e, a'e, e, m) ->
           repl e t'e k'e a'e m
-      
-      
-      
-      
-      -- case process'declarations declarations env t'env k'env mem of
-      --   Left err -> do
-      --     putStrLn $ "Declaration Error inside " ++ file'name ++ ": " ++ err
-      --     return ()
-      --   Right (env', t'env, k'env', mem') -> do
-      --     case infer'env declarations t'env of
-      --       Left err -> do
-      --         putStrLn $ "Type Error inside " ++ file'name ++ ": " ++ show err
-      --         return ()
-      --       Right mp -> do
-      --         let t'env' = mp `Map.union` t'env
-      --         repl env' t'env' k'env' mem'
+
     _ -> do
       putStrLn $ "Error: " ++ file'name ++ " must only contain declarations."
