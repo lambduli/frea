@@ -1,4 +1,4 @@
-module Compiler.TypeChecker.AnalyzeUtils where
+module Compiler.TypeAnalyzer.AnalyzeUtils where
 
 
 import qualified Data.Set as Set
@@ -11,11 +11,11 @@ import Control.Monad.Except
 import Compiler.Syntax.Kind
 import Compiler.Syntax.Type
 
-import Compiler.TypeChecker.Substituable
-import Compiler.TypeChecker.AnalyzeEnv
-import Compiler.TypeChecker.Analyze
-import Compiler.TypeChecker.AnalyzeState
-import Compiler.TypeChecker.Error
+import Compiler.TypeAnalyzer.Substituable
+import Compiler.TypeAnalyzer.AnalyzeEnv
+import Compiler.TypeAnalyzer.Analyze
+import Compiler.TypeAnalyzer.AnalyzeState
+import Compiler.TypeAnalyzer.Error
 
 
 letters :: [String]

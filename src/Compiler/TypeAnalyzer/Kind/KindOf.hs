@@ -1,4 +1,4 @@
-module Compiler.TypeChecker.Kind.KindOf where
+module Compiler.TypeAnalyzer.Kind.KindOf where
 
 
 import qualified Data.Map.Strict as Map
@@ -10,17 +10,17 @@ import Control.Monad.Except
 import Compiler.Syntax.Declaration
 import Compiler.Syntax
 
-import Compiler.TypeChecker.Analyze
-import Compiler.TypeChecker.Constraint
-import Compiler.TypeChecker.AnalyzeEnv
-import Compiler.TypeChecker.Error
-import Compiler.TypeChecker.Substituable
-import Compiler.TypeChecker.Solver
-import Compiler.TypeChecker.AnalyzeState
-import Compiler.TypeChecker.AnalyzeUtils
+import Compiler.TypeAnalyzer.Analyze
+import Compiler.TypeAnalyzer.Constraint
+import Compiler.TypeAnalyzer.AnalyzeEnv
+import Compiler.TypeAnalyzer.Error
+import Compiler.TypeAnalyzer.Substituable
+import Compiler.TypeAnalyzer.Solver
+import Compiler.TypeAnalyzer.AnalyzeState
+import Compiler.TypeAnalyzer.AnalyzeUtils
 
 
-import Compiler.TypeChecker.Kind.Infer
+import Compiler.TypeAnalyzer.Kind.Infer
 
 
 

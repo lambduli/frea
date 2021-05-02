@@ -25,10 +25,10 @@ import Compiler.Syntax.Type
 import Compiler.Syntax.Expression
 import Compiler.Syntax.Declaration
 
-import Compiler.TypeChecker.TypeOf
-import Compiler.TypeChecker.AnalyzeEnv
-import Compiler.TypeChecker.Analyze
-import Compiler.TypeChecker.Kind.KindOf
+import Compiler.TypeAnalyzer.TypeOf
+import Compiler.TypeAnalyzer.AnalyzeEnv
+import Compiler.TypeAnalyzer.Analyze
+import Compiler.TypeAnalyzer.Kind.KindOf
 
 import Interpreter.Evaluate
 import Interpreter.Value

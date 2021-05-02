@@ -3,7 +3,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module Compiler.TypeChecker.Substituable where
+module Compiler.TypeAnalyzer.Substituable where
 
 
 import qualified Data.Map.Strict as Map
@@ -11,8 +11,8 @@ import qualified Data.Set as Set
 
 import Compiler.Syntax.Type
 import Compiler.Syntax.Kind
-import Compiler.TypeChecker.AnalyzeEnv
-import Compiler.TypeChecker.Constraint
+import Compiler.TypeAnalyzer.AnalyzeEnv
+import Compiler.TypeAnalyzer.Constraint
 
 
 -- | Substitution -- ordered mapping between name and a

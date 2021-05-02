@@ -1,4 +1,4 @@
-module Compiler.TypeChecker.Error where
+module Compiler.TypeAnalyzer.Error where
 
 import Data.List
 

@@ -1,32 +1,19 @@
-module Compiler.TypeChecker.Dependency where
+module Compiler.TypeAnalyzer.Dependency where
 
 
 import qualified Data.Set as Set
 import qualified Data.Map.Strict as Map
 import Data.Graph (SCC(..), stronglyConnComp)
 import Data.Map.Strict ((!), (!?))
--- import Data.List (partition)
--- import Data.Bifunctor
 
--- import Control.Monad
--- import Control.Monad.Reader
 import Control.Monad.Except
 
 import Compiler.Syntax.Declaration
 import Compiler.Syntax.Type
--- import Compiler.Syntax.Kind
 import Compiler.Syntax.Expression
 
-import Compiler.TypeChecker.Error
-import Compiler.TypeChecker.Analyze
--- import Compiler.TypeChecker.Solver
--- import Compiler.TypeChecker.Substituable
--- import Compiler.TypeChecker.Constraint
--- import Compiler.TypeChecker.AnalyzeEnv
--- import Compiler.TypeChecker.AnalyzeUtils
--- import qualified Compiler.TypeChecker.Type.Evaluate as E
-
--- import Interpreter.Value (Env, Memory)
+import Compiler.TypeAnalyzer.Error
+import Compiler.TypeAnalyzer.Analyze
 
 
 index'bindings :: [(String, a)] -> Map.Map String Int -- [((String, Expression), Int)]

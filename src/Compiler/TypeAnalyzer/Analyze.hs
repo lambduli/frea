@@ -1,4 +1,4 @@
-module Compiler.TypeChecker.Analyze where
+module Compiler.TypeAnalyzer.Analyze where
 
 
 import qualified Data.Map.Strict as Map
@@ -8,9 +8,9 @@ import Control.Monad.State
 import Control.Monad.Except
 
 
-import Compiler.TypeChecker.AnalyzeEnv
-import Compiler.TypeChecker.AnalyzeState
-import Compiler.TypeChecker.Error
+import Compiler.TypeAnalyzer.AnalyzeEnv
+import Compiler.TypeAnalyzer.AnalyzeState
+import Compiler.TypeAnalyzer.Error
 
 
 -- Inference monad

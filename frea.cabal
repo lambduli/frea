@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 33bc43b805326b4160ab17eceb8b24df42eef10f516e06337ee9dc4c3cff523f
+-- hash: 0c2df4e4b6b5f7187fa3e70311d364802dfc05e3494678ba1ae85dfc6c0f37c2
 
 name:           frea
 version:        0.1.0.0
@@ -42,21 +42,21 @@ library
       Compiler.Syntax.Pattern
       Compiler.Syntax.Signature
       Compiler.Syntax.Type
-      Compiler.TypeChecker.Analyze
-      Compiler.TypeChecker.AnalyzeEnv
-      Compiler.TypeChecker.AnalyzeState
-      Compiler.TypeChecker.AnalyzeUtils
-      Compiler.TypeChecker.Constraint
-      Compiler.TypeChecker.Dependency
-      Compiler.TypeChecker.Error
-      Compiler.TypeChecker.Kind.Infer
-      Compiler.TypeChecker.Kind.KindOf
-      Compiler.TypeChecker.Solver
-      Compiler.TypeChecker.Substituable
-      Compiler.TypeChecker.Type.Analyze
-      Compiler.TypeChecker.Type.Evaluate
-      Compiler.TypeChecker.TypeOf
-      Compiler.TypeChecker.Types
+      Compiler.TypeAnalyzer.Analyze
+      Compiler.TypeAnalyzer.AnalyzeEnv
+      Compiler.TypeAnalyzer.AnalyzeState
+      Compiler.TypeAnalyzer.AnalyzeUtils
+      Compiler.TypeAnalyzer.Constraint
+      Compiler.TypeAnalyzer.Dependency
+      Compiler.TypeAnalyzer.Error
+      Compiler.TypeAnalyzer.Kind.Infer
+      Compiler.TypeAnalyzer.Kind.KindOf
+      Compiler.TypeAnalyzer.Solver
+      Compiler.TypeAnalyzer.Substituable
+      Compiler.TypeAnalyzer.Type.Analyze
+      Compiler.TypeAnalyzer.Type.Evaluate
+      Compiler.TypeAnalyzer.TypeOf
+      Compiler.TypeAnalyzer.Types
       Interpreter.Address
       Interpreter.Evaluate
       Interpreter.Print

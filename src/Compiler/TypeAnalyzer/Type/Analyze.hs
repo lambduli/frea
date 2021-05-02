@@ -1,4 +1,4 @@
-module Compiler.TypeChecker.Type.Analyze where
+module Compiler.TypeAnalyzer.Type.Analyze where
 
 
 import qualified Data.Map.Strict as Map
@@ -15,15 +15,15 @@ import Compiler.Syntax.Expression
 import Compiler.Syntax.Type
 import Compiler.Syntax.Literal
 
-import Compiler.TypeChecker.Types
-import Compiler.TypeChecker.Error
-import Compiler.TypeChecker.Analyze
-import Compiler.TypeChecker.Solver
-import Compiler.TypeChecker.Substituable
-import Compiler.TypeChecker.AnalyzeEnv
-import Compiler.TypeChecker.Constraint
-import Compiler.TypeChecker.AnalyzeState
-import Compiler.TypeChecker.AnalyzeUtils
+import Compiler.TypeAnalyzer.Types
+import Compiler.TypeAnalyzer.Error
+import Compiler.TypeAnalyzer.Analyze
+import Compiler.TypeAnalyzer.Solver
+import Compiler.TypeAnalyzer.Substituable
+import Compiler.TypeAnalyzer.AnalyzeEnv
+import Compiler.TypeAnalyzer.Constraint
+import Compiler.TypeAnalyzer.AnalyzeState
+import Compiler.TypeAnalyzer.AnalyzeUtils
 
 
 

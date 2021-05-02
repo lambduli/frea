@@ -1,4 +1,4 @@
-module Compiler.TypeChecker.AnalyzeEnv where
+module Compiler.TypeAnalyzer.AnalyzeEnv where
 
 
 import qualified Data.Map.Strict as Map
@@ -6,7 +6,7 @@ import qualified Data.Map.Strict as Map
 import Compiler.Syntax.Type
 import Compiler.Syntax.Kind
 
-import Compiler.TypeChecker.Types
+import Compiler.TypeAnalyzer.Types
 
 
 -- TODO: refactor to:

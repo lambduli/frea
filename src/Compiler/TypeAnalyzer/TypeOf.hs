@@ -1,4 +1,4 @@
-module Compiler.TypeChecker.TypeOf where
+module Compiler.TypeAnalyzer.TypeOf where
 
 
 import qualified Data.Set as Set
@@ -19,18 +19,18 @@ import Compiler.Syntax.Type
 import Compiler.Syntax.Kind
 import Compiler.Syntax.Expression
 
-import Compiler.TypeChecker.Error
-import Compiler.TypeChecker.Analyze
-import Compiler.TypeChecker.Solver
-import Compiler.TypeChecker.Substituable
-import Compiler.TypeChecker.Constraint
-import Compiler.TypeChecker.AnalyzeEnv
-import Compiler.TypeChecker.AnalyzeUtils
-import Compiler.TypeChecker.Dependency
-import qualified Compiler.TypeChecker.Type.Evaluate as E
+import Compiler.TypeAnalyzer.Error
+import Compiler.TypeAnalyzer.Analyze
+import Compiler.TypeAnalyzer.Solver
+import Compiler.TypeAnalyzer.Substituable
+import Compiler.TypeAnalyzer.Constraint
+import Compiler.TypeAnalyzer.AnalyzeEnv
+import Compiler.TypeAnalyzer.AnalyzeUtils
+import Compiler.TypeAnalyzer.Dependency
+import qualified Compiler.TypeAnalyzer.Type.Evaluate as E
 
-import Compiler.TypeChecker.Type.Analyze
-import Compiler.TypeChecker.Kind.KindOf
+import Compiler.TypeAnalyzer.Type.Analyze
+import Compiler.TypeAnalyzer.Kind.KindOf
 
 import Interpreter.Value (Env, Memory)
 import qualified Interpreter.Value as Val

@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module Compiler.TypeChecker.Solver where
+module Compiler.TypeAnalyzer.Solver where
 
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
@@ -12,11 +12,11 @@ import Control.Monad.Except
 import Compiler.Syntax.Type
 import Compiler.Syntax.Kind
 
-import Compiler.TypeChecker.Error
-import Compiler.TypeChecker.Analyze
-import Compiler.TypeChecker.Substituable
-import Compiler.TypeChecker.Constraint
-import Compiler.TypeChecker.AnalyzeEnv
+import Compiler.TypeAnalyzer.Error
+import Compiler.TypeAnalyzer.Analyze
+import Compiler.TypeAnalyzer.Substituable
+import Compiler.TypeAnalyzer.Constraint
+import Compiler.TypeAnalyzer.AnalyzeEnv
 
 
 -- Constraint solver monad

@@ -1,4 +1,4 @@
-module Compiler.TypeChecker.Type.Evaluate where
+module Compiler.TypeAnalyzer.Type.Evaluate where
 
 
 import qualified Data.Map.Strict as Map
@@ -9,11 +9,11 @@ import Control.Monad.State
 
 
 import Compiler.Syntax.Type
-import Compiler.TypeChecker.Substituable
-import Compiler.TypeChecker.Analyze
-import Compiler.TypeChecker.AnalyzeEnv
-import Compiler.TypeChecker.AnalyzeState
-import Compiler.TypeChecker.AnalyzeUtils
+import Compiler.TypeAnalyzer.Substituable
+import Compiler.TypeAnalyzer.Analyze
+import Compiler.TypeAnalyzer.AnalyzeEnv
+import Compiler.TypeAnalyzer.AnalyzeState
+import Compiler.TypeAnalyzer.AnalyzeUtils
 
 
 class Normalizing a where

@@ -1,4 +1,4 @@
-module Compiler.TypeChecker.Constraint where
+module Compiler.TypeAnalyzer.Constraint where
 
 import Compiler.Syntax.Type
 import Compiler.Syntax.Kind

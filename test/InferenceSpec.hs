@@ -12,11 +12,11 @@ import Compiler.Syntax.Type
 import Compiler.Syntax.Literal
 
 
-import Compiler.TypeChecker.TypeOf (infer'expression)
-import Compiler.TypeChecker.Analyze
-import Compiler.TypeChecker.AnalyzeEnv
-import Compiler.TypeChecker.Error
-import Compiler.TypeChecker.Types
+import Compiler.TypeAnalyzer.TypeOf (infer'expression)
+import Compiler.TypeAnalyzer.Analyze
+import Compiler.TypeAnalyzer.AnalyzeEnv
+import Compiler.TypeAnalyzer.Error
+import Compiler.TypeAnalyzer.Types
 
 
 env :: TypeEnv

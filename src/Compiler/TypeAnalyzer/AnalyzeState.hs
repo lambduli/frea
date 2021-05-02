@@ -1,4 +1,4 @@
-module Compiler.TypeChecker.AnalyzeState where
+module Compiler.TypeAnalyzer.AnalyzeState where
 
 
 -- Inference state
