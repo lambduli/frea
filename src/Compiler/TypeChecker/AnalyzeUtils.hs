@@ -91,7 +91,9 @@ lookup'k'env var = do
 
 
 put'in'ali'env :: (String, Type) -> Analyze a -> Analyze a
-put'in'ali'env = undefined
+put'in'ali'env (name, type') m = do
+  let scope (k'env, t'env, ali'env) = (k'env, t'env, remove ali'env name `extend` (name, type'))
+  local scope m
 
 
 instantiate :: Scheme -> Analyze Type

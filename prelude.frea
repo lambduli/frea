@@ -18,7 +18,7 @@ module Main where
     = []
     | a : (List a)
 
-; type Infinite a = a a
+-- ; type Infinite a = a a
 
 ; type String = List Char
 

@@ -16,9 +16,13 @@ import Compiler.TypeChecker.Error
 -- Inference monad
 type Analyze a
   = ReaderT
-      AnalyzeEnv        -- | Typing environment
+      AnalyzeEnv        -- | Kind Context, Type Context, Type Alias Context
       (StateT           -- | Inference state
         AnalyzeState
         (Except         -- | Inference errors
           Error))
       a                 -- | Result
+
+
+run'analyze :: AnalyzeEnv -> Analyze a -> Either Error a
+run'analyze env m = runExcept $ evalStateT (runReaderT m env) init'analyze

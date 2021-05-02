@@ -197,6 +197,24 @@ process'declarations declarations env t'env mem = do
 --
 --
 
+
+-- TODO: musim vzit ali'env a expandovat vsechny typovy anotace v tom expr
+-- idealne bych jeste taky ty anotace vzal a posbiral z nich constrainty uz tak jak jsou?
+infer'expression :: Expression -> Analyze Scheme
+infer'expression expr = do
+  ex'expr <- expand'expr expr
+  (type', constraints) <- infer ex'expr
+  case runSolve constraints  of
+      Left err -> throwError err
+      Right subst -> do
+        return $ closeOver $ apply subst type'
+
+        -- (_, t'env, _) <- ask
+        -- let scheme'bindings = map (second (closeOver . apply subst)) type'bindings
+        --     env' = apply subst $ t'env `Map.union` Map.fromList scheme'bindings
+        -- return env'
+
+
 {-
 Potrebuju napsat funkci, ktera vezme vsechny deklarace a type'env, kind'env, memory, env a ali'env
 
