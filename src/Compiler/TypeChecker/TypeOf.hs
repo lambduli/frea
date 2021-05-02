@@ -33,7 +33,169 @@ import Compiler.TypeChecker.Type.Analyze
 import Compiler.TypeChecker.Kind.KindOf
 
 import Interpreter.Value (Env, Memory)
+import qualified Interpreter.Value as Val
+import Interpreter.Address
+import Interpreter.Evaluate
 
+
+--
+--
+--
+
+
+
+register'constr'insts :: [ConstrDecl] -> Val.Env -> Val.Env
+register'constr'insts [] env = env
+register'constr'insts (ConDecl name types : cons) env =
+  let addr = Addr $ Map.size env
+      env' = Map.insert name addr env
+  in register'constr'insts cons env'
+
+
+register'elim'insts :: String -> [ConstrDecl] -> Val.Env -> Val.Env
+register'elim'insts name constrs env =
+  let addr        = Addr $ Map.size env
+      cons'count  = length constrs
+      elim'name   = "which-" ++ name
+      env'        = Map.insert elim'name addr env
+  in  env'
+
+
+generate'constr'insts :: [ConstrDecl] -> Val.Env -> Val.Memory -> Val.Memory
+generate'constr'insts [] _ mem = mem
+generate'constr'insts (ConDecl name types : cons) env mem =
+  let addr      = env Map.! name
+      par'inds  = [1 .. length types]
+      params    = map (\ ind -> "p" ++ show ind ) par'inds
+      vars      = map Var params
+      intro     = Intro name vars
+      con'lam   = foldr Lam intro params
+      value     = Val.Thunk (\ env -> force con'lam env) Val.empty'env addr -- I don't need anything from the Env
+      mem'      = Map.insert addr value mem
+  in  generate'constr'insts cons env mem'
+
+
+generate'elim'insts :: String -> [ConstrDecl] -> Val.Env -> Val.Memory -> Val.Memory
+generate'elim'insts name constructors env mem =
+  let 
+      cons'count  = length constructors
+      elim'name   = "which-" ++ name
+      addr        = env Map.! elim'name
+      par'inds    = [1 .. length constructors]
+      params      = map (\ ind -> "destr" ++ show ind ) par'inds
+      val'var     = Var "value"
+      destr'vars  = map Var params
+      elim        = Elim constructors val'var destr'vars
+      which'elim  = Lam "value" $ foldr Lam elim params
+      value       = Val.Thunk (\ env -> force which'elim env) env addr
+      mem'        = Map.insert addr value mem
+  in  mem'
+
+
+-- tohle prida constructory pro data do TypeEnv - explicitne otypovane
+add'constrs'types :: Type -> [ConstrDecl] -> TypeEnv -> TypeEnv
+add'constrs'types _ [] t'env = t'env
+add'constrs'types result't (ConDecl name types : cons) t'env
+  = add'constrs'types result't cons (Map.insert name scheme t'env)
+    where
+      type' = foldr TyArr result't types
+      ty'params = Set.toList $ free'vars type'
+      scheme = ForAll ty'params type'
+
+
+add'elim'type :: String -> Type -> [ConstrDecl] -> TypeEnv -> TypeEnv
+add'elim'type name result't constructors t'env =
+  let elim'name     = "which-" ++ name
+      res           = TyVar "@:z" -- TODO: this needs to be fresh variable!!! -- for now making it somehow hard to mix up with anything
+      destr'type (ConDecl name types) = foldr TyArr res types
+      destrs'types  = map destr'type constructors
+      which'type    = result't `TyArr` (foldr TyArr res destrs'types)
+      scheme        = ForAll (Set.toList $ free'vars which'type) which'type
+      -- TODO: it would be much better to not create the scheme HERE
+      -- it would also be much better to use already implemented functions like generalize and so
+      -- TODO: once I implement higher kinded types, list of the free type variables needs to reflect that
+      t'env'        = Map.insert elim'name scheme t'env
+  in  t'env'
+
+
+process'declarations :: [Declaration] -> Val.Env -> TypeEnv -> Val.Memory -> (Val.Env, TypeEnv, Val.Memory)
+process'declarations declarations env t'env mem = do
+  -- k'env' <- case infer'decls declarations k'env of
+  --   Left k'err -> Left $ show k'err
+  --   Right k'env' -> Right k'env'
+
+  -- nejdriv musim vyrobit Env
+  -- ten obsahuje jenom identifikatory a adresy
+  let env' = foldl register'declarations env declarations
+  -- ted mam kompletni Env a ten obsahuje bindingy pro vsechny identifikatory
+  -- ted muzu timhle envem closovat libovolny Values a pokud pri evaluaci bude v memory
+  -- na spravne adrese implementace, bude to v poradku
+
+  -- ted musim projit vsechny deklarace znova a tentokrat skutecne vyrobit Values
+  -- a pri tom foldovani musim vyrobit i Memory
+  let mem' = foldl (construct'declarations env') mem declarations
+  let t'env' = foldl add'types t'env declarations
+
+  (env', t'env', mem')
+
+    where
+      register'declarations :: Val.Env -> Declaration -> Val.Env
+      register'declarations env decl =
+        case decl of
+          Binding name expr ->
+            let addr = Addr $ Map.size env
+            in Map.insert name addr env
+
+          Annotated name type' expr ->
+            let addr = Addr $ Map.size env
+            in Map.insert name addr env
+
+          DataDecl name _ constrs ->
+            let env'  = register'constr'insts constrs env
+                env'' = register'elim'insts name constrs env'
+            in  env''
+
+          _ -> env
+
+
+      construct'declarations :: Val.Env -> Val.Memory -> Declaration -> Val.Memory
+      construct'declarations env mem decl =
+        case decl of
+          Binding name expr ->
+            let addr  = env Map.! name
+                val   = Val.Thunk (\ env -> force expr env) env addr
+                mem'  = Map.insert addr val mem
+            in  mem'
+
+          Annotated name type' expr ->
+            let addr  = env Map.! name
+                val   = Val.Thunk (\ env -> force expr env) env addr
+                mem'  = Map.insert addr val mem
+            in mem'
+
+          DataDecl name _ constrs ->
+            -- [ConstrDecl] -> Val.Env -> Val.Memory -> Val.Memory
+            let mem'  = generate'constr'insts constrs env mem
+                mem'' = generate'elim'insts name constrs env mem'
+            in  mem''
+
+          _ -> mem
+
+
+      add'types :: TypeEnv -> Declaration -> TypeEnv
+      add'types t'env decl =
+        case decl of
+          DataDecl name ty'params constrs ->
+            let res'type = foldl (\ t var -> TyApp t (TyVar var)) (TyCon name) ty'params
+                t'env'  = add'constrs'types res'type constrs t'env
+                t'env'' = add'elim'type name res'type constrs t'env'
+            in  t'env''
+          _ -> t'env
+
+
+--
+--
+--
 
 {-
 Potrebuju napsat funkci, ktera vezme vsechny deklarace a type'env, kind'env, memory, env a ali'env
@@ -55,19 +217,26 @@ pak je teprve vyhodnotit, znova vygenerovat dalsi synonyma spojit dohromady a pa
 
 
 -- TODO: add the implementation from the DeclarationCheck module
-analyze'module :: [Declaration] -> Analyze (KindEnv, TypeEnv, AliEnv, Env, Memory)
-analyze'module decls = do
+analyze'module :: [Declaration] -> (Env, Memory) -> Analyze (KindEnv, TypeEnv, AliEnv, Env, Memory)
+analyze'module decls (env, mem) = do
   -- (k'env, t'env, ali'env, env, mem)
-  local (\ (k, t, a) -> (k, t, ali'env a)) analyze'
+
+  (k'e, t'e, a'e) <- ask
+
+  let (env', t'e', mem') = process'declarations decls env t'e mem
+      ali'env = Map.union a'e $ make'alias'env only'aliases
+
+  local (const (k'e, t'e', ali'env)) (analyze' env' mem')
 
     where
       only'aliases  = filter is'alias decls
       only'funs     = filter is'fun decls
       only'types    = filter is'type decls
-      ali'env a     = Map.union a $ make'alias'env only'aliases -- TODO: this is awkward, pls fix
+      -- ali'env'       = make'alias'env only'aliases
+      -- ali'env a     = Map.union a ali'env'  -- TODO: this is awkward, pls fix
 
-      analyze' :: Analyze (KindEnv, TypeEnv, AliEnv, Env, Memory)
-      analyze' = do
+      analyze' :: Val.Env -> Memory -> Analyze (KindEnv, TypeEnv, AliEnv, Env, Memory)
+      analyze' env mem = do
         check'for'synonym'cycles only'aliases
         -- TODO: maybe collect some constraints from unevaluated type annotations?
         expanded'funs <- mapM expand'aliases only'funs
@@ -83,8 +252,10 @@ analyze'module decls = do
         
         k'env <- analyze'type'decls type'pairs
 
+        (_, _, ali'env) <- ask
 
-        return undefined
+
+        return (k'env, t'env, ali'env, env, mem)
 
 
       name'expr :: Declaration -> (String, Expression)
