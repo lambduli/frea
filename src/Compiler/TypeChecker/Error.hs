@@ -18,6 +18,7 @@ data Error
   | SynonymCycle [(String, Type)]
 
   | Unexpected String
+  deriving (Eq)
 
 
 instance Show Error where

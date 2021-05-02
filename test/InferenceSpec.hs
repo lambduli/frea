@@ -2,17 +2,21 @@ module InferenceSpec where
 
 import Test.Hspec
 import System.Exit
+
 import qualified Data.Map.Strict as Map
 
 import Compiler.Parser.Parser (parse'expr)
+
 import Compiler.Syntax.Expression
 import Compiler.Syntax.Type
-import Compiler.TypeChecker.TypeError
 import Compiler.Syntax.Literal
 
-import Compiler.TypeChecker.Inference.TypeOf (typeof, infer'expression)
-import Compiler.TypeChecker.Type
-import Compiler.TypeChecker.Inference.TypeEnv
+
+import Compiler.TypeChecker.TypeOf (infer'expression)
+import Compiler.TypeChecker.Analyze
+import Compiler.TypeChecker.AnalyzeEnv
+import Compiler.TypeChecker.Error
+import Compiler.TypeChecker.Types
 
 
 env :: TypeEnv
@@ -27,18 +31,16 @@ spec :: Spec
 spec = describe "Test the inference" $ do
 
   it "Infers the type of a single integer" $
-    typeof (Lit (LitInt 23)) `shouldBe` Right (ForAll [] t'Int)
+    type'of (Lit (LitInt 23)) `shouldBe` Right (ForAll [] t'Int)
 
   it "Infers the type of a List" $
-    infer'expression env (Var "[]") `shouldBe` Right (ForAll ["a"] $ TyApp (TyCon "List") (TyVar "a"))
+    "[]" <::> ForAll ["a"] (TyApp (TyCon "List") (TyVar "a"))
   
   it "Infer the type of a singleton List" $
     "[23]" <::> ForAll [] (TyApp (TyCon "List") t'Int)
 
   it "Infers the type of a tuple" $
-    infer'expression env (Tuple [Lit (LitInt 23), Var "True", Lit (LitChar 'a')])
-    `shouldBe`
-    Right (ForAll [] $ TyTuple [t'Int, t'Bool, t'Char])
+    "(23, True, 'a')" <::> (ForAll [] $ TyTuple [t'Int, t'Bool, t'Char])
 
   it "Infers the type of a let inside lambda" $
     "\\ x -> let { y = ((#+) (x, 1)) } in y" <::> ForAll [] (TyArr t'Int t'Int)
@@ -73,5 +75,9 @@ infix 4 <::>
   case parse'expr expr of
     Left cmd -> exitFailure
     Right ast ->
-      infer'expression env ast
+      (run'analyze (empty'k'env, env, empty'ali'env) (infer'expression ast))
         `shouldBe` Right scheme
+
+
+type'of :: Expression -> Either Error Scheme
+type'of expr = run'analyze (empty'k'env, empty't'env, empty'ali'env) (infer'expression expr)

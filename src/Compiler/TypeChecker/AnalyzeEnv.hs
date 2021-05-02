@@ -51,3 +51,7 @@ empty'k'env = Map.fromList
   , ("Double" , Star) 
   , ("Char"   , Star) 
   , ("Unit"   , Star) ]
+
+
+empty'ali'env :: AliEnv
+empty'ali'env = Map.empty
