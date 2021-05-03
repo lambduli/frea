@@ -84,7 +84,7 @@ lookup'k'env :: String -> Analyze Kind
 lookup'k'env var = do
   (k'env, _, _) <- ask
   case Map.lookup var k'env of
-    Nothing     -> throwError $ UnboundVar var
+    Nothing     -> throwError $ UnboundTypeVar var
     Just kind'  -> return kind' -- we don't instantiate kinds
     -- TODO: do some normalization or something
     -- change all the free variables in the kind into *

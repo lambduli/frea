@@ -11,6 +11,7 @@ data Error
   | TypeUnifMismatch Type Type
   | KindUnifMismatch Kind Kind
   | UnboundVar String
+  | UnboundTypeVar String
   | TypeShapeMismatch Type Type
   | KindShapeMismatch Kind Kind
   | TypeUnifCountMismatch [Type] [Type]
@@ -34,6 +35,8 @@ instance Show Error where
     = "Couldn't match kind `" ++ show kind'a ++ "` with `" ++ show kind'b ++ "`"
   show (UnboundVar name)
     = "Unknown variable " ++ name
+  show (UnboundTypeVar name)
+    = "Unknown type variable " ++ name
   show (TypeShapeMismatch type'l type'r)
     = "[Shape] Couldn't match type `" ++ show type'l ++ "` with `" ++ show type'r ++ "`"
   show (KindShapeMismatch kind'l kind'r)

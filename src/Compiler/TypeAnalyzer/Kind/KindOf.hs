@@ -41,10 +41,10 @@ kind'of (k'env, t'env, ali'env) t = do
 -- TODO: refactor to be Analyze so it won't need to use run'infer
 -- analyze'type'decls :: AnalyzeEnv -> [(String, Declaration )] -> Either Error KindEnv
 -- analyze'type'decls (k'env, t'env, ali'env) bindings =
-analyze'type'decls :: [(String, Declaration )] -> Analyze KindEnv
-analyze'type'decls bindings = do
+analyze'type'decls :: [(String, Declaration)] -> [Constraint Kind] -> Analyze KindEnv
+analyze'type'decls bindings k'constrs = do
   (kind'bindings, constraints) <- analyze'types bindings
-  case runSolve constraints of
+  case runSolve (constraints ++ k'constrs) of
     Left err -> throwError err
     Right subst -> do
       (k'env, _, _) <- ask

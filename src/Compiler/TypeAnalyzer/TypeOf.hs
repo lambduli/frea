@@ -203,7 +203,7 @@ process'declarations declarations env t'env mem = do
 infer'expression :: Expression -> Analyze Scheme
 infer'expression expr = do
   ex'expr <- expand'expr expr
-  (type', constraints) <- infer ex'expr
+  (type', constraints, _) <- infer ex'expr -- TODO: it would be better to also solve the kind constraints
   case runSolve constraints  of
       Left err -> throwError err
       Right subst -> do
@@ -266,9 +266,23 @@ analyze'module decls (env, mem) = do
 
         -- to co musim udelat je ekvivalentni infer'top + infer'data
 
-        t'env <- analyze'top'decls fun'pairs
+        -- mozna bych mohl zacit zlehka tim, ze vratim kind constrainty spolu s t'env
         
-        k'env <- analyze'type'decls type'pairs
+        -- hodim si sem in place analyze'type'decsl
+        -- analyze'type'decls bindings k'constrs = do
+        (kind'bindings, k'constrs) <- analyze'types type'pairs
+        -- sesbiram kind constrainty
+        
+        (t'env, k'constrs') <- local (\ (k'e, t'e, a'e) -> (k'e `Map.union` Map.fromList kind'bindings, t'e, a'e)) $ analyze'top'decls fun'pairs
+        
+        -- k'env <- analyze'type'decls type'pairs k'constrs
+        k'env <- case runSolve (k'constrs ++ k'constrs') of
+          Left err -> throwError err
+          Right subst -> do
+            (k'env, _, _) <- ask
+            let k'env' = specify'k'vars $ apply subst $ k'env `Map.union` Map.fromList kind'bindings
+            return k'env'
+
 
         (_, _, ali'env) <- ask
 
@@ -324,16 +338,16 @@ analyze'module decls (env, mem) = do
 
 
 -- | This functions is the counterpart of the analyze'type'decls
-analyze'top'decls :: [(String, Expression)] -> Analyze TypeEnv
+analyze'top'decls :: [(String, Expression)] -> Analyze (TypeEnv, [Constraint Kind])
 analyze'top'decls fun'pairs = do
-  (type'bindings, t'constrs) <- infer'many fun'pairs
+  (type'bindings, t'constrs, k'constrs) <- infer'many fun'pairs
   case runSolve t'constrs  of
     Left err -> throwError err
     Right subst -> do
       (_, t'env, _) <- ask
       let scheme'bindings = map (second (closeOver . apply subst)) type'bindings
           env' = apply subst $ t'env `Map.union` Map.fromList scheme'bindings
-      return env'
+      return (env', k'constrs)
 
 
 {-  This function finds all type annotations in the given Expression
@@ -379,7 +393,7 @@ expand'expr expr =
 
 
 -- | NOTE: this can stay like this for now
-infer'many :: [(String, Expression)] -> Analyze ([(String, Type)], [Constraint Type])
+infer'many :: [(String, Expression)] -> Analyze ([(String, Type)], [Constraint Type], [Constraint Kind])
 infer'many bindings = do
   let indexed = index'bindings bindings
   let graph = build'graph bindings indexed
@@ -394,23 +408,23 @@ infer'many bindings = do
     -- jenom to infernu -> posbiram constrainty a type a vratim je nekam vejs
   infer'groups solved
     where
-      infer'groups :: [SCC (String, Expression)] -> Analyze ([(String, Type)], [Constraint Type])
-      infer'groups [] = return ([], [])
+      infer'groups :: [SCC (String, Expression)] -> Analyze ([(String, Type)], [Constraint Type], [Constraint Kind])
+      infer'groups [] = return ([], [], [])
       infer'groups ((AcyclicSCC bind) : sccs) = do
-        (t'binds, constrs) <- infer'group [bind]
+        (t'binds, constrs, k'constrs) <- infer'group [bind]
         (k'env, t'env, ali'env) <- ask
-        (t'binds', constrs') <- merge'into't'env (map (\ (n, t) -> (n, generalize t'env t)) t'binds) $ infer'groups sccs
-        return (t'binds ++ t'binds', constrs ++ constrs')
+        (t'binds', constrs', k'constrs') <- merge'into't'env (map (\ (n, t) -> (n, generalize t'env t)) t'binds) $ infer'groups sccs
+        return (t'binds ++ t'binds', constrs ++ constrs', k'constrs ++ k'constrs')
 
       infer'groups ((CyclicSCC bindings) : sccs) = do
-        (t'binds, constrs) <- infer'group bindings
+        (t'binds, constrs, k'constrs) <- infer'group bindings
         (k'env, t'env, ali'ev) <- ask
-        (t'binds', constrs') <- merge'into't'env (map (\ (n, t) -> (n, generalize t'env t)) t'binds) $ infer'groups sccs
-        return (t'binds ++ t'binds', constrs ++ constrs')
+        (t'binds', constrs', k'constrs') <- merge'into't'env (map (\ (n, t) -> (n, generalize t'env t)) t'binds) $ infer'groups sccs
+        return (t'binds ++ t'binds', constrs ++ constrs', k'constrs ++ k'constrs')
 
 
 -- | NOTE: this can stay like this for now
-infer'group :: [(String, Expression)] -> Analyze ([(String, Type)], [Constraint Type])
+infer'group :: [(String, Expression)] -> Analyze ([(String, Type)], [Constraint Type], [Constraint Kind])
 infer'group bindings = do
   let names = map fst bindings
       gener name = do ForAll [] <$> (TyVar <$> fresh)
@@ -419,15 +433,15 @@ infer'group bindings = do
 
 
 -- | NOTE: this can stay like this for now
-infer'many' :: [(String, Expression)] -> Analyze ([(String, Type)], [Constraint Type])
+infer'many' :: [(String, Expression)] -> Analyze ([(String, Type)], [Constraint Type], [Constraint Kind])
 infer'many' [] = do
-  return ([], [])
+  return ([], [], [])
 infer'many' ((name, expr) : exprs) = do
-  (type', constraints) <- infer expr
+  (type', constraints, k'constrs) <- infer expr
 
   orig'type <- lookup't'env name
-  (types, constrs') <- infer'many' exprs
-  return ((name, type') : types, (orig'type, type') : constraints ++ constrs')
+  (types, constrs', k'constrs') <- infer'many' exprs
+  return ((name, type') : types, (orig'type, type') : constraints ++ constrs', k'constrs ++ k'constrs')
 
 
 -- runInfer :: AnalyzeEnv -> Analyze (Type, [Constraint Type]) -> Either Error (Type, [Constraint  Type])
