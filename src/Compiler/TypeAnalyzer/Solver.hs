@@ -42,8 +42,8 @@ class Bindable a where
   bind :: String -> a -> Solve (Subst a)
 
 
-runSolve :: ((Substitutable a a), (Unifiable a)) => [Constraint a] -> Either Error (Subst a)
-runSolve constrs = runIdentity $ runExceptT $ solver state
+run'solve :: ((Substitutable a a), (Unifiable a)) => [Constraint a] -> Either Error (Subst a)
+run'solve constrs = runIdentity $ runExceptT $ solver state
   where state = (empty'subst, constrs)
 
 

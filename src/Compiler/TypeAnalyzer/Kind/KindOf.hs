@@ -19,9 +19,29 @@ import Compiler.TypeAnalyzer.Solver
 import Compiler.TypeAnalyzer.AnalyzeState
 import Compiler.TypeAnalyzer.AnalyzeUtils
 
+-- import qualified Compiler.TypeAnalyzer.Type.Evaluate as E
 
 import Compiler.TypeAnalyzer.Kind.Infer
 
+
+-- | NOTE:  I thought I should normalize the type before doing the kind inference.
+-- |        But it's probably not needed.
+-- kind'of :: AnalyzeEnv -> Type -> Either Error Kind
+-- kind'of (k'env, t'env, ali'env) t = do
+--   let ex't = run'analyze (k'env, t'env, ali'env) (E.evaluate t)
+--   case ex't of
+--     Left err -> Left err
+--     Right t' ->
+--       case run'infer (k'env, t'env, ali'env) (infer t') of
+--         Left err -> Left err
+--         Right (k, constraints) ->  
+--           case run'solve constraints of
+--             Left err -> Left err
+--             Right subst -> do
+--               return $ apply subst k
+--               -- let env' = apply subst $ environment `Map.union` Map.fromList kind'bindings
+--               -- let env'' = specify'k'vars env'
+--               -- return env''
 
 
 kind'of :: AnalyzeEnv -> Type -> Either Error Kind
@@ -29,22 +49,16 @@ kind'of (k'env, t'env, ali'env) t = do
   case run'infer (k'env, t'env, ali'env) (infer t) of
     Left err -> Left err
     Right (k, constraints) ->  
-      case runSolve constraints of
+      case run'solve constraints of
         Left err -> Left err
         Right subst -> do
           return $ apply subst k
-          -- let env' = apply subst $ environment `Map.union` Map.fromList kind'bindings
-          -- let env'' = specify'k'vars env'
-          -- return env''
 
 
--- TODO: refactor to be Analyze so it won't need to use run'infer
--- analyze'type'decls :: AnalyzeEnv -> [(String, Declaration )] -> Either Error KindEnv
--- analyze'type'decls (k'env, t'env, ali'env) bindings =
-analyze'type'decls :: [(String, Declaration )] -> Analyze KindEnv
-analyze'type'decls bindings = do
+analyze'type'decls :: [(String, Declaration)] -> [Constraint Kind] -> Analyze KindEnv
+analyze'type'decls bindings k'constrs = do
   (kind'bindings, constraints) <- analyze'types bindings
-  case runSolve constraints of
+  case run'solve (constraints ++ k'constrs) of
     Left err -> throwError err
     Right subst -> do
       (k'env, _, _) <- ask
@@ -59,10 +73,6 @@ specify'k'vars = Map.map specify'k'vars'
     specify'k'vars' Star = Star
     specify'k'vars' (KVar _) = Star
     specify'k'vars' (KArr left right) = KArr (specify'k'vars' left) (specify'k'vars' right)
-
-
--- run'infer :: AnalyzeEnv -> Analyze ([(String, Kind)], [Constraint Kind]) -> Either Error ([(String, Kind)], [Constraint Kind])
--- run'infer env m = runExcept $ evalStateT (runReaderT m env) init'analyze
 
 
 run'infer :: AnalyzeEnv -> Analyze a -> Either Error a

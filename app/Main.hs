@@ -107,7 +107,7 @@ repl env t'env k'env ali'env mem = do
           -- loop
           repl env t'env k'env ali'env mem
         Right expression -> do
-          let error'or'scheme = run'analyze (k'env, t'env, ali'env) (infer'expression expression) -- (infer'expression expression)
+          let error'or'scheme = run'analyze (k'env, t'env, ali'env) (infer'expression expression)
           -- print
           case error'or'scheme of
             Left err -> do
