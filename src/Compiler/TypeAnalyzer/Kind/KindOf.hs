@@ -19,9 +19,29 @@ import Compiler.TypeAnalyzer.Solver
 import Compiler.TypeAnalyzer.AnalyzeState
 import Compiler.TypeAnalyzer.AnalyzeUtils
 
+-- import qualified Compiler.TypeAnalyzer.Type.Evaluate as E
 
 import Compiler.TypeAnalyzer.Kind.Infer
 
+
+-- | NOTE:  I thought I should normalize the type before doing the kind inference.
+-- |        But it's probably not needed.
+-- kind'of :: AnalyzeEnv -> Type -> Either Error Kind
+-- kind'of (k'env, t'env, ali'env) t = do
+--   let ex't = run'analyze (k'env, t'env, ali'env) (E.evaluate t)
+--   case ex't of
+--     Left err -> Left err
+--     Right t' ->
+--       case run'infer (k'env, t'env, ali'env) (infer t') of
+--         Left err -> Left err
+--         Right (k, constraints) ->  
+--           case runSolve constraints of
+--             Left err -> Left err
+--             Right subst -> do
+--               return $ apply subst k
+--               -- let env' = apply subst $ environment `Map.union` Map.fromList kind'bindings
+--               -- let env'' = specify'k'vars env'
+--               -- return env''
 
 
 kind'of :: AnalyzeEnv -> Type -> Either Error Kind
