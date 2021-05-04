@@ -203,16 +203,14 @@ process'declarations declarations env t'env mem = do
 infer'expression :: Expression -> Analyze Scheme
 infer'expression expr = do
   ex'expr <- expand'expr expr
-  (type', constraints, _) <- infer ex'expr -- TODO: it would be better to also solve the kind constraints
+  (type', constraints, k'constrs) <- infer ex'expr -- TODO: it would be better to also solve the kind constraints
   case runSolve constraints  of
       Left err -> throwError err
-      Right subst -> do
-        return $ closeOver $ apply subst type'
-
-        -- (_, t'env, _) <- ask
-        -- let scheme'bindings = map (second (closeOver . apply subst)) type'bindings
-        --     env' = apply subst $ t'env `Map.union` Map.fromList scheme'bindings
-        -- return env'
+      Right subst ->
+        case runSolve k'constrs of -- Just also check if kinds are correct
+          Left err -> throwError err
+          Right _ -> do
+            return $ closeOver $ apply subst type'
 
 
 {-
@@ -250,8 +248,6 @@ analyze'module decls (env, mem) = do
       only'aliases  = filter is'alias decls
       only'funs     = filter is'fun decls
       only'types    = filter is'type decls
-      -- ali'env'       = make'alias'env only'aliases
-      -- ali'env a     = Map.union a ali'env'  -- TODO: this is awkward, pls fix
 
       analyze' :: Val.Env -> Memory -> Analyze (KindEnv, TypeEnv, AliEnv, Env, Memory)
       analyze' env mem = do
@@ -266,8 +262,6 @@ analyze'module decls (env, mem) = do
 
         -- to co musim udelat je ekvivalentni infer'top + infer'data
 
-        -- mozna bych mohl zacit zlehka tim, ze vratim kind constrainty spolu s t'env
-        
         -- hodim si sem in place analyze'type'decsl
         -- analyze'type'decls bindings k'constrs = do
         (kind'bindings, k'constrs) <- analyze'types type'pairs
@@ -275,17 +269,13 @@ analyze'module decls (env, mem) = do
         
         (t'env, k'constrs') <- local (\ (k'e, t'e, a'e) -> (k'e `Map.union` Map.fromList kind'bindings, t'e, a'e)) $ analyze'top'decls fun'pairs
         
-        -- k'env <- analyze'type'decls type'pairs k'constrs
         k'env <- case runSolve (k'constrs ++ k'constrs') of
           Left err -> throwError err
           Right subst -> do
             (k'env, _, _) <- ask
-            let k'env' = specify'k'vars $ apply subst $ k'env `Map.union` Map.fromList kind'bindings
-            return k'env'
-
+            return $ specify'k'vars $ apply subst $ k'env `Map.union` Map.fromList kind'bindings
 
         (_, _, ali'env) <- ask
-
 
         return (k'env, t'env, ali'env, env, mem)
 
