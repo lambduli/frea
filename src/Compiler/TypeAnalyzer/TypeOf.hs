@@ -204,10 +204,10 @@ infer'expression :: Expression -> Analyze Scheme
 infer'expression expr = do
   ex'expr <- expand'expr expr
   (type', constraints, k'constrs) <- infer ex'expr -- TODO: it would be better to also solve the kind constraints
-  case runSolve constraints  of
+  case run'solve constraints  of
       Left err -> throwError err
       Right subst ->
-        case runSolve k'constrs of -- Just also check if kinds are correct
+        case run'solve k'constrs of -- Just also check if kinds are correct
           Left err -> throwError err
           Right _ -> do
             return $ closeOver $ apply subst type'
@@ -269,7 +269,7 @@ analyze'module decls (env, mem) = do
         
         (t'env, k'constrs') <- local (\ (k'e, t'e, a'e) -> (k'e `Map.union` Map.fromList kind'bindings, t'e, a'e)) $ analyze'top'decls fun'pairs
         
-        k'env <- case runSolve (k'constrs ++ k'constrs') of
+        k'env <- case run'solve (k'constrs ++ k'constrs') of
           Left err -> throwError err
           Right subst -> do
             (k'env, _, _) <- ask
@@ -331,7 +331,7 @@ analyze'module decls (env, mem) = do
 analyze'top'decls :: [(String, Expression)] -> Analyze (TypeEnv, [Constraint Kind])
 analyze'top'decls fun'pairs = do
   (type'bindings, t'constrs, k'constrs) <- infer'many fun'pairs
-  case runSolve t'constrs  of
+  case run'solve t'constrs  of
     Left err -> throwError err
     Right subst -> do
       (_, t'env, _) <- ask
@@ -432,11 +432,3 @@ infer'many' ((name, expr) : exprs) = do
   orig'type <- lookup't'env name
   (types, constrs', k'constrs') <- infer'many' exprs
   return ((name, type') : types, (orig'type, type') : constraints ++ constrs', k'constrs ++ k'constrs')
-
-
--- runInfer :: AnalyzeEnv -> Analyze (Type, [Constraint Type]) -> Either Error (Type, [Constraint  Type])
--- runInfer env m = runExcept $ evalStateT (runReaderT m env) init'infer
-
-
--- run'infer'many :: AnalyzeEnv -> Analyze ([(String, Type)], [Constraint  Type]) -> Either Error ([(String, Type)], [Constraint  Type])
--- run'infer'many env m = runExcept $ evalStateT (runReaderT m env) init'infer

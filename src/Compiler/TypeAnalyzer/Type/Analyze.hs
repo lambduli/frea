@@ -73,7 +73,7 @@ check t (Let x ex'val ex'body) = do
   -- assume t :: *
   (_, t'env, _) <- ask
   (t'val, cs'val, k'cs'val) <- infer ex'val
-  case runSolve cs'val of
+  case run'solve cs'val of
       Left err -> throwError err
       Right sub -> do
           let sc = generalize (apply sub t'env) (apply sub t'val)
@@ -128,7 +128,7 @@ infer expr = case expr of
   Let x ex'val ex'body -> do
     (_, t'env, _) <- ask
     (t'val, cs'val, k'cs'val) <- infer ex'val
-    case runSolve cs'val of
+    case run'solve cs'val of
         Left err -> throwError err
         Right sub -> do
             let sc = generalize (apply sub t'env) (apply sub t'val)
