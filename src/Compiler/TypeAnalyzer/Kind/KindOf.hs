@@ -45,8 +45,8 @@ import Compiler.TypeAnalyzer.Kind.Infer
 
 
 kind'of :: AnalyzeEnv -> Type -> Either Error Kind
-kind'of (k'env, t'env, ali'env) t = do
-  case run'infer (k'env, t'env, ali'env) (infer t) of
+kind'of env t = do
+  case run'infer env (infer t) of
     Left err -> Left err
     Right (k, constraints) ->  
       case run'solve constraints of
@@ -61,7 +61,7 @@ analyze'type'decls bindings k'constrs = do
   case run'solve (constraints ++ k'constrs) of
     Left err -> throwError err
     Right subst -> do
-      (k'env, _, _) <- ask
+      k'env <- asks kind'env
       let k'env' = specify'k'vars $ apply subst $ k'env `Map.union` Map.fromList kind'bindings
       return k'env'
 

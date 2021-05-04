@@ -10,8 +10,8 @@ import Compiler.TypeAnalyzer.Types
 
 
 -- TODO: refactor to:
--- data AnalizeEnv = AEnv { kind'env :: KindEnv, type'env :: TypeEnv, ali'env :: AliEnv }
-type AnalyzeEnv = (KindEnv, TypeEnv, AliEnv)
+data AnalyzeEnv = AEnv { kind'env :: KindEnv, type'env :: TypeEnv, ali'env :: AliEnv }
+-- type AnalyzeEnv = (KindEnv, TypeEnv, AliEnv)
 
 
 type KindEnv = Map.Map String Kind
@@ -21,6 +21,10 @@ type TypeEnv = Map.Map String Scheme
 
 
 type AliEnv = Map.Map String Type
+
+
+empty'an'env :: AnalyzeEnv
+empty'an'env = AEnv empty'k'env empty't'env empty'ali'env
 
 
 -- not really empty
