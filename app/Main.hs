@@ -146,8 +146,8 @@ repl env e@AEnv{ kind'env = k'env, type'env = t'env, ali'env = ali'env } mem = d
             Left err -> do
               putStrLn $ "Error " ++ show err
               return ()
-            Right (k'e, t'e, a'e, e, m) ->
-              repl e (AEnv k'e t'e a'e) m
+            Right (an'env, e, m) ->
+              repl e an'env m
 
         Right expression -> do
           let error'or'scheme = run'analyze e (infer'expression expression)
@@ -184,8 +184,8 @@ load file'name env a'env mem = do
         Left err -> do
           putStrLn $ "Error inside module " ++ file'name ++ ": " ++ show err
           return ()
-        Right (k'e, t'e, a'e, e, m) ->
-          repl e (AEnv k'e t'e a'e) m
+        Right (an'env, e, m) ->
+          repl e an'env m
 
     _ -> do
       putStrLn $ "Error: " ++ file'name ++ " must only contain declarations."

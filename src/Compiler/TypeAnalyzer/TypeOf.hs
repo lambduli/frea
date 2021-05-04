@@ -233,7 +233,7 @@ pak je teprve vyhodnotit, znova vygenerovat dalsi synonyma spojit dohromady a pa
 
 
 -- TODO: add the implementation from the DeclarationCheck module
-analyze'module :: [Declaration] -> (Env, Memory) -> Analyze (KindEnv, TypeEnv, AliEnv, Env, Memory)
+analyze'module :: [Declaration] -> (Env, Memory) -> Analyze (AnalyzeEnv, Env, Memory)
 analyze'module decls (env, mem) = do
   -- (k'env, t'env, ali'env, env, mem)
 
@@ -249,7 +249,7 @@ analyze'module decls (env, mem) = do
       only'funs     = filter is'fun decls
       only'types    = filter is'type decls
 
-      analyze' :: Val.Env -> Memory -> Analyze (KindEnv, TypeEnv, AliEnv, Env, Memory)
+      analyze' :: Val.Env -> Memory -> Analyze (AnalyzeEnv, Env, Memory)
       analyze' env mem = do
         check'for'synonym'cycles only'aliases
         -- TODO: maybe collect some constraints from unevaluated type annotations?
@@ -277,7 +277,7 @@ analyze'module decls (env, mem) = do
 
         ali'env <- asks ali'env
 
-        return (k'env, t'env, ali'env, env, mem)
+        return (AEnv k'env t'env ali'env, env, mem)
 
 
       name'expr :: Declaration -> (String, Expression)
