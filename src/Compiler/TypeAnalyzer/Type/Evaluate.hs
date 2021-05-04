@@ -22,13 +22,13 @@ class Normalizing a where
 
 instance Normalizing Type where
   evaluate (TyVar name) = do
-    (_, _, ali'env) <- ask
+    ali'env <- asks ali'env
     case ali'env Map.!? name of
       Nothing -> return $ TyVar name
       Just t -> evaluate t
 
   evaluate (TyCon name) = do
-    (_, _, ali'env) <- ask
+    ali'env <- asks ali'env
     case ali'env Map.!? name of
       Nothing -> return $ TyCon name
       Just t -> evaluate t

@@ -49,20 +49,22 @@ remove env var = Map.delete var env
 
 merge'into't'env :: [(String, Scheme)] -> Analyze a -> Analyze a
 merge'into't'env bindings m = do
-  let scope (k'env, t'env, ali'env) = (k'env, Map.fromList bindings `Map.union` t'env, ali'env)
+  let scope e@AEnv{ type'env = t'env } = e{ type'env = Map.fromList bindings `Map.union` t'env}
+    -- (k'env, Map.fromList bindings `Map.union` t'env, ali'env)
   local scope m
 
 
 put'in't'env :: (String, Scheme) -> Analyze a -> Analyze a
 put'in't'env (var, scheme) m = do
   -- (k'env, _) <- ask
-  let scope (k'env, t'env, ali'env) = (k'env, remove t'env var `extend` (var, scheme), ali'env)
+  let scope e@AEnv{ type'env = t'env } = e{ type'env = remove t'env var `extend` (var, scheme) }
+    -- (k'env, remove t'env var `extend` (var, scheme), ali'env)
   local scope m
 
 
 lookup't'env :: String -> Analyze Type
 lookup't'env var = do
-  (_, env, _) <- ask
+  env <- asks type'env
   case Map.lookup var env of
     Nothing     ->  throwError $ UnboundVar var
     Just scheme ->  instantiate scheme
@@ -70,19 +72,21 @@ lookup't'env var = do
 
 merge'into'k'env :: [(String, Kind)] -> Analyze a -> Analyze a
 merge'into'k'env bindings m = do
-  let scope (k'env, t'env, ali'env) = (Map.fromList bindings `Map.union` k'env, t'env, ali'env)
+  let scope e@AEnv{ kind'env = k'env } = e{ kind'env = Map.fromList bindings `Map.union` k'env }
+    -- (Map.fromList bindings `Map.union` k'env, t'env, ali'env)
   local scope m
 
 
 put'in'k'env :: (String, Kind) -> Analyze a -> Analyze a
 put'in'k'env (var, kind') m = do
-  let scope (k'env, t'env, ali'env) = (remove k'env var `extend` (var, kind'), t'env, ali'env)
+  let scope e@AEnv{ kind'env = k'env } = e{ kind'env = remove k'env var `extend` (var, kind') }
+    -- (remove k'env var `extend` (var, kind'), t'env, ali'env)
   local scope m
 
 
 lookup'k'env :: String -> Analyze Kind
 lookup'k'env var = do
-  (k'env, _, _) <- ask
+  k'env <- asks kind'env
   case Map.lookup var k'env of
     Nothing     -> throwError $ UnboundTypeVar var
     Just kind'  -> return kind' -- we don't instantiate kinds
@@ -92,7 +96,7 @@ lookup'k'env var = do
 
 put'in'ali'env :: (String, Type) -> Analyze a -> Analyze a
 put'in'ali'env (name, type') m = do
-  let scope (k'env, t'env, ali'env) = (k'env, t'env, remove ali'env name `extend` (name, type'))
+  let scope e@AEnv{ ali'env = a'env } = e{ ali'env = remove a'env name `extend` (name, type') }
   local scope m
 
 
@@ -130,4 +134,3 @@ generalize env type'
       fvt = free'vars type'
       fve = free'vars env
       type'args = Set.toList $ fvt `Set.difference` fve
-

@@ -237,12 +237,12 @@ analyze'module :: [Declaration] -> (Env, Memory) -> Analyze (KindEnv, TypeEnv, A
 analyze'module decls (env, mem) = do
   -- (k'env, t'env, ali'env, env, mem)
 
-  (k'e, t'e, a'e) <- ask
+  AEnv{ kind'env = k'e, type'env = t'e, ali'env = a'e } <- ask
 
   let (env', t'e', mem') = process'declarations decls env t'e mem
       ali'env = Map.union a'e $ make'alias'env only'aliases
 
-  local (const (k'e, t'e', ali'env)) (analyze' env' mem')
+  local (const (AEnv k'e t'e' ali'env)) (analyze' env' mem')
 
     where
       only'aliases  = filter is'alias decls
@@ -267,15 +267,15 @@ analyze'module decls (env, mem) = do
         (kind'bindings, k'constrs) <- analyze'types type'pairs
         -- sesbiram kind constrainty
         
-        (t'env, k'constrs') <- local (\ (k'e, t'e, a'e) -> (k'e `Map.union` Map.fromList kind'bindings, t'e, a'e)) $ analyze'top'decls fun'pairs
+        (t'env, k'constrs') <- local (\ e@AEnv{ kind'env = k'e } -> e{ kind'env = k'e `Map.union` Map.fromList kind'bindings }) $ analyze'top'decls fun'pairs
         
         k'env <- case run'solve (k'constrs ++ k'constrs') of
           Left err -> throwError err
           Right subst -> do
-            (k'env, _, _) <- ask
+            k'env <- asks kind'env
             return $ specify'k'vars $ apply subst $ k'env `Map.union` Map.fromList kind'bindings
 
-        (_, _, ali'env) <- ask
+        ali'env <- asks ali'env
 
         return (k'env, t'env, ali'env, env, mem)
 
@@ -334,7 +334,7 @@ analyze'top'decls fun'pairs = do
   case run'solve t'constrs  of
     Left err -> throwError err
     Right subst -> do
-      (_, t'env, _) <- ask
+      t'env <- asks type'env
       let scheme'bindings = map (second (closeOver . apply subst)) type'bindings
           env' = apply subst $ t'env `Map.union` Map.fromList scheme'bindings
       return (env', k'constrs)
@@ -402,13 +402,15 @@ infer'many bindings = do
       infer'groups [] = return ([], [], [])
       infer'groups ((AcyclicSCC bind) : sccs) = do
         (t'binds, constrs, k'constrs) <- infer'group [bind]
-        (k'env, t'env, ali'env) <- ask
+        -- (k'env, t'env, ali'env) <- ask
+        t'env <- asks type'env
         (t'binds', constrs', k'constrs') <- merge'into't'env (map (\ (n, t) -> (n, generalize t'env t)) t'binds) $ infer'groups sccs
         return (t'binds ++ t'binds', constrs ++ constrs', k'constrs ++ k'constrs')
 
       infer'groups ((CyclicSCC bindings) : sccs) = do
         (t'binds, constrs, k'constrs) <- infer'group bindings
-        (k'env, t'env, ali'ev) <- ask
+        -- (k'env, t'env, ali'ev) <- ask
+        t'env <- asks type'env
         (t'binds', constrs', k'constrs') <- merge'into't'env (map (\ (n, t) -> (n, generalize t'env t)) t'binds) $ infer'groups sccs
         return (t'binds ++ t'binds', constrs ++ constrs', k'constrs ++ k'constrs')
 

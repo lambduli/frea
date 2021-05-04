@@ -39,7 +39,7 @@ main :: IO ()
 main = do
   putStrLn "Glamorous Frea REPL."
   putStrLn ""
-  load "prelude.frea" empty'env empty't'env empty'k'env Map.empty empty'memory
+  load "prelude.frea" empty'env empty'an'env empty'memory
 
 
 readExpression :: IO String
@@ -72,8 +72,8 @@ readExpression = do
             return $ line ++ ['\n'] ++ next'line
 
 
-repl :: Env -> TypeEnv -> KindEnv -> AliEnv -> Memory -> IO ()
-repl env t'env k'env ali'env mem = do
+repl :: Env -> AnalyzeEnv -> Memory -> IO ()
+repl env e@AEnv{ kind'env = k'env, type'env = t'env, ali'env = ali'env } mem = do
   -- read
   line <- readExpression
 
@@ -83,13 +83,13 @@ repl env t'env k'env ali'env mem = do
       putStrLn ""
 
       -- loop
-      repl env t'env k'env ali'env mem
+      repl env e mem
     ":exit" -> do
       putStrLn "Bye!"
       return ()
     ':' : 'l' : 'o' : 'a' : 'd' : ' ' : file -> do
       let trimmed = trim file
-      load trimmed env t'env k'env ali'env mem
+      load trimmed env e mem
 
     ":q" -> do
       putStrLn "Bye!"
@@ -105,58 +105,58 @@ repl env t'env k'env ali'env mem = do
           putStrLn "Incorrect Format! The :t command must be followed by an expression, not a declaration."
 
           -- loop
-          repl env t'env k'env ali'env mem
+          repl env e mem
         Right expression -> do
-          let error'or'scheme = run'analyze (k'env, t'env, ali'env) (infer'expression expression)
+          let error'or'scheme = run'analyze e (infer'expression expression)
           -- print
           case error'or'scheme of
             Left err -> do
               putStrLn $ "Type Error: " ++ show err
 
               -- loop
-              repl env t'env k'env ali'env mem
+              repl env e mem
             Right scheme -> do
               putStrLn $ "         " ++ trim line ++ " :: " ++ show scheme
 
               -- loop
-              repl env t'env k'env ali'env mem
+              repl env e mem
 
     -- COMMAND :k(ind)
     ':' : 'k' : line -> do
       let t = parse'type line
-      let error'or'kind = kind'of (k'env, t'env, ali'env) t -- infer'kind k'env t -- runExcept $ evalStateT (runReaderT (infer'kind t) k'env) init'infer
+      let error'or'kind = kind'of e t -- infer'kind k'env t -- runExcept $ evalStateT (runReaderT (infer'kind t) k'env) init'infer
       case error'or'kind of
         Left err -> do
           putStrLn $ "Kind Error: " ++ show err
 
           -- loop
-          repl env t'env k'env ali'env mem
+          repl env e mem
 
         Right kind' -> do
           putStrLn $ "         " ++ show t ++ " :: " ++ show kind'
 
           -- loop
-          repl env t'env k'env ali'env mem
+          repl env e mem
 
     -- EXPRESSION to typecheck and evaluate
     _ -> do
       case parse'expr line of
         Left declarations -> do
-          case run'analyze (k'env, t'env, ali'env) (analyze'module declarations (env, mem)) of
+          case run'analyze e (analyze'module declarations (env, mem)) of
             Left err -> do
               putStrLn $ "Error " ++ show err
               return ()
             Right (k'e, t'e, a'e, e, m) ->
-              repl e t'e k'e a'e m
+              repl e (AEnv k'e t'e a'e) m
 
         Right expression -> do
-          let error'or'scheme = run'analyze (k'env, t'env, ali'env) (infer'expression expression)
+          let error'or'scheme = run'analyze e (infer'expression expression)
           case error'or'scheme of
             Left err -> do
               putStrLn $ "Type Error: " ++ show err
 
               -- loop
-              repl env t'env k'env ali'env mem
+              repl env e mem
             _ -> do
               let error'or'expr'n'state = runState (IP.print $ force expression env) mem
               -- print
@@ -165,27 +165,27 @@ repl env t'env k'env ali'env mem = do
                   putStrLn $ "Evaluation Error: " ++ show err
 
                   -- loop
-                  repl env t'env k'env ali'env mem
+                  repl env e mem
 
                 (Right str', mem') -> do
                   putStrLn $ "         " ++ str'
 
                   -- loop
-                  repl env t'env k'env ali'env mem' 
+                  repl env e mem' 
 
 
-load :: String -> Env -> TypeEnv -> KindEnv -> AliEnv -> Memory -> IO ()
-load file'name env t'env k'env ali'env mem = do
+load :: String -> Env -> AnalyzeEnv -> Memory -> IO ()
+load file'name env a'env mem = do
   handle <- openFile file'name ReadMode
   contents <- hGetContents handle
   case parse'expr contents of
     Left declarations -> do
-      case run'analyze (k'env, t'env, ali'env) (analyze'module declarations (env, mem)) of
+      case run'analyze a'env (analyze'module declarations (env, mem)) of
         Left err -> do
           putStrLn $ "Error inside module " ++ file'name ++ ": " ++ show err
           return ()
         Right (k'e, t'e, a'e, e, m) ->
-          repl e t'e k'e a'e m
+          repl e (AEnv k'e t'e a'e) m
 
     _ -> do
       putStrLn $ "Error: " ++ file'name ++ " must only contain declarations."
