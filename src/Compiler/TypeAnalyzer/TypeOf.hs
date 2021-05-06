@@ -103,22 +103,25 @@ add'constrs'types result't (ConDecl name types : cons) t'env
       scheme = ForAll ty'params type'
 
 
-add'elim'type :: String -> Type -> [ConstrDecl] -> TypeEnv -> TypeEnv
-add'elim'type name result't constructors t'env =
+add'elim'type :: String -> Type -> [ConstrDecl] -> TypeEnv -> Analyze TypeEnv
+add'elim'type name result't constructors t'env = do
+  fresh'name <- fresh
   let elim'name     = "which-" ++ name
-      res           = TyVar "@:z" -- TODO: this needs to be fresh variable!!! -- for now making it somehow hard to mix up with anything
+      res           = TyVar fresh'name -- TODO: this needs to be fresh variable!!! -- for now making it somehow hard to mix up with anything
       destr'type (ConDecl name types) = foldr TyArr res types
       destrs'types  = map destr'type constructors
       which'type    = result't `TyArr` (foldr TyArr res destrs'types)
-      scheme        = ForAll (Set.toList $ free'vars which'type) which'type
+      scheme        = generalize empty't'env which'type
+        
+        -- ForAll (Set.toList $ free'vars which'type) which'type
       -- TODO: it would be much better to not create the scheme HERE
       -- it would also be much better to use already implemented functions like generalize and so
       -- TODO: once I implement higher kinded types, list of the free type variables needs to reflect that
       t'env'        = Map.insert elim'name scheme t'env
-  in  t'env'
+  return t'env'
 
 
-process'declarations :: [Declaration] -> Val.Env -> TypeEnv -> Val.Memory -> (Val.Env, TypeEnv, Val.Memory)
+process'declarations :: [Declaration] -> Val.Env -> TypeEnv -> Val.Memory -> Analyze (Val.Env, TypeEnv, Val.Memory)
 process'declarations declarations env t'env mem = do
   -- k'env' <- case infer'decls declarations k'env of
   --   Left k'err -> Left $ show k'err
@@ -134,9 +137,9 @@ process'declarations declarations env t'env mem = do
   -- ted musim projit vsechny deklarace znova a tentokrat skutecne vyrobit Values
   -- a pri tom foldovani musim vyrobit i Memory
   let mem' = foldl (construct'declarations env') mem declarations
-  let t'env' = foldl add'types t'env declarations
+  t'env' <- foldM add'types t'env declarations
 
-  (env', t'env', mem')
+  return (env', t'env', mem')
 
     where
       register'declarations :: Val.Env -> Declaration -> Val.Env
@@ -182,15 +185,15 @@ process'declarations declarations env t'env mem = do
           _ -> mem
 
 
-      add'types :: TypeEnv -> Declaration -> TypeEnv
+      add'types :: TypeEnv -> Declaration -> Analyze TypeEnv
       add'types t'env decl =
         case decl of
-          DataDecl name ty'params constrs ->
+          DataDecl name ty'params constrs -> do
             let res'type = foldl (\ t var -> TyApp t (TyVar var)) (TyCon name) ty'params
                 t'env'  = add'constrs'types res'type constrs t'env
-                t'env'' = add'elim'type name res'type constrs t'env'
-            in  t'env''
-          _ -> t'env
+            add'elim'type name res'type constrs t'env'
+
+          _ -> return t'env
 
 
 --
@@ -239,8 +242,8 @@ analyze'module decls (env, mem) = do
 
   AEnv{ kind'env = k'e, type'env = t'e, ali'env = a'e } <- ask
 
-  let (env', t'e', mem') = process'declarations decls env t'e mem
-      ali'env = Map.union a'e $ make'alias'env only'aliases
+  (env', t'e', mem') <- process'declarations decls env t'e mem
+  let ali'env = Map.union a'e $ make'alias'env only'aliases
 
   local (const (AEnv k'e t'e' ali'env)) (analyze' env' mem')
 
