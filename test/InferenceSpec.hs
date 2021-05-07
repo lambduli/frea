@@ -75,9 +75,9 @@ infix 4 <::>
   case parse'expr expr of
     Left cmd -> exitFailure
     Right ast ->
-      (run'analyze (empty'k'env, env, empty'ali'env) (infer'expression ast))
+      (run'analyze (AEnv empty'k'env env empty'ali'env) (infer'expression ast))
         `shouldBe` Right scheme
 
 
 type'of :: Expression -> Either Error Scheme
-type'of expr = run'analyze (empty'k'env, empty't'env, empty'ali'env) (infer'expression expr)
+type'of expr = run'analyze (AEnv empty'k'env empty't'env empty'ali'env) (infer'expression expr)
