@@ -30,11 +30,7 @@ import Compiler.TypeAnalyzer.AnalyzeUtils
 import qualified Compiler.TypeAnalyzer.Kind.Infer as K
 
 
--- | TODO: once I merge the kind checking into the same process as type checking
--- | I will be able to create two types of constraints, for types and for kinds
--- | that will allow me easily assert that some specific type should be of some specific kind
 check :: Type -> Expression -> Analyze ((), [Constraint Type], [Constraint Kind])
--- check (TyVar n) e@(Lit _) = undefined
 check t'Int (Lit (LitInt i)) = return ((), [], [])
 check t'Double (Lit (LitDouble i)) = return ((), [], [])
 check t'Char (Lit (LitChar i)) = return ((), [], [])
@@ -78,7 +74,7 @@ check t (Let x ex'val ex'body) = do
       Right sub -> do
           let sc = generalize (apply sub t'env) (apply sub t'val)
           ((), cs'body, k'cs'body) <- put'in't'env (x, sc) $ local (\ e@AEnv{ type'env = t'env } -> e{ type'env = apply sub t'env }) (check t ex'body)
-          return ((), cs'val ++ cs'body, k'cs'val ++ k'cs'body) --  ^^^ terrible : TODO: fix pls
+          return ((), cs'val ++ cs'body, k'cs'val ++ k'cs'body)
 
 check (TyTuple types') (Tuple exprs) = do
   -- assume each type :: * where type isfrom types'
@@ -133,7 +129,7 @@ infer expr = case expr of
         Right sub -> do
             let sc = generalize (apply sub t'env) (apply sub t'val)
             (t'body, cs'body, k'cs'body) <- put'in't'env (x, sc) $ local (\ e@AEnv{ type'env = t'env } -> e{ type'env = apply sub t'env }) (infer ex'body)
-            return (t'body, cs'val ++ cs'body, k'cs'val ++ k'cs'body) --  ^^^ terrible : TODO: fix pls
+            return (t'body, cs'val ++ cs'body, k'cs'val ++ k'cs'body)
 
   Fix expr -> do
     (type', cs, k'cs) <- infer expr
