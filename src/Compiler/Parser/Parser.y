@@ -169,10 +169,12 @@ AppLeft         ::  { Expression }
                 |   '(' AppLeft ')'                                 { $2 }
                                 |   fix Exp                                         { Fix $2 }
                 |   if Exp then Exp else Exp                        { If $2 $4 $6 }
-                |   let Layout(Binding) in Exp                      { foldr
-                                                                        (\ (name, expr) body -> Let name expr body)
-                                                                        $4
-                                                                        $2 }
+                |   let Layout(Binding) in Exp                      { Let $2 $4 }
+                
+                --                                                  { foldr
+                --                                                      (\ (name, expr) body -> Let name expr body)
+                --                                                      $4
+                --                                                      $2 }
                 |   letrec LowIdent Params '=' Exp in Exp           { Let $2 (Fix $ foldr (\ arg body -> Lam arg body) $5 ($2 : $3)) $7 }
                 -- TODO: do the same for letrec
                 |   '(' Exp CommaSeparated(Exp) ')'                 { Tuple $ $2 : $3 }
