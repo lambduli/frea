@@ -55,10 +55,10 @@ build'graph bindings indexer = graph
               e'deps = get'deps else'expr
           in  b'deps `Set.union` t'deps `Set.union` e'deps
 
-        Let name val'expr body'expr ->
-          let v'deps = get'deps val'expr
-              b'deps = get'deps body'expr
-          in  v'deps `Set.union` b'deps
+        Let bind'pairs body'expr ->
+          let vs'deps = foldl (\ acc expr -> acc `Set.union` get'deps expr) Set.empty (map snd bind'pairs)
+              b'deps  = get'deps body'expr
+          in  vs'deps `Set.union` b'deps
 
         Fix expr -> get'deps expr
 

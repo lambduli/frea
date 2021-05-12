@@ -67,7 +67,11 @@ evaluate expr env =
     Tuple exprs ->
        return $ Right $ Val.Tuple $ map (\ expr -> Val.Thunk (\ env -> evaluate expr env) env (Addr (-1))) exprs
 
-    Let name val expr ->
+    Let bind'pairs expr ->
+      -- TODO: do the same thing as for global bindings
+      -- first collect them all to the env
+      -- then store them all in the memory
+      -- then set new memory and evaluate the expr with the new env
       evaluate (App (Lam name expr) val) env
 
     Lam par body ->

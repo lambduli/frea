@@ -121,7 +121,12 @@ infer expr = case expr of
     (t3, c3, k'c3) <- infer fl
     return (t2, (t1, t'Bool) : (t2, t3) : c1 ++ c2 ++ c3, k'c1 ++ k'c2 ++ k'c3)
   
-  Let x ex'val ex'body -> do
+  Let bind'pairs ex'body -> do
+    -- TODO: do the same thing as for the global bindings
+    -- first do the dependency analysis - this time though - only mark something as a dependency if it's one of the names in the let bindings
+    -- second collect the constraints for all the Strongly Connected Components
+    -- then solve all the constraints and obtain a lot's of type schemes
+    -- put those in the typing context and finally infer ex'body
     t'env <- asks type'env
     (t'val, cs'val, k'cs'val) <- infer ex'val
     case run'solve cs'val of
