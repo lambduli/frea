@@ -55,7 +55,7 @@ evaluate expr env =
         Just addr ->
           case mem !? addr of
             Just val -> return $ Right val
-            Nothing -> return $ Left $ Unexpected $ "V pameti sem nenasel " ++ name
+            Nothing -> return $ Left $ Unexpected $ "Value of " ++ name ++ " not found in the memory for some reason."
         Nothing -> return $ Left $ UnboundVar name -- can't really happen thanks to the type system
 
     Op name ->
