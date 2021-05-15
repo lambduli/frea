@@ -1,3 +1,5 @@
+{-# LANGUAGE TupleSections #-}
+
 module Compiler.TypeAnalyzer.TypeOf where
 
 
@@ -10,7 +12,7 @@ import Data.Bifunctor
 
 import Control.Monad
 import Control.Monad.Reader
-import Control.Monad.Except
+import Control.Monad.Except ( MonadError(throwError) )
 import Control.Monad.State
 
 
@@ -31,6 +33,8 @@ import qualified Compiler.TypeAnalyzer.Type.Evaluate as E
 
 import Compiler.TypeAnalyzer.Type.Analyze
 import Compiler.TypeAnalyzer.Kind.KindOf
+
+-- import Compiler.TypeAnalyzer.Inference.Many
 
 import Interpreter.Value (Env, Memory)
 import qualified Interpreter.Value as Val
@@ -368,10 +372,13 @@ expand'expr expr =
       ex'then <- expand'expr then'
       ex'else <- expand'expr else'
       return $ If ex'cond ex'then ex'else
-    Let name value expr -> do
-      ex'val <- expand'expr value
+    Let bind'pairs expr -> do
+      -- NOTE: check it later
+      let ex'b'p = map (second expand'expr) bind'pairs
+      ex'bind'pairs <- mapM (\ (n, v) -> (n, ) <$> expand'expr v) bind'pairs
+      -- ex'val <- expand'expr value
       ex'expr <- expand'expr expr
-      return $ Let name ex'val ex'expr
+      return $ Let ex'bind'pairs ex'expr
     Fix expr -> do
       ex'expr <- expand'expr expr
       return $ Fix ex'expr
@@ -383,57 +390,3 @@ expand'expr expr =
       return $ Intro name exprs -- NOTE: I can safely do that - this is generated, no type annotations can get there
     Elim cons'decls val destrs ->
       return $ Elim cons'decls val destrs -- NOTE: I can safely do that - this is generated, no type annotations can get there
-
-
--- | NOTE: this can stay like this for now
-infer'many :: [(String, Expression)] -> Analyze ([(String, Type)], [Constraint Type], [Constraint Kind])
-infer'many bindings = do
-  let indexed = index'bindings bindings
-  let graph = build'graph bindings indexed
-  let solved = stronglyConnComp graph
-  -- ted to mam vyreseny a co musim udelat je
-  -- ze projdu celej ten   list a pro kazdy CyclicSCC [(String, Expression)]
-    -- priradim kazdymu jmenu Forall [] <$> fresh
-    -- pak vlastne provedu posbirani constraintu
-    -- pak je vratim nekam
-  -- pro kazdy AcyclicSCC (String, Expression)
-    -- tady to Expression nezavisi ani samo na sobe, takze neni potreba to zanaset
-    -- jenom to infernu -> posbiram constrainty a type a vratim je nekam vejs
-  infer'groups solved
-    where
-      infer'groups :: [SCC (String, Expression)] -> Analyze ([(String, Type)], [Constraint Type], [Constraint Kind])
-      infer'groups [] = return ([], [], [])
-      infer'groups ((AcyclicSCC bind) : sccs) = do
-        (t'binds, constrs, k'constrs) <- infer'group [bind]
-        -- (k'env, t'env, ali'env) <- ask
-        t'env <- asks type'env
-        (t'binds', constrs', k'constrs') <- merge'into't'env (map (\ (n, t) -> (n, generalize t'env t)) t'binds) $ infer'groups sccs
-        return (t'binds ++ t'binds', constrs ++ constrs', k'constrs ++ k'constrs')
-
-      infer'groups ((CyclicSCC bindings) : sccs) = do
-        (t'binds, constrs, k'constrs) <- infer'group bindings
-        -- (k'env, t'env, ali'ev) <- ask
-        t'env <- asks type'env
-        (t'binds', constrs', k'constrs') <- merge'into't'env (map (\ (n, t) -> (n, generalize t'env t)) t'binds) $ infer'groups sccs
-        return (t'binds ++ t'binds', constrs ++ constrs', k'constrs ++ k'constrs')
-
-
--- | NOTE: this can stay like this for now
-infer'group :: [(String, Expression)] -> Analyze ([(String, Type)], [Constraint Type], [Constraint Kind])
-infer'group bindings = do
-  let names = map fst bindings
-      gener name = do ForAll [] <$> (TyVar <$> fresh)
-  fresh'vars <- mapM gener names
-  merge'into't'env (zip names fresh'vars) $ infer'many' bindings
-
-
--- | NOTE: this can stay like this for now
-infer'many' :: [(String, Expression)] -> Analyze ([(String, Type)], [Constraint Type], [Constraint Kind])
-infer'many' [] = do
-  return ([], [], [])
-infer'many' ((name, expr) : exprs) = do
-  (type', constraints, k'constrs) <- infer expr
-
-  orig'type <- lookup't'env name
-  (types, constrs', k'constrs') <- infer'many' exprs
-  return ((name, type') : types, (orig'type, type') : constraints ++ constrs', k'constrs ++ k'constrs')
