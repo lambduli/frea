@@ -81,6 +81,8 @@ check t (If cond tr fl) = do
 --           ((), cs'body, k'cs'body) <- put'in't'env (x, sc) $ local (\ e@AEnv{ type'env = t'env } -> e{ type'env = apply sub t'env }) (check t ex'body)
 --           return ((), cs'val ++ cs'body, k'cs'val ++ k'cs'body)
 
+check t (Let _ _) = throwError $ Unexpected "I am not type checking Let expressions right now."
+
 check (TyTuple types') (Tuple exprs) = do
   -- assume each type :: * where type isfrom types'
   (cs, k'cs) <- foldM check' ([], []) (zip types' exprs)
@@ -140,7 +142,6 @@ infer expr = case expr of
         t'env <- asks type'env
         let scheme'bindings = map (second (closeOver . apply subst)) type'bindings
             t'env' = apply subst $ t'env `Map.union` Map.fromList scheme'bindings
-        
         (t'body, cs'body, k'cs'body) <- local (\ e@AEnv{ } -> e{ type'env = t'env' }) (infer ex'body)
         
         return (t'body, t'constrs ++ cs'body, k'constrs ++ k'cs'body)
@@ -154,11 +155,11 @@ infer expr = case expr of
     --         (t'body, cs'body, k'cs'body) <- put'in't'env (x, sc) $ local (\ e@AEnv{ type'env = t'env } -> e{ type'env = apply sub t'env }) (infer ex'body)
     --         return (t'body, cs'val ++ cs'body, k'cs'val ++ k'cs'body)
 
-  Fix expr -> do
-    (type', cs, k'cs) <- infer expr
-    fresh'name <- fresh
-    let t'var = TyVar fresh'name
-    return (t'var, cs ++ [(t'var `TyArr` t'var, type')], k'cs)
+  -- Fix expr -> do
+  --   (type', cs, k'cs) <- infer expr
+  --   fresh'name <- fresh
+  --   let t'var = TyVar fresh'name
+  --   return (t'var, cs ++ [(t'var `TyArr` t'var, type')], k'cs)
 
   Tuple exprs -> do
     (types, cs, k'cs) <- foldM infer' ([], [], []) exprs
