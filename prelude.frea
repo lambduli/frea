@@ -2,6 +2,8 @@ module Main where
 
 { data () = ()
 
+-- (\ x -> let { plus = \ a b -> ((#+) (a, b)) ; numnum = (plus x 1) } in numnum)
+
 ; data Bool
     = True
     | False
@@ -154,5 +156,11 @@ module Main where
 ; wrong n = badbad n
 
 ; badbad o = 23
+
+; plus a b = a + b
+; numnum = plus 23 42 -- this will have an incorrect type
+
+; add = (+)
+; munmun = add 23 42 -- this will have an incorrect type
 
 }
