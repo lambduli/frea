@@ -69,6 +69,18 @@ check t (If cond tr fl) = do
   ((), c3, k'c3) <- check t fl
   return ((), (t1, t'Bool) : c1 ++ c2 ++ c3, k'c1 ++ k'c2 ++ k'c3)
 
+check t (Let bind'pairs ex'body) = do
+  (type'bindings, t'constrs, k'constrs) <- infer'many bind'pairs
+  case run'solve t'constrs of
+    Left err -> throwError err
+    Right subst -> do
+      t'env <- asks type'env
+      let scheme'bindings = map (second (closeOver . apply subst)) type'bindings
+          t'env' = apply subst $ t'env `Map.union` Map.fromList scheme'bindings
+      ((), cs'body, k'cs'body) <- local (\ e@AEnv{ } -> e{ type'env = t'env' }) (check t ex'body)
+      
+      return ((), t'constrs ++ cs'body, k'constrs ++ k'cs'body)
+
 -- TODO: don't forget to fix this
 -- check t (Let x ex'val ex'body) = do
 --   -- assume t :: *
@@ -81,7 +93,7 @@ check t (If cond tr fl) = do
 --           ((), cs'body, k'cs'body) <- put'in't'env (x, sc) $ local (\ e@AEnv{ type'env = t'env } -> e{ type'env = apply sub t'env }) (check t ex'body)
 --           return ((), cs'val ++ cs'body, k'cs'val ++ k'cs'body)
 
-check t (Let _ _) = throwError $ Unexpected "I am not type checking Let expressions right now."
+-- check t (Let _ _) = throwError $ Unexpected "I am not type checking Let expressions right now."
 
 check (TyTuple types') (Tuple exprs) = do
   -- assume each type :: * where type isfrom types'
