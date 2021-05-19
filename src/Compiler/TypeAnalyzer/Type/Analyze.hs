@@ -81,20 +81,6 @@ check t (Let bind'pairs ex'body) = do
       
       return ((), t'constrs ++ cs'body, k'constrs ++ k'cs'body)
 
--- TODO: don't forget to fix this
--- check t (Let x ex'val ex'body) = do
---   -- assume t :: *
---   t'env <- asks type'env
---   (t'val, cs'val, k'cs'val) <- infer ex'val
---   case run'solve cs'val of
---       Left err -> throwError err
---       Right sub -> do
---           let sc = generalize (apply sub t'env) (apply sub t'val)
---           ((), cs'body, k'cs'body) <- put'in't'env (x, sc) $ local (\ e@AEnv{ type'env = t'env } -> e{ type'env = apply sub t'env }) (check t ex'body)
---           return ((), cs'val ++ cs'body, k'cs'val ++ k'cs'body)
-
--- check t (Let _ _) = throwError $ Unexpected "I am not type checking Let expressions right now."
-
 check (TyTuple types') (Tuple exprs) = do
   -- assume each type :: * where type isfrom types'
   (cs, k'cs) <- foldM check' ([], []) (zip types' exprs)
@@ -157,15 +143,6 @@ infer expr = case expr of
         (t'body, cs'body, k'cs'body) <- local (\ e@AEnv{ } -> e{ type'env = t'env' }) (infer ex'body)
         
         return (t'body, t'constrs ++ cs'body, k'constrs ++ k'cs'body)
-
-    -- t'env <- asks type'env
-    -- (t'val, cs'val, k'cs'val) <- infer ex'val
-    -- case run'solve cs'val of
-    --     Left err -> throwError err
-    --     Right sub -> do
-    --         let sc = generalize (apply sub t'env) (apply sub t'val)
-    --         (t'body, cs'body, k'cs'body) <- put'in't'env (x, sc) $ local (\ e@AEnv{ type'env = t'env } -> e{ type'env = apply sub t'env }) (infer ex'body)
-    --         return (t'body, cs'val ++ cs'body, k'cs'val ++ k'cs'body)
 
   -- Fix expr -> do
   --   (type', cs, k'cs) <- infer expr
