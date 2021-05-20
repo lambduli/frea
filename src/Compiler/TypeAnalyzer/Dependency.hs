@@ -60,7 +60,7 @@ build'graph bindings indexer = graph
               b'deps  = get'deps body'expr
           in  vs'deps `Set.union` b'deps
 
-        Fix expr -> get'deps expr
+        -- Fix expr -> get'deps expr
 
         -- this should always yield an empty Set, but just to be sure
         Intro _ exprs -> foldl (\ deps'acc expr -> deps'acc `Set.union` get'deps expr) Set.empty exprs

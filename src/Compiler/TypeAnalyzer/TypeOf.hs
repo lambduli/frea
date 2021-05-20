@@ -379,9 +379,9 @@ expand'expr expr =
       -- ex'val <- expand'expr value
       ex'expr <- expand'expr expr
       return $ Let ex'bind'pairs ex'expr
-    Fix expr -> do
-      ex'expr <- expand'expr expr
-      return $ Fix ex'expr
+    -- Fix expr -> do
+    --   ex'expr <- expand'expr expr
+    --   return $ Fix ex'expr
     Ann type' expr -> do
       norm'type <- E.evaluate type'
       ex'expr <- expand'expr expr

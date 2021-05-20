@@ -90,7 +90,7 @@ check (TyTuple types') (Tuple exprs) = do
         ((), cs, k'cs) <- check ty expr
         return (cs ++ constrs, k'constrs ++ k'cs)
 
-check _ (Fix _) = throwError $ Unexpected "I am not type checking Fix expressions right now."
+-- check _ (Fix _) = throwError $ Unexpected "I am not type checking Fix expressions right now."
 
 
 infer :: Expression -> Analyze (Type, [Constraint Type], [Constraint Kind])
