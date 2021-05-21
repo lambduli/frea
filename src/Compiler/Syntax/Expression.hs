@@ -9,24 +9,22 @@ import Data.List
 
 
 data Expression
-  = Var String -- OK
-  | Op String -- OK
-  | Lit Lit -- OK
-  | Lam String Expression -- OK
-  | App Expression Expression -- OK
-  | Tuple [Expression] -- OK
-  | If Expression Expression Expression -- OK
-  | Let String Expression Expression -- OK
-  | Fix Expression -- OK
+  = Var String
+  | Op String
+  | Lit Lit
+  | Lam String Expression
+  | App Expression Expression
+  | Tuple [Expression]
+  | If Expression Expression Expression
+  | Let [(String, Expression)] Expression
   | Ann Type Expression
   | Intro String [Expression]
   | Elim [ConstrDecl] Expression [Expression]
   --     for matching elim what? destructors
   deriving (Eq)
-
-  -- | Typed Type Expression -- OK
   -- | MatchWith Expression MatchGroup -- OK
-  
+
+
 instance Show Expression where
   show (Var name) = name
   show (Op op) = op
@@ -35,10 +33,8 @@ instance Show Expression where
   show (App left right) = "(" ++ show left ++ " " ++ show right ++ ")"
   show (Tuple exprs) = "(" ++ intercalate ", " (map show exprs) ++ ")"
   show (If cond' then' else') = "if " ++ show cond' ++ " then " ++ show then' ++ " else " ++ show else'
-  show (Let name value expr) = "let " ++ name ++ " = " ++ show value ++ " in " ++ show expr
-  show (Fix expr) = "fix " ++ show expr
+  show (Let pairs expr) = "let " ++ intercalate "\n" (map (\ (name, val) -> name ++ show val) pairs) ++ " in " ++ show expr
   show (Ann type' expr) = show expr ++ " :: " ++ show type'
   show (Intro name exprs) = "(" ++ name ++ " " ++ intercalate " " (map show exprs) ++ ")"
   show (Elim constrs val'to'elim destrs) = "<eliminator>"
-  -- typed
   -- matchwith

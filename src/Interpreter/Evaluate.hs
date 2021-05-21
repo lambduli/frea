@@ -46,6 +46,17 @@ force expr env = do
       Left err -> return $ Left err
 
 
+construct'bindings :: [(String, Expression)] -> Env -> State Val.Memory ()
+construct'bindings [] _ = return ()
+construct'bindings ((name, expr) : rest) env = do
+  mem <- get
+  let addr  = env Map.! name
+      val   = Val.Thunk (\ env -> force expr env) env addr
+      mem'  = Map.insert addr val mem
+  put mem'
+  construct'bindings rest env
+
+
 evaluate :: Expression -> Env -> State Val.Memory (Either EvaluationError Val.Value)
 evaluate expr env =
   case expr of
@@ -55,7 +66,7 @@ evaluate expr env =
         Just addr ->
           case mem !? addr of
             Just val -> return $ Right val
-            Nothing -> return $ Left $ Unexpected $ "V pameti sem nenasel " ++ name
+            Nothing -> return $ Left $ Unexpected $ "Value of " ++ name ++ " not found in the memory for some reason."
         Nothing -> return $ Left $ UnboundVar name -- can't really happen thanks to the type system
 
     Op name ->
@@ -67,8 +78,20 @@ evaluate expr env =
     Tuple exprs ->
        return $ Right $ Val.Tuple $ map (\ expr -> Val.Thunk (\ env -> evaluate expr env) env (Addr (-1))) exprs
 
-    Let name val expr ->
-      evaluate (App (Lam name expr) val) env
+    Let bind'pairs expr -> do
+      let env' = foldl register'binding env bind'pairs
+
+          register'binding env (name, _) =
+            let addr = Addr $ Map.size env
+            in Map.insert name addr env
+    
+      construct'bindings bind'pairs env'
+
+      -- TODO: do the same thing as for global bindings
+      -- first collect them all to the env
+      -- then store them all in the memory
+      -- then set new memory and evaluate the expr with the new env
+      evaluate expr env'
 
     Lam par body ->
       return $ Right $ Val.Lam par body env
@@ -114,9 +137,6 @@ evaluate expr env =
         Right (Val.Data con'name []) -- wiring the Bool into the type checker
           | con'name == "True" -> evaluate then' env
           | otherwise -> evaluate else' env
-
-    Fix expr ->
-      evaluate (App expr $ Fix expr) env
 
     Intro name exprs -> do
       let values = map (\ expr -> Val.Thunk (\ env -> evaluate expr env) env (Addr (-1))) exprs

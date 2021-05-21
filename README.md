@@ -14,9 +14,9 @@ To test: `$ stack test`
 let
   { list = [1, 2, 3, 4, 5]
   ; double x = 2 * x
-  ; rec map fn lst = which-List lst
-                      []
-                      \ h t -> (fn h) : (map fn t) }
+  ; map fn lst = which-List lst
+                  []
+                  \ h t -> (fn h) : (map fn t) }
 in map double list
 ```
 ### Computing Factorial
@@ -24,9 +24,9 @@ in map double list
 let
   { zero n = n == 0
   ; dec n = n - 1
-  ; rec fact n =  if zero n
-                then 1
-                else n * (fact (dec n)) }
+  ; fact n =  if zero n
+              then 1
+              else n * (fact (dec n)) }
 in fact 5
 ```
 
@@ -250,18 +250,18 @@ frea λ > (fix (\ fact n -> if (n == 0) then 1 else (n * (fact (n - 1)))) 5)
 
 120
 ```
--->
 
 ### Recursion using Let rec
 ```haskell
 let
   { zero n = n == 0
   ; dec n = n - 1
-  ; rec fact n =  if zero n
-                  then 1
-                  else n * (fact (dec n))
+  ; fact n =  if zero n
+              then 1
+              else n * (fact (dec n))
   } in fact 5
 ```
+-->
 
 ___
 
