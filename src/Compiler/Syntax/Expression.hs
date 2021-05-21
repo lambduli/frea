@@ -17,7 +17,6 @@ data Expression
   | Tuple [Expression]
   | If Expression Expression Expression
   | Let [(String, Expression)] Expression
-  -- | Fix Expression
   | Ann Type Expression
   | Intro String [Expression]
   | Elim [ConstrDecl] Expression [Expression]
@@ -35,7 +34,6 @@ instance Show Expression where
   show (Tuple exprs) = "(" ++ intercalate ", " (map show exprs) ++ ")"
   show (If cond' then' else') = "if " ++ show cond' ++ " then " ++ show then' ++ " else " ++ show else'
   show (Let pairs expr) = "let " ++ intercalate "\n" (map (\ (name, val) -> name ++ show val) pairs) ++ " in " ++ show expr
-  -- show (Fix expr) = "fix " ++ show expr
   show (Ann type' expr) = show expr ++ " :: " ++ show type'
   show (Intro name exprs) = "(" ++ name ++ " " ++ intercalate " " (map show exprs) ++ ")"
   show (Elim constrs val'to'elim destrs) = "<eliminator>"

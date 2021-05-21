@@ -90,8 +90,6 @@ check (TyTuple types') (Tuple exprs) = do
         ((), cs, k'cs) <- check ty expr
         return (cs ++ constrs, k'constrs ++ k'cs)
 
--- check _ (Fix _) = throwError $ Unexpected "I am not type checking Fix expressions right now."
-
 
 infer :: Expression -> Analyze (Type, [Constraint Type], [Constraint Kind])
 infer expr = case expr of  
@@ -143,12 +141,6 @@ infer expr = case expr of
         (t'body, cs'body, k'cs'body) <- local (\ e@AEnv{ } -> e{ type'env = t'env' }) (infer ex'body)
         
         return (t'body, t'constrs ++ cs'body, k'constrs ++ k'cs'body)
-
-  -- Fix expr -> do
-  --   (type', cs, k'cs) <- infer expr
-  --   fresh'name <- fresh
-  --   let t'var = TyVar fresh'name
-  --   return (t'var, cs ++ [(t'var `TyArr` t'var, type')], k'cs)
 
   Tuple exprs -> do
     (types, cs, k'cs) <- foldM infer' ([], [], []) exprs

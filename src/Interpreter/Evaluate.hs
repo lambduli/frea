@@ -138,9 +138,6 @@ evaluate expr env =
           | con'name == "True" -> evaluate then' env
           | otherwise -> evaluate else' env
 
-    -- Fix expr ->
-    --   evaluate (App expr $ Fix expr) env
-
     Intro name exprs -> do
       let values = map (\ expr -> Val.Thunk (\ env -> evaluate expr env) env (Addr (-1))) exprs
       return . Right $ Val.Data name values

@@ -157,7 +157,6 @@ Application     ::  { Expression }
                 |   AppLeft '`' Con '`' OneOrMany(AppRight)         { foldl App (Var $3) ($1 : $5) }
                 --  Note: Consider adding Constructor Expression for this ^^^
                 |   AppLeft Oper OneOrMany(AppRight)                { foldl App $2 ($1 : $3) }
-                --  NOTE: what about (fn) ? you can't call a function without arguments!
 
 AppLeft         ::  { Expression }
                 :   LowIdent                                        { Var $1 }
@@ -167,18 +166,10 @@ AppLeft         ::  { Expression }
                 |   Lit                                             { $1 }
                 |   lambda Params '->' Exp                          { foldr (\ arg body -> Lam arg body) $4 $2 }
                 |   '(' AppLeft ')'                                 { $2 }
-                --                |   fix Exp                                         { Fix $2 }
                 |   if Exp then Exp else Exp                        { If $2 $4 $6 }
-                |   let Layout(Binding) in Exp                      { Let $2 $4 }
-                
-                --                                                  { foldr
-                --                                                      (\ (name, expr) body -> Let name expr body)
-                --                                                      $4
-                --                                                      $2 }
-                -- |   letrec LowIdent Params '=' Exp in Exp           { Let $2 (Fix $ foldr (\ arg body -> Lam arg body) $5 ($2 : $3)) $7 }
-                -- TODO: do the same for letrec
+                |   let Layout(Binding) in Exp                      { Let $2 $4 }                
                 |   '(' Exp CommaSeparated(Exp) ')'                 { Tuple $ $2 : $3 }
-                |   '[' NoneOrManySeparated(Exp) ']'                 { foldr (\ item acc -> App (App (Var ":") item) acc ) (Var "[]") $2 }
+                |   '[' NoneOrManySeparated(Exp) ']'                { foldr (\ item acc -> App (App (Var ":") item) acc ) (Var "[]") $2 }
                 -- wiring the List type into the compiler
                 |   '(' Application ')'                             { $2 }
                 |   '(' Exp '::' Type ')'                           { Ann $4 $2 }
@@ -192,15 +183,6 @@ Binding         ::  { (String, Expression) }
                 |   Var Op Params '=' Exp                           { ($2, foldr Lam $5 ($1 : $3)) }
                 |   Var '`' Var '`' Params '=' Exp                  { ($3, foldr Lam $7 ($1 : $5)) }
                 
-                -- |   rec LowIdent Params '=' Exp                     { ($2, Fix $ foldr (\ arg body -> Lam arg body) $5 ($2 : $3)) }
-                -- |   rec Var Op Params '=' Exp                       { ($3, Fix $ foldr Lam $6 ($3 : $2 : $4)) }
-                -- |   rec Var '`' Var '`' Params '=' Exp              { ($4, Fix $ foldr Lam $8 ($4 : $2 : $6)) }
-
--- GlobalBinding   ::  { (String, Expression) }
---                 :   LowIdent Params '=' Exp                         { ($1, foldr (\ arg body -> Lam arg body) $4 $2) }
---                 |   Var Op Params '=' Exp                           { ($2, foldr Lam $5 ($1 : $3)) }
---                 |   Var '`' Var '`' Params '=' Exp                  { ($3, foldr Lam $7 ($1 : $5)) }
-
 Fun             ::  { Declaration }
                 :   Binding                                         { Binding (fst $1) (snd $1) }
                 |   Annotation ';' Binding                          { Annotated (fst $3) (snd $1) (snd $3) }
