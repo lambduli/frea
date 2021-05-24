@@ -337,14 +337,17 @@ analyze'module decls (env, mem) = do
 -- | This functions is the counterpart of the analyze'type'decls
 analyze'top'decls :: [(String, Expression)] -> Analyze (TypeEnv, [Constraint Kind])
 analyze'top'decls fun'pairs = do
-  (type'bindings, t'constrs, k'constrs) <- infer'many fun'pairs
-  case run'solve t'constrs  of
-    Left err -> throwError err
-    Right subst -> do
-      t'env <- asks type'env
-      let scheme'bindings = map (second (closeOver . apply subst)) type'bindings
-          env' = apply subst $ t'env `Map.union` Map.fromList scheme'bindings
-      return (env', k'constrs)
+  (t'env', t'constrs, k'constrs) <- infer'definitions fun'pairs
+  return (t'env', k'constrs)
+
+  -- (type'bindings, t'constrs, k'constrs) <- infer'many fun'pairs
+  -- case run'solve t'constrs  of
+  --   Left err -> throwError err
+  --   Right subst -> do
+  --     t'env <- asks type'env
+  --     let scheme'bindings = map (second (closeOver . apply subst)) type'bindings
+  --         env' = apply subst $ t'env `Map.union` Map.fromList scheme'bindings
+  --     return (env', k'constrs)
 
 
 {-  This function finds all type annotations in the given Expression
