@@ -119,7 +119,7 @@ module Main where
               else (which-List lst Nothing (\ h t -> (t !! (ix - 1))))
 
 ; fst a  = (#fst a)
-; inj1 = fst (23, 42) -- incorrect type
+; inj1 = fst (23, 42) -- incorrect type -- it is correct now
 
 ; snd a  = (#snd a)
 
@@ -159,10 +159,10 @@ module Main where
 ; badbad o = 23
 
 ; plus a b = a + b
-; numnum = plus 23 42 -- this will have an incorrect type
+; numnum = plus 23 42 -- this will have an incorrect type -- it is correct now
 
 ; add = (+)
-; munmun = add 23 42 -- this will have an incorrect type
+; munmun = add 23 42 -- this will have an incorrect type -- it is correct now
 
 ; nnum = #+ (23, 42)
 
