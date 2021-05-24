@@ -119,6 +119,7 @@ module Main where
               else (which-List lst Nothing (\ h t -> (t !! (ix - 1))))
 
 ; fst a  = (#fst a)
+; inj1 = fst (23, 42) -- incorrect type
 
 ; snd a  = (#snd a)
 
@@ -162,5 +163,7 @@ module Main where
 
 ; add = (+)
 ; munmun = add 23 42 -- this will have an incorrect type
+
+; nnum = #+ (23, 42)
 
 }
