@@ -70,16 +70,22 @@ check t (If cond tr fl) = do
   return ((), (t1, t'Bool) : c1 ++ c2 ++ c3, k'c1 ++ k'c2 ++ k'c3)
 
 check t (Let bind'pairs ex'body) = do
-  (type'bindings, t'constrs, k'constrs) <- infer'many bind'pairs
-  case run'solve t'constrs of
-    Left err -> throwError err
-    Right subst -> do
-      t'env <- asks type'env
-      let scheme'bindings = map (second (closeOver . apply subst)) type'bindings
-          t'env' = apply subst $ t'env `Map.union` Map.fromList scheme'bindings
-      ((), cs'body, k'cs'body) <- local (\ e@AEnv{ } -> e{ type'env = t'env' }) (check t ex'body)
+  (t'env', t'constrs, k'constrs) <- infer'definitions bind'pairs
+  ((), cs'body, k'cs'body) <- local (\ e@AEnv{ } -> e{ type'env = t'env' }) (check t ex'body)
       
-      return ((), t'constrs ++ cs'body, k'constrs ++ k'cs'body)
+  return ((), t'constrs ++ cs'body, k'constrs ++ k'cs'body)
+
+
+  -- (type'bindings, t'constrs, k'constrs) <- infer'many bind'pairs
+  -- case run'solve t'constrs of
+  --   Left err -> throwError err
+  --   Right subst -> do
+  --     t'env <- asks type'env
+  --     let scheme'bindings = map (second (closeOver . apply subst)) type'bindings
+  --         t'env' = apply subst $ t'env `Map.union` Map.fromList scheme'bindings
+  --     ((), cs'body, k'cs'body) <- local (\ e@AEnv{ } -> e{ type'env = t'env' }) (check t ex'body)
+      
+  --     return ((), t'constrs ++ cs'body, k'constrs ++ k'cs'body)
 
 check (TyTuple types') (Tuple exprs) = do
   -- assume each type :: * where type isfrom types'
