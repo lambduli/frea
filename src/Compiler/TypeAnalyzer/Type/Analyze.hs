@@ -192,30 +192,16 @@ infer'definitions bindings = do
           Left err -> throwError err
           Right subst -> do
             (t'env', t'constrs', k'constrs') <- put'in't'env (bind'name, closeOver $ apply subst bind'type) (infer'groups sccs)
-            -- merge'into't'env (map (\ (n, t) -> (n, generalize t'env t)) t'binds) $ infer'groups sccs
             return (t'env', t'constrs ++ t'constrs', k'constrs ++ k'constrs')
-
-
-        -- t'env <- asks type'env
-        -- (t'binds', t'constrs', k'constrs') <- merge'into't'env (map (\ (n, t) -> (n, generalize t'env t)) t'binds) $ infer'groups sccs
-        -- return (t'binds ++ t'binds', t'constrs ++ t'constrs', k'constrs ++ k'constrs')
 
       infer'groups ((CyclicSCC bindings) : sccs) = do
         (t'binds, t'constrs, k'constrs) <- infer'group bindings
 
-        -- ted to musim solvnout a zapracovat a infernout zbytek sccs
         case run'solve t'constrs of
           Left err -> throwError err
           Right subst -> do
             (t'env', t'constrs', k'constrs') <- merge'into't'env (map (second (closeOver . apply subst)) t'binds) (infer'groups sccs)
-            -- put'in't'env (bind'name, closeOver $ apply subst bind'type) (infer'groups sccs)
-            -- merge'into't'env (map (\ (n, t) -> (n, generalize t'env t)) t'binds) $ infer'groups sccs
             return (t'env', t'constrs ++ t'constrs', k'constrs ++ k'constrs')
-
-        -- (k'env, t'env, ali'ev) <- ask
-        -- t'env <- asks type'env
-        -- (t'binds', constrs', k'constrs') <- merge'into't'env (map (\ (n, t) -> (n, generalize t'env t)) t'binds) $ infer'groups sccs
-        -- return (t'binds ++ t'binds', t'constrs ++ constrs', k'constrs ++ k'constrs')
 
 
 -- | NOTE: this can stay like this for now
