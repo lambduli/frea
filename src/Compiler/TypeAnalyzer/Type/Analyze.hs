@@ -205,36 +205,36 @@ infer'definitions bindings = do
 
 
 -- | NOTE: this can stay like this for now
-infer'many :: [(String, Expression)] -> Analyze ([(String, Type)], [Constraint Type], [Constraint Kind])
-infer'many bindings = do
-  let indexed = index'bindings bindings
-  let graph = build'graph bindings indexed
-  let solved = stronglyConnComp graph
-  -- ted to mam vyreseny a co musim udelat je
-  -- ze projdu celej ten   list a pro kazdy CyclicSCC [(String, Expression)]
-    -- priradim kazdymu jmenu Forall [] <$> fresh
-    -- pak vlastne provedu posbirani constraintu
-    -- pak je vratim nekam
-  -- pro kazdy AcyclicSCC (String, Expression)
-    -- tady to Expression nezavisi ani samo na sobe, takze neni potreba to zanaset
-    -- jenom to infernu -> posbiram constrainty a type a vratim je nekam vejs
-  infer'groups solved
-    where
-      infer'groups :: [SCC (String, Expression)] -> Analyze ([(String, Type)], [Constraint Type], [Constraint Kind])
-      infer'groups [] = return ([], [], [])
-      infer'groups ((AcyclicSCC bind) : sccs) = do
-        (t'binds, constrs, k'constrs) <- infer'group [bind]
-        -- (k'env, t'env, ali'env) <- ask
-        t'env <- asks type'env
-        (t'binds', constrs', k'constrs') <- merge'into't'env (map (\ (n, t) -> (n, generalize t'env t)) t'binds) $ infer'groups sccs
-        return (t'binds ++ t'binds', constrs ++ constrs', k'constrs ++ k'constrs')
+-- infer'many :: [(String, Expression)] -> Analyze ([(String, Type)], [Constraint Type], [Constraint Kind])
+-- infer'many bindings = do
+--   let indexed = index'bindings bindings
+--   let graph = build'graph bindings indexed
+--   let solved = stronglyConnComp graph
+--   -- ted to mam vyreseny a co musim udelat je
+--   -- ze projdu celej ten   list a pro kazdy CyclicSCC [(String, Expression)]
+--     -- priradim kazdymu jmenu Forall [] <$> fresh
+--     -- pak vlastne provedu posbirani constraintu
+--     -- pak je vratim nekam
+--   -- pro kazdy AcyclicSCC (String, Expression)
+--     -- tady to Expression nezavisi ani samo na sobe, takze neni potreba to zanaset
+--     -- jenom to infernu -> posbiram constrainty a type a vratim je nekam vejs
+--   infer'groups solved
+--     where
+--       infer'groups :: [SCC (String, Expression)] -> Analyze ([(String, Type)], [Constraint Type], [Constraint Kind])
+--       infer'groups [] = return ([], [], [])
+--       infer'groups ((AcyclicSCC bind) : sccs) = do
+--         (t'binds, constrs, k'constrs) <- infer'group [bind]
+--         -- (k'env, t'env, ali'env) <- ask
+--         t'env <- asks type'env
+--         (t'binds', constrs', k'constrs') <- merge'into't'env (map (\ (n, t) -> (n, generalize t'env t)) t'binds) $ infer'groups sccs
+--         return (t'binds ++ t'binds', constrs ++ constrs', k'constrs ++ k'constrs')
 
-      infer'groups ((CyclicSCC bindings) : sccs) = do
-        (t'binds, constrs, k'constrs) <- infer'group bindings
-        -- (k'env, t'env, ali'ev) <- ask
-        t'env <- asks type'env
-        (t'binds', constrs', k'constrs') <- merge'into't'env (map (\ (n, t) -> (n, generalize t'env t)) t'binds) $ infer'groups sccs
-        return (t'binds ++ t'binds', constrs ++ constrs', k'constrs ++ k'constrs')
+--       infer'groups ((CyclicSCC bindings) : sccs) = do
+--         (t'binds, constrs, k'constrs) <- infer'group bindings
+--         -- (k'env, t'env, ali'ev) <- ask
+--         t'env <- asks type'env
+--         (t'binds', constrs', k'constrs') <- merge'into't'env (map (\ (n, t) -> (n, generalize t'env t)) t'binds) $ infer'groups sccs
+--         return (t'binds ++ t'binds', constrs ++ constrs', k'constrs ++ k'constrs')
 
 
 -- | NOTE: this can stay like this for now
