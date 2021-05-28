@@ -75,18 +75,6 @@ check t (Let bind'pairs ex'body) = do
       
   return ((), t'constrs ++ cs'body, k'constrs ++ k'cs'body)
 
-
-  -- (type'bindings, t'constrs, k'constrs) <- infer'many bind'pairs
-  -- case run'solve t'constrs of
-  --   Left err -> throwError err
-  --   Right subst -> do
-  --     t'env <- asks type'env
-  --     let scheme'bindings = map (second (closeOver . apply subst)) type'bindings
-  --         t'env' = apply subst $ t'env `Map.union` Map.fromList scheme'bindings
-  --     ((), cs'body, k'cs'body) <- local (\ e@AEnv{ } -> e{ type'env = t'env' }) (check t ex'body)
-      
-  --     return ((), t'constrs ++ cs'body, k'constrs ++ k'cs'body)
-
 check (TyTuple types') (Tuple exprs) = do
   -- assume each type :: * where type isfrom types'
   (cs, k'cs) <- foldM check' ([], []) (zip types' exprs)
@@ -131,21 +119,6 @@ infer expr = case expr of
     return (t2, (t1, t'Bool) : (t2, t3) : c1 ++ c2 ++ c3, k'c1 ++ k'c2 ++ k'c3)
   
   Let bind'pairs ex'body -> do
-    -- TODO: do the same thing as for the global bindings
-    -- first do the dependency analysis - this time though - only mark something as a dependency if it's one of the names in the let bindings
-    -- second collect the constraints for all the Strongly Connected Components
-    -- then solve all the constraints and obtain a lot's of type schemes
-    -- put those in the typing context and finally infer ex'body
-    -- TODO: check everything and remove commented out code
-    
-    -- (type'bindings, t'constrs, k'constrs) <- infer'many bind'pairs
-    -- case run'solve t'constrs of
-    --   Left err -> throwError err
-    --   Right subst -> do
-    --     t'env <- asks type'env
-    --     let scheme'bindings = map (second (closeOver . apply subst)) type'bindings
-    --         t'env' = apply subst $ t'env `Map.union` Map.fromList scheme'bindings
-
     (t'env', t'constrs, k'constrs) <- infer'definitions bind'pairs
     (t'body, cs'body, k'cs'body) <- local (\ e@AEnv{ } -> e{ type'env = t'env' }) (infer ex'body)
         
@@ -169,8 +142,6 @@ infer expr = case expr of
 
 
 -- NOTE: maybe it should stay here
-
-
 infer'definitions :: [(String, Expression)] -> Analyze (TypeEnv, [Constraint Type], [Constraint Kind])
 infer'definitions bindings = do
   let indexed = index'bindings bindings
