@@ -72,7 +72,7 @@ frea λ > :t 'c'
 ```haskell
 frea λ > :t "hello world"
 
-"hello world" :: String
+"hello world" :: List Char
 ```
 
 ## Some More Interesting Ones
