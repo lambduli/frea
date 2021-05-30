@@ -80,13 +80,13 @@ frea λ > :t "hello world"
 ```haskell
 frea λ > :t [1, 2, 3]
 
-[1, 2, 3] :: [Int]
+[1, 2, 3] :: List Int
 ```
 ### Tuples of arbitrary size
 ```haskell
 frea λ > :t (1, "string", 'c')
 
-(1, "string", 'c') :: (Int, String, Char)
+(1, "string", 'c') :: (Int, List Char, Char)
 ```
 ### Unit
 ```haskell
