@@ -2,7 +2,7 @@ module Compiler.Syntax.Type where
 
 import Data.List (intercalate)
 
-import Compiler.Syntax.Kind (Kind)
+import Compiler.Syntax.Kind (Kind(..))
 
 
 type Name = String
@@ -62,3 +62,27 @@ instance Show Scheme where
     = show type'
   show (ForAll type'args type')
     = "forall " ++ intercalate " " type'args ++ " . " ++ show type'
+
+
+class HasKind t where
+  kind :: t -> Kind
+
+
+instance HasKind TVar where
+  kind (TVar _ k) = k
+
+
+instance HasKind TCon where
+  kind (TCon _ k) = k
+
+
+{- following definition is only partial function, it is assumed that the types are always well formed -}
+instance HasKind Type where
+  kind (TyVar tv) = kind tv
+  kind (TyCon tcon) = kind tcon
+  kind (TyTuple _) = Star -- assuming the type is well formed
+  kind (TyArr _ _) = Star -- assuming the type is well formed
+  kind (TyApp t _)
+    = case kind t of
+      KArr _ k -> k
+      -- assuming the type is well formed, therefore there's no other option
