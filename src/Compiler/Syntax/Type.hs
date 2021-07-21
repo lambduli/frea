@@ -8,9 +8,22 @@ import Compiler.Syntax.Kind (Kind)
 type Name = String
 
 
+{-
+    Now there's the question:
+    Do I add TyVar and TyCon types?
+-}
+
+data TVar = TVar Name Kind
+  deriving (Eq)
+
+
+data TCon = TCon Name Kind
+  deriving (Eq)
+
+
 data Type
-  = TyVar Name Kind
-  | TyCon Name Kind
+  = TyVar TVar
+  | TyCon TCon
   | TyTuple [Type] -- TODO: remove it too?
   | TyArr Type Type -- TODO: remove it and represent it as an application instead
   | TyApp Type Type
@@ -21,9 +34,9 @@ data Type
 
 {- Show instance is just for quick'n'dirty serialization purpose. -}
 instance Show Type where
-  show (TyVar name kind')
+  show (TyVar (TVar name kind'))
     = name -- ignoring the kind of the type variable
-  show (TyCon name kind')
+  show (TyCon (TCon name kind'))
     = name -- ignoring the kind of the type constant
   show (TyTuple types)
     = "(" ++ intercalate ", " (map show types) ++ ")"

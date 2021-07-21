@@ -59,7 +59,7 @@ check t (App left right) = do
   (t'l, cs'l, k'cs'l) <- infer left
   (t'r, cs'r, k'cs'r) <- infer right
   fresh'name <- fresh 
-  let t'var = TyVar fresh'name Star
+  let t'var = TyVar (TVar fresh'name Star)
   -- TODO: FIX! the Star on the previous line is just for compilation
   -- I should be able to check the correct kind of the `t` and assign that kind to the t'var I think
   --
@@ -104,7 +104,7 @@ infer expr = case expr of
 
   Lam x body -> do
     fresh'name <- fresh
-    let t'var = TyVar fresh'name Star
+    let t'var = TyVar (TVar fresh'name Star)
     -- TODO: FIX!
     -- the Star kind is just for compilation
     -- BUT! I think it ought to be Star
@@ -116,7 +116,7 @@ infer expr = case expr of
     (t'l, cs'l, k'cs'l) <- infer left
     (t'r, cs'r, k'cs'r) <- infer right
     fresh'name <- fresh
-    let t'var = TyVar fresh'name Star
+    let t'var = TyVar (TVar fresh'name Star)
     -- TODO: FIX!
     -- the Star kind is just to compile
     -- what must be done -> get the kind of the left and check that it is Star (because again, no value of the Kind other than Star)
@@ -224,7 +224,7 @@ infer'definitions bindings = do
 infer'group :: [(String, Expression)] -> Analyze ([(String, Type)], [Constraint Type], [Constraint Kind])
 infer'group bindings = do
   let names = map fst bindings
-      gener name = do ForAll [] <$> fmap (\ name -> TyVar name (KVar name)) fresh
+      gener name = do ForAll [] <$> fmap (\ name -> TyVar (TVar name (KVar name))) fresh
       -- TODO: FIX! this is just so it compiles
       -- kind variables and type variables shouldn't share the same names
       -- there's probably nothing wrong with it, but it would be better if each of them has unique name
@@ -235,7 +235,7 @@ infer'group bindings = do
 infer'one :: (String, Expression) -> Analyze ((String, Type), [Constraint Type], [Constraint Kind])
 infer'one (name, type') = do
   fresh'name <- fresh
-  fresh'var <- ForAll [] <$> fmap (\ name -> TyVar name (KVar name)) fresh
+  fresh'var <- ForAll [] <$> fmap (\ name -> TyVar (TVar name (KVar name))) fresh
   -- TODO: FIX! the same thing as above
   -- it previously read: -- (TyVar fresh'name)
   put'in't'env (name, fresh'var) $ infer'one' (name, type')

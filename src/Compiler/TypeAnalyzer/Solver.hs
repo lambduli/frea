@@ -59,13 +59,13 @@ solver (subst, constraints) =
 
 instance Unifiable Type where
   unify t1 t2 | t1 == t2 = return empty'subst
-  unify (TyVar v k') t = v `bind` t
-  unify t (TyVar v k') = v `bind` t
+  unify (TyVar (TVar v k')) t = v `bind` t
+  unify t (TyVar (TVar v k')) = v `bind` t
   -- TODO: use the k's to make sure we are unifying only Type Variable of specific Kind with the Type of the same Kind
 
   unify (TyArr t1 t2) (TyArr t3 t4) = [t1, t2] `unify'many` [t3, t4]
   unify (TyApp t1 t2) (TyApp t3 t4) = [t1, t2] `unify'many` [t3, t4]
-  unify l@(TyCon name'l k'l) r@(TyCon name'r k'r)
+  unify l@(TyCon (TCon name'l k'l)) r@(TyCon (TCon name'r k'r))
     | name'l == name'r = return empty'subst
     | otherwise = throwError $ TypeUnifMismatch l r
     -- TODO: use the kinds to make sure we are unifying only Type Constants of the same Kind
@@ -108,10 +108,19 @@ compose :: Substitutable a a => Subst a -> Subst a -> Subst a
   = Sub $ Map.map (apply (Sub sub'l)) sub'r `Map.union` sub'l
 
 
+-- {- symmetric merge function from the paper Typing Haskell in Haskell -}
+-- merge :: (Substitutable a a, Monad m) => Subst a -> Subst a -> m (Subst a)
+-- s1@(Sub sub'l) `merge` s2@(Sub sub'r)
+--   = if agree then return (Sub $ sub'l `Map.union` sub'r) else fail "merge fails"
+--     where
+--       agree = all (\ var -> apply s1 (TyVar ))
+
+
+
 instance Occurable Type where
-  name `occurs'in` (TyVar varname k')
+  name `occurs'in` (TyVar (TVar varname k'))
     = name == varname
-  name `occurs'in` (TyCon conname k')
+  name `occurs'in` (TyCon (TCon conname k'))
     = name == conname -- TODO: So I think I can do that safely. Consider if TyCon didn't exist and everything would just be a TyVar. You would do this check and by the fact that constructors start with upper case letter it wouldn't break anything. 
   name `occurs'in` (TyTuple ts)
     = any (name `occurs'in`) ts
@@ -139,8 +148,8 @@ instance Bindable Type where
     -- which will have the name and the Kind
     -- then I will be able to compare it
     -- alternatively I can redefine it for now like:
-    | TyVar name _ <- type', name == varname = return empty'subst
-    | varname `occurs'in` type' = throwError $ InfiniteType (TyVar varname Star) type'
+    | TyVar (TVar name _) <- type', name == varname = return empty'subst
+    | varname `occurs'in` type' = throwError $ InfiniteType (TyVar (TVar varname Star)) type'
     -- TODO: I think this is interesting!
     -- I don't think infinite type can have any particular Kind
     -- I think that infinite type doesn't have a proper kind in this system

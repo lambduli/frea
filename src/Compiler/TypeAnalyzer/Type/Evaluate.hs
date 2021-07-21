@@ -22,16 +22,16 @@ class Normalizing a where
 
 
 instance Normalizing Type where
-  evaluate (TyVar name k') = do
+  evaluate (TyVar (TVar name k')) = do
     ali'env <- asks ali'env
     case ali'env Map.!? name of
-      Nothing -> return $ TyVar name k'
+      Nothing -> return $ TyVar (TVar name k')
       Just t -> evaluate t
 
-  evaluate (TyCon name k') = do
+  evaluate (TyCon (TCon name k')) = do
     ali'env <- asks ali'env
     case ali'env Map.!? name of
-      Nothing -> return $ TyCon name k'
+      Nothing -> return $ TyCon (TCon name k')
       Just t -> evaluate t
 
   evaluate (TyTuple types) = do
@@ -68,8 +68,8 @@ ty'app t'left t'right = return $ TyApp t'left t'right
 
 
 collect'bound'vars :: Type -> Set.Set String
-collect'bound'vars (TyVar name k') = Set.singleton name
-collect'bound'vars (TyCon name k') = Set.empty
+collect'bound'vars (TyVar (TVar name k')) = Set.singleton name
+collect'bound'vars (TyCon (TCon name k')) = Set.empty
 collect'bound'vars (TyTuple types) = foldl (\ acc t' -> Set.union acc $ collect'bound'vars t') Set.empty types
 collect'bound'vars (TyArr t'from t'to) = Set.union (collect'bound'vars t'from) (collect'bound'vars t'to)
 collect'bound'vars (TyApp t'left t'right) = Set.union (collect'bound'vars t'left) (collect'bound'vars t'right)
@@ -85,7 +85,7 @@ rename ftvs (TyOp par body) = do
   -- at this moment, I don't think the correct kind is known
   -- but I might be wrong
   renamed'body <- rename ftvs body
-  return $ TyOp new $ apply (Sub $ Map.singleton par (TyVar new k')) renamed'body
+  return $ TyOp new $ apply (Sub $ Map.singleton par (TyVar (TVar new k'))) renamed'body
 rename _ t' = return t'
 
 

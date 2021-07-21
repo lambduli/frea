@@ -225,12 +225,12 @@ TyAppLeft       ::  { Type }
                 -}
                 :   LowIdent                                        {%  do
                                                                         { name <- fresh'ident
-                                                                        ; return $ TyVar $1 (KVar name) } }
+                                                                        ; return $ TyVar (TVar $1 (KVar name)) } }
                 {- NOTE: Same as above. I can't possibly know the kind of the Type Constant at this moment.
                 -}
                 |   UpIdent                                         {%  do
                                                                         { name <- fresh'ident
-                                                                        ; return $ TyCon $1 (KVar name) } }
+                                                                        ; return $ TyCon (TCon $1 (KVar name)) } }
                 |   TyArr                                           { $1 }
                 |   TyTuple                                         { $1 }
                 |   '(' TyApp ')'                                   { $2 }

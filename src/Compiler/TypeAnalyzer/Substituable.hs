@@ -29,10 +29,10 @@ class Term a where
 
 
 instance Substitutable Type Type where
-  apply (Sub s) var@(TyVar varname kind')
+  apply (Sub s) var@(TyVar (TVar varname kind'))
     = Map.findWithDefault var varname s
-  apply _ (TyCon conname kind')
-    = TyCon conname kind'
+  apply _ (TyCon (TCon conname kind'))
+    = TyCon (TCon conname kind')
   apply s (left `TyArr` right)
     = apply s left `TyArr` apply s right
   apply s (TyTuple types)
@@ -46,8 +46,8 @@ instance Substitutable Type Type where
 
 instance Term Type where
   free'vars type' = case type' of
-    TyVar name kind' -> Set.singleton name
-    TyCon name kind' -> Set.empty
+    TyVar (TVar name kind') -> Set.singleton name
+    TyCon (TCon name kind') -> Set.empty
     TyTuple ts -> foldl (\ set' t' -> Set.union set' (free'vars t')) Set.empty ts
     TyArr left right -> free'vars left `Set.union` free'vars right
     TyApp left right -> free'vars left `Set.union` free'vars right

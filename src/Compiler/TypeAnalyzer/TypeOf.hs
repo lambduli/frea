@@ -111,7 +111,7 @@ add'elim'type :: String -> Type -> [ConstrDecl] -> TypeEnv -> Analyze TypeEnv
 add'elim'type name result't constructors t'env = do
   fresh'name <- fresh
   let elim'name     = "which-" ++ name
-      res           = TyVar fresh'name (KVar fresh'name)
+      res           = TyVar (TVar fresh'name (KVar fresh'name))
       -- TODO: FIX!
       -- again - type and kind variables should probably not share the same identifier
       -- it would be better for them to be unique
@@ -199,7 +199,7 @@ process'declarations declarations env t'env mem = do
           DataDecl name ty'params constrs -> do
             fresh'name't <- fresh
             fresh'name'k <- fresh
-            let res'type = foldl (\ t var -> TyApp t (TyVar var (KVar fresh'name't))) (TyCon name (KVar fresh'name'k)) ty'params
+            let res'type = foldl (\ t var -> TyApp t (TyVar (TVar var (KVar fresh'name't)))) (TyCon (TCon name (KVar fresh'name'k))) ty'params
             -- TODO: FIX!
             -- I think that fresh'name't usage is OK
             -- but for the fresh'name'k in TyCon

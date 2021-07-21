@@ -103,7 +103,7 @@ put'in'ali'env (name, type') m = do
 instantiate :: Scheme -> Analyze Type
 instantiate (ForAll args type') = do
   fresh'strs <- mapM (real'fresh args) args
-  let ty'vars = map (\ name -> TyVar name Star) fresh'strs -- TODO: the Star kind is incorrect
+  let ty'vars = map (\ name -> TyVar (TVar name Star)) fresh'strs -- TODO: the Star kind is incorrect
   -- it needs to be fixed promptly
   -- instead -> `args` will (have to) contain information about which parametrized (quantified) variables have which kinds
   --
@@ -122,11 +122,11 @@ normalize (ForAll type'args body) = ForAll (fmap snd ord) (normtype body)
 
     normtype (TyApp a b) = TyApp (normtype a) (normtype b)
     normtype (TyArr a b) = TyArr (normtype a) (normtype b)
-    normtype (TyCon a k') = TyCon a k'
+    normtype (TyCon (TCon a k')) = TyCon (TCon a k')
     normtype (TyTuple ts) = TyTuple $ map normtype ts
-    normtype (TyVar a k') =
+    normtype (TyVar (TVar a k')) =
       case lookup a ord of
-        Just x -> TyVar x k'
+        Just x -> TyVar (TVar x k')
         Nothing -> error $ "Type variable " ++ show a ++ " not in the signature."
 
 
