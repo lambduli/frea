@@ -17,6 +17,7 @@ import Compiler.Syntax.MatchGroup
 import Compiler.Syntax.Pattern
 import Compiler.Syntax.Signature
 import Compiler.Syntax.Type
+import Compiler.Syntax.Kind
 }
 
 
@@ -218,8 +219,18 @@ TyApp           ::  { Type }
                 :   TyAppLeft OneOrMany(TyAppLeft)                 { foldl TyApp $1 $2 }
 
 TyAppLeft       ::  { Type }
-                :   LowIdent                                        { TyVar $1 }
-                |   UpIdent                                         { TyCon $1 }
+                {-  NOTE: I need to add kind to the Type Variable,
+                but since I can't possible know it at this moment,
+                I need to generate a fresh kind variable - for that I need to make this rule monadic.
+                -}
+                :   LowIdent                                        {%  do
+                                                                        { name <- fresh'ident
+                                                                        ; return $ TyVar $1 (KVar name) } }
+                {- NOTE: Same as above. I can't possibly know the kind of the Type Constant at this moment.
+                -}
+                |   UpIdent                                         {%  do
+                                                                        { name <- fresh'ident
+                                                                        ; return $ TyCon $1 (KVar name) } }
                 |   TyArr                                           { $1 }
                 |   TyTuple                                         { $1 }
                 |   '(' TyApp ')'                                   { $2 }

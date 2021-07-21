@@ -3,12 +3,14 @@ module Compiler.TypeAnalyzer.Types where
 
 import Compiler.Syntax (Type(..))
 
+import Compiler.Syntax.Kind
+
 
 -- | Assuming that Bool will be defined in the Prelude.
-t'Bool = TyCon "Bool"
+t'Bool = TyCon "Bool" Star
 
-t'Int = TyCon "Int"
+t'Int = TyCon "Int" Star
 
-t'Double = TyCon "Double"
+t'Double = TyCon "Double" Star
 
-t'Char = TyCon "Char"
+t'Char = TyCon "Char" Star

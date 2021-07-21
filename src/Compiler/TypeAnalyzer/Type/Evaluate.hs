@@ -9,6 +9,7 @@ import Control.Monad.State
 
 
 import Compiler.Syntax.Type
+import Compiler.Syntax.Kind
 import Compiler.TypeAnalyzer.Substituable
 import Compiler.TypeAnalyzer.Analyze
 import Compiler.TypeAnalyzer.AnalyzeEnv
@@ -21,16 +22,16 @@ class Normalizing a where
 
 
 instance Normalizing Type where
-  evaluate (TyVar name) = do
+  evaluate (TyVar name k') = do
     ali'env <- asks ali'env
     case ali'env Map.!? name of
-      Nothing -> return $ TyVar name
+      Nothing -> return $ TyVar name k'
       Just t -> evaluate t
 
-  evaluate (TyCon name) = do
+  evaluate (TyCon name k') = do
     ali'env <- asks ali'env
     case ali'env Map.!? name of
-      Nothing -> return $ TyCon name
+      Nothing -> return $ TyCon name k'
       Just t -> evaluate t
 
   evaluate (TyTuple types) = do
@@ -67,8 +68,8 @@ ty'app t'left t'right = return $ TyApp t'left t'right
 
 
 collect'bound'vars :: Type -> Set.Set String
-collect'bound'vars (TyVar name) = Set.singleton name
-collect'bound'vars (TyCon name) = Set.empty
+collect'bound'vars (TyVar name k') = Set.singleton name
+collect'bound'vars (TyCon name k') = Set.empty
 collect'bound'vars (TyTuple types) = foldl (\ acc t' -> Set.union acc $ collect'bound'vars t') Set.empty types
 collect'bound'vars (TyArr t'from t'to) = Set.union (collect'bound'vars t'from) (collect'bound'vars t'to)
 collect'bound'vars (TyApp t'left t'right) = Set.union (collect'bound'vars t'left) (collect'bound'vars t'right)
@@ -78,8 +79,13 @@ collect'bound'vars (TyOp par type') = Set.insert par $ collect'bound'vars type'
 rename :: Set.Set String -> Type -> Analyze Type
 rename ftvs (TyOp par body) = do
   new <- real'fresh (Set.toList ftvs) ()
+  k' <- KVar <$> fresh
+  -- TODO: NOTE!
+  -- I just figured it should be OK to just create a new kind variable
+  -- at this moment, I don't think the correct kind is known
+  -- but I might be wrong
   renamed'body <- rename ftvs body
-  return $ TyOp new $ apply (Sub $ Map.singleton par (TyVar new)) renamed'body
+  return $ TyOp new $ apply (Sub $ Map.singleton par (TyVar new k')) renamed'body
 rename _ t' = return t'
 
 

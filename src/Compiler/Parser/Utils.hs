@@ -29,7 +29,8 @@ data ParseState = ParseState
   , lexSC :: Int                      -- lexer start code
   , stringBuf :: String               -- temporary storage for strings
   , pending'tokens :: [Token]         -- right now used when Parser consumes the lookeahead and decided to put it back
-  , pending'position :: TokPosition } -- needed when parsing strings, chars, multi-line strings
+  , pending'position :: TokPosition   -- needed when parsing strings, chars, multi-line strings
+  , counter :: Int }                  -- counter to always get fresh variable while parsing
   deriving Show
 
 
@@ -44,7 +45,8 @@ initialState s = ParseState
   , lexSC = 0
   , stringBuf = ""
   , pending'tokens = []
-  , pending'position = TokPosition { line = 1, column = 1 }}
+  , pending'position = TokPosition { line = 1, column = 1 }
+  , counter = 0 }
 
 
 -- The functions that must be provided to Alex's basic interface
@@ -103,6 +105,16 @@ getPosition :: Int -> P TokPosition
 getPosition tok'len = do
   ParseState { input = AlexInput { ai'line'number = ln, ai'column'number = cn } } <- get
   return $ TokPosition { line = ln, column = cn - tok'len }
+
+
+fresh'ident :: P String
+fresh'ident = do
+  ps@ParseState { counter = counter } <- get
+  put $ ps{ counter = counter + 1 }
+  return (letters !! counter)
+    where
+      letters :: [String]
+      letters = [1..] >>= flip replicateM ['a'..'z']
 
 
 evalP :: P a -> String -> a

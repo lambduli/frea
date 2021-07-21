@@ -59,7 +59,10 @@ check t (App left right) = do
   (t'l, cs'l, k'cs'l) <- infer left
   (t'r, cs'r, k'cs'r) <- infer right
   fresh'name <- fresh 
-  let t'var = TyVar fresh'name
+  let t'var = TyVar fresh'name Star
+  -- TODO: FIX! the Star on the previous line is just for compilation
+  -- I should be able to check the correct kind of the `t` and assign that kind to the t'var I think
+  --
   return ((), (t, t'var) : (t'l, t'r `TyArr` t'var) : cs'l ++ cs'r, k'cs'l ++ k'cs'r)
 
 check t (If cond tr fl) = do
@@ -101,7 +104,11 @@ infer expr = case expr of
 
   Lam x body -> do
     fresh'name <- fresh
-    let t'var = TyVar fresh'name
+    let t'var = TyVar fresh'name Star
+    -- TODO: FIX!
+    -- the Star kind is just for compilation
+    -- BUT! I think it ought to be Star
+    -- the lambda abstraction just can not accept a value of the type with the kind other than Star
     (t, t'constrs, k'constrs) <- put'in't'env (x, ForAll [] t'var) (infer body)
     return (t'var `TyArr` t, t'constrs, k'constrs)
 
@@ -109,7 +116,12 @@ infer expr = case expr of
     (t'l, cs'l, k'cs'l) <- infer left
     (t'r, cs'r, k'cs'r) <- infer right
     fresh'name <- fresh
-    let t'var = TyVar fresh'name
+    let t'var = TyVar fresh'name Star
+    -- TODO: FIX!
+    -- the Star kind is just to compile
+    -- what must be done -> get the kind of the left and check that it is Star (because again, no value of the Kind other than Star)
+    -- then do the same for right
+    -- then the result will be of the kind Star so OK
     return (t'var, cs'l ++ cs'r ++ [(t'l, t'r `TyArr` t'var)], k'cs'l ++ k'cs'r)
 
   If cond tr fl -> do
@@ -212,14 +224,20 @@ infer'definitions bindings = do
 infer'group :: [(String, Expression)] -> Analyze ([(String, Type)], [Constraint Type], [Constraint Kind])
 infer'group bindings = do
   let names = map fst bindings
-      gener name = do ForAll [] <$> (TyVar <$> fresh)
+      gener name = do ForAll [] <$> fmap (\ name -> TyVar name (KVar name)) fresh
+      -- TODO: FIX! this is just so it compiles
+      -- kind variables and type variables shouldn't share the same names
+      -- there's probably nothing wrong with it, but it would be better if each of them has unique name
+      -- it previously read: -- (TyVar <$> fresh)
   fresh'vars <- mapM gener names
   merge'into't'env (zip names fresh'vars) $ infer'many' bindings
 
 infer'one :: (String, Expression) -> Analyze ((String, Type), [Constraint Type], [Constraint Kind])
 infer'one (name, type') = do
   fresh'name <- fresh
-  let fresh'var = ForAll [] (TyVar fresh'name)
+  fresh'var <- ForAll [] <$> fmap (\ name -> TyVar name (KVar name)) fresh
+  -- TODO: FIX! the same thing as above
+  -- it previously read: -- (TyVar fresh'name)
   put'in't'env (name, fresh'var) $ infer'one' (name, type')
 
 

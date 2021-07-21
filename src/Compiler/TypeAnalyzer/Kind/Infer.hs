@@ -27,12 +27,14 @@ import Compiler.TypeAnalyzer.AnalyzeUtils
 infer :: Type -> Analyze (Kind, [Constraint Kind])
 infer type' =
   case type' of
-    TyVar name -> do
+    TyVar name kind' -> do
       k' <- lookup'k'env name
       return (k', [])
-    TyCon name -> do
+      -- TODO: NOTE: should I take the kind from the lookup-ing or from the TyVar value?
+    TyCon name kind' -> do
       k' <- lookup'k'env name
       return (k', [])
+      -- TODO: NOTE: should I take the kind from the lookup-ing or from the TyCon value?
     TyTuple types -> do
       -- nez ale reknu ze ten tuple je v poradku
       -- musim projit vsechny types a zkontrolovat, ze jsou kindu *

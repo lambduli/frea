@@ -111,7 +111,11 @@ add'elim'type :: String -> Type -> [ConstrDecl] -> TypeEnv -> Analyze TypeEnv
 add'elim'type name result't constructors t'env = do
   fresh'name <- fresh
   let elim'name     = "which-" ++ name
-      res           = TyVar fresh'name -- TODO: this needs to be fresh variable!!! -- for now making it somehow hard to mix up with anything
+      res           = TyVar fresh'name (KVar fresh'name)
+      -- TODO: FIX!
+      -- again - type and kind variables should probably not share the same identifier
+      -- it would be better for them to be unique
+      -- NOTE: this needs to be fresh type variable!!! -- for now making it somehow hard to mix up with anything
       destr'type (ConDecl name types) = foldr TyArr res types
       destrs'types  = map destr'type constructors
       which'type    = result't `TyArr` (foldr TyArr res destrs'types)
@@ -193,7 +197,16 @@ process'declarations declarations env t'env mem = do
       add'types t'env decl =
         case decl of
           DataDecl name ty'params constrs -> do
-            let res'type = foldl (\ t var -> TyApp t (TyVar var)) (TyCon name) ty'params
+            fresh'name't <- fresh
+            fresh'name'k <- fresh
+            let res'type = foldl (\ t var -> TyApp t (TyVar var (KVar fresh'name't))) (TyCon name (KVar fresh'name'k)) ty'params
+            -- TODO: FIX!
+            -- I think that fresh'name't usage is OK
+            -- but for the fresh'name'k in TyCon
+            -- I think it would be better to just create a kind function according the number of type parameters
+            -- this way it should probably work too, inference should be able to figure it out
+            -- but honestly I am not sure, if I run type/kind inference on generated code
+            -- which this is
                 t'env'  = add'constrs'types res'type constrs t'env
             add'elim'type name res'type constrs t'env'
 

@@ -2,23 +2,29 @@ module Compiler.Syntax.Type where
 
 import Data.List (intercalate)
 
+import Compiler.Syntax.Kind (Kind)
+
+
+type Name = String
+
 
 data Type
-  = TyVar String
-  | TyCon String
-  | TyTuple [Type]
-  | TyArr Type Type
+  = TyVar Name Kind
+  | TyCon Name Kind
+  | TyTuple [Type] -- TODO: remove it too?
+  | TyArr Type Type -- TODO: remove it and represent it as an application instead
   | TyApp Type Type
 
-  | TyOp String Type -- type operator/function
+  | TyOp String Type -- type operator/function/alias
   deriving (Eq)
 
 
+{- Show instance is just for quick'n'dirty serialization purpose. -}
 instance Show Type where
-  show (TyVar name)
-    = name
-  show (TyCon name)
-    = name
+  show (TyVar name kind')
+    = name -- ignoring the kind of the type variable
+  show (TyCon name kind')
+    = name -- ignoring the kind of the type constant
   show (TyTuple types)
     = "(" ++ intercalate ", " (map show types) ++ ")"
   show (TyArr left@(TyArr _ _) res'type)
