@@ -38,10 +38,10 @@ instance Normalizing Type where
     n't <- mapM evaluate types
     return $ TyTuple n't
 
-  evaluate (TyArr t'from t'to) = do
-    nt'from <- evaluate t'from
-    nt'to <- evaluate t'to
-    return $ nt'from `TyArr` nt'to
+  -- evaluate (TyArr t'from t'to) = do
+  --   nt'from <- evaluate t'from
+  --   nt'to <- evaluate t'to
+  --   return $ nt'from `TyArr` nt'to
 
   evaluate (TyOp par t') = do
     nt' <- evaluate t'
@@ -71,7 +71,7 @@ collect'bound'vars :: Type -> Set.Set String
 collect'bound'vars (TyVar (TVar name k')) = Set.singleton name
 collect'bound'vars (TyCon (TCon name k')) = Set.empty
 collect'bound'vars (TyTuple types) = foldl (\ acc t' -> Set.union acc $ collect'bound'vars t') Set.empty types
-collect'bound'vars (TyArr t'from t'to) = Set.union (collect'bound'vars t'from) (collect'bound'vars t'to)
+-- collect'bound'vars (TyArr t'from t'to) = Set.union (collect'bound'vars t'from) (collect'bound'vars t'to)
 collect'bound'vars (TyApp t'left t'right) = Set.union (collect'bound'vars t'left) (collect'bound'vars t'right)
 collect'bound'vars (TyOp par type') = Set.insert par $ collect'bound'vars type'
 

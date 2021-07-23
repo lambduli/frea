@@ -18,6 +18,7 @@ import Compiler.Syntax.Pattern
 import Compiler.Syntax.Signature
 import Compiler.Syntax.Type
 import Compiler.Syntax.Kind
+import Compiler.TypeAnalyzer.Types
 }
 
 
@@ -210,7 +211,7 @@ Type            ::  { Type }
                 |   '(' Type ')'                                    { $2 }
 
 TyArr           ::  { Type }
-                :   Type '->' Type                                  { TyArr $1 $3 }
+                :   Type '->' Type                                  { $1 `type'fn` $3 }
 
 TyTuple         ::  { Type }
                 :   '(' Type CommaSeparated(Type) ')'               { TyTuple $ $2 : $3 }

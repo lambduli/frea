@@ -45,15 +45,23 @@ infer type' =
       let constraints = zip (replicate len Star) kinds
 
       return (Star, constraints)
-    TyArr left right -> do
-      -- tady prijde na radu rekurze
-      -- tohle by zrovna melo bejt jednoduchy
-      -- left i right musi bejt *
-      -- takze je infernu a pak jim priradim v constraintu *
-      (k'l, cs'l) <- infer left
-      (k'r, cs'r) <- infer right
+    -- TyArr left right -> do
+    --   -- tady prijde na radu rekurze
+    --   -- tohle by zrovna melo bejt jednoduchy
+    --   -- left i right musi bejt *
+    --   -- takze je infernu a pak jim priradim v constraintu *
+    --   (k'l, cs'l) <- infer left
+    --   (k'r, cs'r) <- infer right
 
-      return (Star, [(Star, k'l), (Star, k'r)] ++ cs'l ++ cs'r)
+    --   return (Star, [(Star, k'l), (Star, k'r)] ++ cs'l ++ cs'r)
+
+    -- TyApp (TyApp (TyCon (TCon "(->)" k)) left) right -> do
+    --   (k'l, cs'l) <- infer left
+    --   (k'r, cs'r) <- infer right
+
+    --   return (Star, [(Star, k'l), (Star, k'r)] ++ cs'l ++ cs'r)
+
+
     TyApp left right -> do
       -- tohle bude malinko komplikovanejsi
       -- infernu left a infernu right

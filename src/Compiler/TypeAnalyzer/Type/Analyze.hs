@@ -49,8 +49,12 @@ check t (Op x) = do
   type' <- lookup't'env x
   return ((), [(t, type')], [])
 
-check (from `TyArr` to) (Lam x body) = do
-  -- assume from :: * and to :: *
+-- check (from `TyArr` to) (Lam x body) = do
+--   -- assume from :: * and to :: *
+--   (t, constrs, k'constrs) <- put'in't'env (x, ForAll [] from) (check to body)
+--   return ((), constrs, k'constrs)
+
+check (TyApp (TyApp (TyCon (TCon "(->)" _)) from) to) (Lam x body) = do
   (t, constrs, k'constrs) <- put'in't'env (x, ForAll [] from) (check to body)
   return ((), constrs, k'constrs)
 
@@ -63,7 +67,7 @@ check t (App left right) = do
   -- TODO: FIX! the Star on the previous line is just for compilation
   -- I should be able to check the correct kind of the `t` and assign that kind to the t'var I think
   --
-  return ((), (t, t'var) : (t'l, t'r `TyArr` t'var) : cs'l ++ cs'r, k'cs'l ++ k'cs'r)
+  return ((), (t, t'var) : (t'l, t'r `type'fn` t'var) : cs'l ++ cs'r, k'cs'l ++ k'cs'r)
 
 check t (If cond tr fl) = do
   -- assume t :: *
@@ -86,6 +90,10 @@ check (TyTuple types') (Tuple exprs) = do
       check' (constrs, k'constrs) (ty, expr) = do
         ((), cs, k'cs) <- check ty expr
         return (cs ++ constrs, k'constrs ++ k'cs)
+check t e = do
+  throwError $ Unexpected $ "Type Checking failed. The type and the expression do not match in structure."
+    ++ "\n" ++ "The Type:\n  " ++ show t ++ "\nThe Expression:\n  " ++ show e
+
 
 
 infer :: Expression -> Analyze (Type, [Constraint Type], [Constraint Kind])
@@ -110,7 +118,7 @@ infer expr = case expr of
     -- BUT! I think it ought to be Star
     -- the lambda abstraction just can not accept a value of the type with the kind other than Star
     (t, t'constrs, k'constrs) <- put'in't'env (x, ForAll [] t'var) (infer body)
-    return (t'var `TyArr` t, t'constrs, k'constrs)
+    return (t'var `type'fn` t, t'constrs, k'constrs)
 
   App left right -> do
     (t'l, cs'l, k'cs'l) <- infer left
@@ -122,7 +130,7 @@ infer expr = case expr of
     -- what must be done -> get the kind of the left and check that it is Star (because again, no value of the Kind other than Star)
     -- then do the same for right
     -- then the result will be of the kind Star so OK
-    return (t'var, cs'l ++ cs'r ++ [(t'l, t'r `TyArr` t'var)], k'cs'l ++ k'cs'r)
+    return (t'var, cs'l ++ cs'r ++ [(t'l, t'r `type'fn` t'var)], k'cs'l ++ k'cs'r)
 
   If cond tr fl -> do
     (t1, c1, k'c1) <- infer cond

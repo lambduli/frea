@@ -121,7 +121,7 @@ normalize (ForAll type'args body) = ForAll (fmap snd ord) (normtype body)
     ord = zip (Set.toList . free'vars $ body) letters
 
     normtype (TyApp a b) = TyApp (normtype a) (normtype b)
-    normtype (TyArr a b) = TyArr (normtype a) (normtype b)
+    -- normtype (TyArr a b) = TyArr (normtype a) (normtype b)
     normtype (TyCon (TCon a k')) = TyCon (TCon a k')
     normtype (TyTuple ts) = TyTuple $ map normtype ts
     normtype (TyVar (TVar a k')) =

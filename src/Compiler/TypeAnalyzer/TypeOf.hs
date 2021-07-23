@@ -30,6 +30,7 @@ import Compiler.TypeAnalyzer.AnalyzeEnv
 import Compiler.TypeAnalyzer.AnalyzeUtils
 import Compiler.TypeAnalyzer.Dependency
 import qualified Compiler.TypeAnalyzer.Type.Evaluate as E
+import Compiler.TypeAnalyzer.Types
 
 import Compiler.TypeAnalyzer.Type.Analyze
 import Compiler.TypeAnalyzer.Kind.KindOf
@@ -102,7 +103,7 @@ add'constrs'types _ [] t'env = t'env
 add'constrs'types result't (ConDecl name types : cons) t'env
   = add'constrs'types result't cons (Map.insert name scheme t'env)
     where
-      type' = foldr TyArr result't types
+      type' = foldr type'fn result't types
       ty'params = Set.toList $ free'vars type'
       scheme = ForAll ty'params type'
 
@@ -116,9 +117,9 @@ add'elim'type name result't constructors t'env = do
       -- again - type and kind variables should probably not share the same identifier
       -- it would be better for them to be unique
       -- NOTE: this needs to be fresh type variable!!! -- for now making it somehow hard to mix up with anything
-      destr'type (ConDecl name types) = foldr TyArr res types
+      destr'type (ConDecl name types) = foldr type'fn res types
       destrs'types  = map destr'type constructors
-      which'type    = result't `TyArr` (foldr TyArr res destrs'types)
+      which'type    = result't `type'fn` (foldr type'fn res destrs'types)
       scheme        = generalize empty't'env which'type
         
         -- ForAll (Set.toList $ free'vars which'type) which'type

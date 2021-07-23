@@ -33,8 +33,8 @@ instance Substitutable Type Type where
     = Map.findWithDefault var varname s
   apply _ (TyCon (TCon conname kind'))
     = TyCon (TCon conname kind')
-  apply s (left `TyArr` right)
-    = apply s left `TyArr` apply s right
+  -- apply s (left `TyArr` right)
+    -- = apply s left `TyArr` apply s right
   apply s (TyTuple types)
     = TyTuple $ map (apply s) types
   apply s (TyApp t'left t'right)
@@ -49,7 +49,7 @@ instance Term Type where
     TyVar (TVar name kind') -> Set.singleton name
     TyCon (TCon name kind') -> Set.empty
     TyTuple ts -> foldl (\ set' t' -> Set.union set' (free'vars t')) Set.empty ts
-    TyArr left right -> free'vars left `Set.union` free'vars right
+    -- TyArr left right -> free'vars left `Set.union` free'vars right
     TyApp left right -> free'vars left `Set.union` free'vars right
 
     TyOp par body -> Set.delete par $ free'vars body

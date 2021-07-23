@@ -30,21 +30,21 @@ empty'an'env = AEnv empty'k'env empty't'env empty'ali'env
 -- not really empty
 empty't'env :: TypeEnv
 empty't'env = Map.fromList
-  [ ("#fst",    ForAll ["a", "b"] (TyArr (TyTuple [TyVar (TVar "a" Star), TyVar (TVar "b" Star)]) (TyVar (TVar "a" Star))))
-  , ("#snd",    ForAll ["a", "b"] (TyArr (TyTuple [TyVar (TVar "a" Star), TyVar (TVar "b" Star)]) (TyVar (TVar "b" Star))))
-  , ("#=",      ForAll ["a"]      (TyTuple [TyVar (TVar "a" Star), TyVar (TVar "a" Star)] `TyArr` t'Bool))
-  , ("#<",      ForAll ["a"]      (TyTuple [TyVar (TVar "a" Star), TyVar (TVar "a" Star)] `TyArr` t'Bool))
-  , ("#>",      ForAll ["a"]      (TyTuple [TyVar (TVar "a" Star), TyVar (TVar "a" Star)] `TyArr` t'Bool))
-  , ("#+",      ForAll []         (TyTuple [t'Int, t'Int] `TyArr` t'Int))
-  , ("#+.",     ForAll []         (TyTuple [t'Double, t'Double] `TyArr` t'Double))
-  , ("#*",      ForAll []         (TyTuple [t'Int, t'Int] `TyArr` t'Int))
-  , ("#*.",     ForAll []         (TyTuple [t'Double, t'Double] `TyArr` t'Double))
-  , ("#-",      ForAll []         (TyTuple [t'Int, t'Int] `TyArr` t'Int))
-  , ("#-.",     ForAll []         (TyTuple [t'Double, t'Double] `TyArr` t'Double))
-  , ("#div",    ForAll []         (TyTuple [t'Int, t'Int] `TyArr` t'Int))
-  , ("#/",      ForAll []         (TyTuple [t'Double, t'Double] `TyArr` t'Double))
-  , ("#show",   ForAll ["a"]      (TyVar (TVar "a" Star) `TyArr` (TyApp (TyCon (TCon "List" (KArr Star Star))) t'Char))) -- wiring the List type into the compiler
-  , ("#debug",  ForAll ["a"]      (TyVar (TVar "a" Star) `TyArr` TyVar (TVar "a" Star)))
+  [ ("#fst",    ForAll ["a", "b"] ((TyTuple [TyVar (TVar "a" Star), TyVar (TVar "b" Star)]) `type'fn` (TyVar (TVar "a" Star))))
+  , ("#snd",    ForAll ["a", "b"] ((TyTuple [TyVar (TVar "a" Star), TyVar (TVar "b" Star)]) `type'fn` (TyVar (TVar "b" Star))))
+  , ("#=",      ForAll ["a"]      (TyTuple [TyVar (TVar "a" Star), TyVar (TVar "a" Star)] `type'fn` t'Bool))
+  , ("#<",      ForAll ["a"]      (TyTuple [TyVar (TVar "a" Star), TyVar (TVar "a" Star)] `type'fn` t'Bool))
+  , ("#>",      ForAll ["a"]      (TyTuple [TyVar (TVar "a" Star), TyVar (TVar "a" Star)] `type'fn` t'Bool))
+  , ("#+",      ForAll []         (TyTuple [t'Int, t'Int] `type'fn` t'Int))
+  , ("#+.",     ForAll []         (TyTuple [t'Double, t'Double] `type'fn` t'Double))
+  , ("#*",      ForAll []         (TyTuple [t'Int, t'Int] `type'fn` t'Int))
+  , ("#*.",     ForAll []         (TyTuple [t'Double, t'Double] `type'fn` t'Double))
+  , ("#-",      ForAll []         (TyTuple [t'Int, t'Int] `type'fn` t'Int))
+  , ("#-.",     ForAll []         (TyTuple [t'Double, t'Double] `type'fn` t'Double))
+  , ("#div",    ForAll []         (TyTuple [t'Int, t'Int] `type'fn` t'Int))
+  , ("#/",      ForAll []         (TyTuple [t'Double, t'Double] `type'fn` t'Double))
+  , ("#show",   ForAll ["a"]      (TyVar (TVar "a" Star) `type'fn` (TyApp (TyCon (TCon "List" (KArr Star Star))) t'Char))) -- wiring the List type into the compiler
+  , ("#debug",  ForAll ["a"]      (TyVar (TVar "a" Star) `type'fn` TyVar (TVar "a" Star)))
   ]
 
 
@@ -54,7 +54,8 @@ empty'k'env = Map.fromList
   , ("Int"    , Star) 
   , ("Double" , Star) 
   , ("Char"   , Star) 
-  , ("Unit"   , Star) ]
+  , ("Unit"   , Star)
+  , ("(->)"   , Star `KArr` (Star `KArr` Star)) ]
 
 
 empty'ali'env :: AliEnv

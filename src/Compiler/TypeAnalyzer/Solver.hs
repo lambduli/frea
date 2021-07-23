@@ -63,7 +63,7 @@ instance Unifiable Type where
   unify t (TyVar (TVar v k')) = v `bind` t
   -- TODO: use the k's to make sure we are unifying only Type Variable of specific Kind with the Type of the same Kind
 
-  unify (TyArr t1 t2) (TyArr t3 t4) = [t1, t2] `unify'many` [t3, t4]
+  -- unify (TyArr t1 t2) (TyArr t3 t4) = [t1, t2] `unify'many` [t3, t4]
   unify (TyApp t1 t2) (TyApp t3 t4) = [t1, t2] `unify'many` [t3, t4]
   unify l@(TyCon (TCon name'l k'l)) r@(TyCon (TCon name'r k'r))
     | name'l == name'r = return empty'subst
@@ -124,8 +124,8 @@ instance Occurable Type where
     = name == conname -- TODO: So I think I can do that safely. Consider if TyCon didn't exist and everything would just be a TyVar. You would do this check and by the fact that constructors start with upper case letter it wouldn't break anything. 
   name `occurs'in` (TyTuple ts)
     = any (name `occurs'in`) ts
-  name `occurs'in` (TyArr left right)
-    = name `occurs'in` left || name `occurs'in` right
+  -- name `occurs'in` (TyArr left right)
+  --   = name `occurs'in` left || name `occurs'in` right
   name `occurs'in` (TyApp left right)
     = name `occurs'in` left || name `occurs'in` right
 
