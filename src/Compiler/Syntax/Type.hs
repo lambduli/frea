@@ -25,7 +25,6 @@ data Type
   = TyVar TVar
   | TyCon TCon
   | TyTuple [Type] -- TODO: remove it too?
-  -- | TyArr Type Type -- TODO: remove it and represent it as an application instead
   | TyApp Type Type
 
   | TyOp String Type -- type operator/function/alias
@@ -66,6 +65,7 @@ instance Show Scheme where
 
 class HasKind t where
   kind :: t -> Kind
+  -- NOTE: maybe make it return (Maybe Kind)
 
 
 instance HasKind TVar where

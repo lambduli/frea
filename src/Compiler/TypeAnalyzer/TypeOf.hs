@@ -110,22 +110,17 @@ add'constrs'types result't (ConDecl name types : cons) t'env
 
 add'elim'type :: String -> Type -> [ConstrDecl] -> TypeEnv -> Analyze TypeEnv
 add'elim'type name result't constructors t'env = do
-  fresh'name <- fresh
+  fresh't'name <- fresh
+  fresh'k'name <- fresh
   let elim'name     = "which-" ++ name
-      res           = TyVar (TVar fresh'name (KVar fresh'name))
-      -- TODO: FIX!
-      -- again - type and kind variables should probably not share the same identifier
-      -- it would be better for them to be unique
-      -- NOTE: this needs to be fresh type variable!!! -- for now making it somehow hard to mix up with anything
+      res           = TyVar (TVar fresh't'name (KVar fresh'k'name))
       destr'type (ConDecl name types) = foldr type'fn res types
       destrs'types  = map destr'type constructors
       which'type    = result't `type'fn` (foldr type'fn res destrs'types)
       scheme        = generalize empty't'env which'type
         
-        -- ForAll (Set.toList $ free'vars which'type) which'type
-      -- TODO: it would be much better to not create the scheme HERE
-      -- it would also be much better to use already implemented functions like generalize and so
       -- TODO: once I implement higher kinded types, list of the free type variables needs to reflect that
+      -- I don't know what i meant by that ^^^
       t'env'        = Map.insert elim'name scheme t'env
   return t'env'
 
@@ -208,6 +203,9 @@ process'declarations declarations env t'env mem = do
             -- this way it should probably work too, inference should be able to figure it out
             -- but honestly I am not sure, if I run type/kind inference on generated code
             -- which this is
+
+            -- I would say I do run the inference (kind)
+            -- because I need to figure out the kinds of the type parameters
                 t'env'  = add'constrs'types res'type constrs t'env
             add'elim'type name res'type constrs t'env'
 

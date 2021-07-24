@@ -67,6 +67,8 @@ check t (App left right) = do
   -- TODO: FIX! the Star on the previous line is just for compilation
   -- I should be able to check the correct kind of the `t` and assign that kind to the t'var I think
   --
+  -- But when we assume t :: *, then the Star is not wrong!
+  -- Question is, can we assume that? It feels like we can.
   return ((), (t, t'var) : (t'l, t'r `type'fn` t'var) : cs'l ++ cs'r, k'cs'l ++ k'cs'r)
 
 check t (If cond tr fl) = do
@@ -232,20 +234,26 @@ infer'definitions bindings = do
 infer'group :: [(String, Expression)] -> Analyze ([(String, Type)], [Constraint Type], [Constraint Kind])
 infer'group bindings = do
   let names = map fst bindings
-      gener name = do ForAll [] <$> fmap (\ name -> TyVar (TVar name (KVar name))) fresh
+      gener name = do ForAll [] <$> fmap (\ (t'name, k'name) -> TyVar (TVar t'name (KVar k'name))) (liftM2 (,) fresh fresh)
       -- TODO: FIX! this is just so it compiles
       -- kind variables and type variables shouldn't share the same names
       -- there's probably nothing wrong with it, but it would be better if each of them has unique name
       -- it previously read: -- (TyVar <$> fresh)
+
+      -- so I "fixed" it
+      -- honestly it looks horribly terrifying but it seems like it should do what it's supposed to
+      -- definitely needs to be revisited
   fresh'vars <- mapM gener names
   merge'into't'env (zip names fresh'vars) $ infer'many' bindings
 
 infer'one :: (String, Expression) -> Analyze ((String, Type), [Constraint Type], [Constraint Kind])
 infer'one (name, type') = do
   fresh'name <- fresh
-  fresh'var <- ForAll [] <$> fmap (\ name -> TyVar (TVar name (KVar name))) fresh
+  fresh'var <- ForAll [] <$> liftM2 (\ t'name k'name -> TyVar (TVar t'name (KVar k'name))) fresh fresh
   -- TODO: FIX! the same thing as above
   -- it previously read: -- (TyVar fresh'name)
+  --
+  -- THIS should be the better version of the thing above (infer'group one)
   put'in't'env (name, fresh'var) $ infer'one' (name, type')
 
 

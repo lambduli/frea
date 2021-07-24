@@ -9,9 +9,7 @@ import Compiler.Syntax.Kind
 import Compiler.TypeAnalyzer.Types
 
 
--- TODO: refactor to:
 data AnalyzeEnv = AEnv { kind'env :: KindEnv, type'env :: TypeEnv, ali'env :: AliEnv }
--- type AnalyzeEnv = (KindEnv, TypeEnv, AliEnv)
 
 
 type KindEnv = Map.Map String Kind
