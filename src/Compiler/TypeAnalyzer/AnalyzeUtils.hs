@@ -102,7 +102,8 @@ put'in'ali'env (name, type') m = do
 
 instantiate :: Scheme -> Analyze Type
 instantiate (ForAll args type') = do
-  fresh'strs <- mapM (real'fresh args) args
+  let params = map (\ (TVar name _) -> name) args
+  fresh'strs <- mapM (real'fresh params) args
   let ty'vars = map (\ name -> TyVar (TVar name Star)) fresh'strs -- TODO: the Star kind is incorrect
   -- it needs to be fixed promptly
   -- instead -> `args` will (have to) contain information about which parametrized (quantified) variables have which kinds
@@ -118,16 +119,19 @@ closeOver = normalize . generalize Map.empty
 normalize :: Scheme -> Scheme
 normalize (ForAll type'args body) = ForAll (fmap snd ord) (normtype body)
   where
-    ord = zip (Set.toList . free'vars $ body) letters
+    pairs = zip (Set.toList . free'vars $ body) letters
+    ord = map (\ (tv@(TVar tv'name kind'), fresh'name) -> (tv, TVar fresh'name kind')) pairs
+    -- NOTE: changed while h-in-h refactoring
+    -- to take advantage from TVar
 
     normtype (TyApp a b) = TyApp (normtype a) (normtype b)
     -- normtype (TyArr a b) = TyArr (normtype a) (normtype b)
     normtype (TyCon (TCon a k')) = TyCon (TCon a k')
     normtype (TyTuple ts) = TyTuple $ map normtype ts
-    normtype (TyVar (TVar a k')) =
-      case lookup a ord of
-        Just x -> TyVar (TVar x k')
-        Nothing -> error $ "Type variable " ++ show a ++ " not in the signature."
+    normtype (TyVar tv) =
+      case lookup tv ord of
+        Just tvar -> TyVar tvar
+        Nothing -> error $ "Type variable " ++ show tv ++ " not in the signature."
 
 
 generalize :: TypeEnv -> Type -> Scheme

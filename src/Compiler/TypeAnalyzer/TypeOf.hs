@@ -223,10 +223,10 @@ infer'expression :: Expression -> Analyze Scheme
 infer'expression expr = do
   ex'expr <- expand'expr expr
   (type', constraints, k'constrs) <- infer ex'expr -- TODO: it would be better to also solve the kind constraints
-  case run'solve constraints  of
+  case run'solve constraints :: Either Error (Subst TVar Type)  of
       Left err -> throwError err
       Right subst ->
-        case run'solve k'constrs of -- Just also check if kinds are correct
+        case run'solve k'constrs :: Either Error (Subst String Kind) of -- Just also check if kinds are correct
           Left err -> throwError err
           Right _ -> do
             return $ closeOver $ apply subst type'
@@ -288,7 +288,7 @@ analyze'module decls (env, mem) = do
         
         (t'env, k'constrs') <- local (\ e@AEnv{ kind'env = k'e } -> e{ kind'env = k'e `Map.union` Map.fromList kind'bindings }) $ analyze'top'decls fun'pairs
         
-        k'env <- case run'solve (k'constrs ++ k'constrs') of
+        k'env <- case run'solve (k'constrs ++ k'constrs') :: Either Error (Subst String Kind) of
           Left err -> throwError err
           Right subst -> do
             k'env <- asks kind'env

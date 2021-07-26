@@ -14,11 +14,36 @@ type Name = String
 -}
 
 data TVar = TVar Name Kind
-  deriving (Eq)
+  -- deriving (Eq)
+
+instance Eq TVar where
+  (TVar name'l kind'l) == (TVar name'r kind'r) = name'l == name'r
+-- TODO: FIX LATER: I am trying this because of the inconsistency in the AST after it's parsed
+-- every occurence of the type variable is given a fresh kind variable, this means they are considered different things
+-- that can be mitigated by not taking the kind in account when comparing
+
+
+instance Show TVar where
+  show (TVar name kind) = "(" ++ name ++ " :: " ++ show kind ++ ")"
+
+
+{- NOTE: this is SOLELY because Map TVar _ and it's `Map.union` operation -}
+instance Ord TVar where
+  (TVar n'l _) <= (TVar n'r _) = n'l <= n'r
 
 
 data TCon = TCon Name Kind
-  deriving (Eq)
+  -- deriving (Eq)
+
+instance Eq TCon where
+  (TCon name'l kind'l) == (TCon name'r kind'r) = name'l == name'r
+-- TODO: FIX LATER: I am trying this because of the inconsistency in the AST after it's parsed
+-- every occurence of the type constant is given a fresh kind variable, this means they are considered different things
+-- that can be mitigated by not taking the kind in account when comparing
+
+
+instance Show TCon where
+  show (TCon name kind) = "(" ++ name ++ " :: " ++ show kind ++ ")"
 
 
 data Type
@@ -28,6 +53,9 @@ data Type
   | TyApp Type Type
 
   | TyOp String Type -- type operator/function/alias
+  | TySyn [TVar] Type -- this should replace the TyOp
+  -- it will only work for fully applied type synonyms
+  -- TODO: comment out TyOp and implement TySyn instead
   deriving (Eq)
 
 
@@ -36,7 +64,7 @@ instance Show Type where
   show (TyVar (TVar name kind'))
     = name -- ignoring the kind of the type variable
   show (TyCon (TCon name kind'))
-    = name -- ignoring the kind of the type constant
+    = "(" ++ name ++ " :: " ++ show kind' ++ ")" -- ignoring the kind of the type constant
   show (TyTuple types)
     = "(" ++ intercalate ", " (map show types) ++ ")"
   -- show (TyArr left@(TyArr _ _) res'type)
@@ -53,14 +81,14 @@ instance Show Type where
 
 
 data Scheme
-  = ForAll [String] Type
+  = ForAll [TVar] Type
   deriving (Eq)
 
 instance Show Scheme where
   show (ForAll [] type')
     = show type'
   show (ForAll type'args type')
-    = "forall " ++ intercalate " " type'args ++ " . " ++ show type'
+    = "forall " ++ unwords (map show type'args) ++ " . " ++ show type'
 
 
 class HasKind t where

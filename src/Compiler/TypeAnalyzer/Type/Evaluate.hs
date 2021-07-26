@@ -55,7 +55,11 @@ instance Normalizing Type where
 
 ty'app :: Type -> Type -> Analyze Type
 ty'app op@(TyOp par t'body) t'arg = do
-  let free't'vars = free'vars t'arg
+  let free't'vars = Set.map (\ (TVar name _) -> name) $ free'vars t'arg
+      -- TODO: NOTE: this is just a quick fix, maybe it would be better to change collect'bound'vars to produce Set TVar
+      -- and rename to accept Set TVar instead
+      -- I will need to think about it.
+      --
       bound'vars = collect'bound'vars op
       reserved'vars = Set.union free't'vars bound'vars
   renamed <- rename reserved'vars op
@@ -78,15 +82,23 @@ collect'bound'vars (TyOp par type') = Set.insert par $ collect'bound'vars type'
 
 rename :: Set.Set String -> Type -> Analyze Type
 rename ftvs (TyOp par body) = do
-  new <- real'fresh (Set.toList ftvs) ()
-  k' <- KVar <$> fresh
+  new <- real'fresh (Set.toList ftvs) () -- a "guaranteed to be fresh" var name
+  k' <- KVar <$> fresh -- one fresh kind variable
   -- TODO: NOTE!
   -- I just figured it should be OK to just create a new kind variable
   -- at this moment, I don't think the correct kind is known
   -- but I might be wrong
-  renamed'body <- rename ftvs body
-  return $ TyOp new $ apply (Sub $ Map.singleton par (TyVar (TVar new k'))) renamed'body
+  renamed'body <- rename ftvs body -- recursion on the body with the same set of free variables
+  return $ TyOp new $ apply (Sub $ Map.singleton (TVar par Star) (TyVar (TVar new k'))) renamed'body -- 
+  -- TODO: FIX! The Star and this whole part     ^^^^^^^^^^^^^^^
+  -- is just WRONG, I've put it here just so it compiles, but I need to figure out the actual kind of the type variable/parameter
+  -- 
+
 rename _ t' = return t'
+{- TODO: QUESTION:  Why do I only care about the TyOp when it's top level?
+                    What if it's somewhere deeper? Like (TyApp (TyOp _ _) _)?
+                    I should definitely investigate later.
+-}
 
 
 remove :: AliEnv -> String -> AliEnv

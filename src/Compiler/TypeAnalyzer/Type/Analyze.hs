@@ -157,7 +157,7 @@ infer expr = case expr of
   Ann type' expr -> do
     let scheme = generalize empty't'env type'
     t' <- instantiate scheme
-    pairs <- mapM (\ name -> (name,) <$> (KVar <$> fresh)) (Set.toList $ free'vars t')
+    pairs <- mapM (\ (TVar name _) -> (name,) <$> (KVar <$> fresh)) (Set.toList $ free'vars t')
     (kind, k'constrs) <- merge'into'k'env pairs (K.infer t')
     (_, constrs, k'cs) <- check t' expr
     return (t', constrs, (kind, Star) : k'constrs ++ k'cs)
@@ -181,7 +181,7 @@ infer'definitions bindings = do
         ((bind'name, bind'type), t'constrs, k'constrs) <- infer'one bind
 
         -- ted to musim solvnout a zapracovat a infernout zbytek sccs
-        case run'solve t'constrs of
+        case run'solve t'constrs :: Either Error (Subst TVar Type) of
           Left err -> throwError err
           Right subst -> do
             (t'env', t'constrs', k'constrs') <- put'in't'env (bind'name, closeOver $ apply subst bind'type) (infer'groups sccs)
@@ -190,7 +190,7 @@ infer'definitions bindings = do
       infer'groups ((CyclicSCC bindings) : sccs) = do
         (t'binds, t'constrs, k'constrs) <- infer'group bindings
 
-        case run'solve t'constrs of
+        case run'solve t'constrs :: Either Error (Subst TVar Type) of
           Left err -> throwError err
           Right subst -> do
             (t'env', t'constrs', k'constrs') <- merge'into't'env (map (second (closeOver . apply subst)) t'binds) (infer'groups sccs)
