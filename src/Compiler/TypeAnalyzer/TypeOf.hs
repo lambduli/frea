@@ -30,6 +30,7 @@ import Compiler.TypeAnalyzer.AnalyzeEnv
 import Compiler.TypeAnalyzer.AnalyzeUtils
 import Compiler.TypeAnalyzer.Dependency
 import qualified Compiler.TypeAnalyzer.Type.Evaluate as E
+import Compiler.TypeAnalyzer.Types
 
 import Compiler.TypeAnalyzer.Type.Analyze
 import Compiler.TypeAnalyzer.Kind.KindOf
@@ -102,25 +103,24 @@ add'constrs'types _ [] t'env = t'env
 add'constrs'types result't (ConDecl name types : cons) t'env
   = add'constrs'types result't cons (Map.insert name scheme t'env)
     where
-      type' = foldr TyArr result't types
+      type' = foldr type'fn result't types
       ty'params = Set.toList $ free'vars type'
       scheme = ForAll ty'params type'
 
 
 add'elim'type :: String -> Type -> [ConstrDecl] -> TypeEnv -> Analyze TypeEnv
 add'elim'type name result't constructors t'env = do
-  fresh'name <- fresh
+  fresh't'name <- fresh
+  fresh'k'name <- fresh
   let elim'name     = "which-" ++ name
-      res           = TyVar fresh'name -- TODO: this needs to be fresh variable!!! -- for now making it somehow hard to mix up with anything
-      destr'type (ConDecl name types) = foldr TyArr res types
+      res           = TyVar (TVar fresh't'name (KVar fresh'k'name))
+      destr'type (ConDecl name types) = foldr type'fn res types
       destrs'types  = map destr'type constructors
-      which'type    = result't `TyArr` (foldr TyArr res destrs'types)
+      which'type    = result't `type'fn` (foldr type'fn res destrs'types)
       scheme        = generalize empty't'env which'type
         
-        -- ForAll (Set.toList $ free'vars which'type) which'type
-      -- TODO: it would be much better to not create the scheme HERE
-      -- it would also be much better to use already implemented functions like generalize and so
       -- TODO: once I implement higher kinded types, list of the free type variables needs to reflect that
+      -- I don't know what i meant by that ^^^
       t'env'        = Map.insert elim'name scheme t'env
   return t'env'
 
@@ -193,7 +193,19 @@ process'declarations declarations env t'env mem = do
       add'types t'env decl =
         case decl of
           DataDecl name ty'params constrs -> do
-            let res'type = foldl (\ t var -> TyApp t (TyVar var)) (TyCon name) ty'params
+            fresh'name't <- fresh
+            fresh'name'k <- fresh
+            let res'type = foldl (\ t var -> TyApp t (TyVar (TVar var (KVar fresh'name't)))) (TyCon (TCon name (KVar fresh'name'k))) ty'params
+            -- TODO: FIX!
+            -- I think that fresh'name't usage is OK
+            -- but for the fresh'name'k in TyCon
+            -- I think it would be better to just create a kind function according the number of type parameters
+            -- this way it should probably work too, inference should be able to figure it out
+            -- but honestly I am not sure, if I run type/kind inference on generated code
+            -- which this is
+
+            -- I would say I do run the inference (kind)
+            -- because I need to figure out the kinds of the type parameters
                 t'env'  = add'constrs'types res'type constrs t'env
             add'elim'type name res'type constrs t'env'
 
@@ -211,10 +223,10 @@ infer'expression :: Expression -> Analyze Scheme
 infer'expression expr = do
   ex'expr <- expand'expr expr
   (type', constraints, k'constrs) <- infer ex'expr -- TODO: it would be better to also solve the kind constraints
-  case run'solve constraints  of
+  case run'solve constraints :: Either Error (Subst TVar Type)  of
       Left err -> throwError err
       Right subst ->
-        case run'solve k'constrs of -- Just also check if kinds are correct
+        case run'solve k'constrs :: Either Error (Subst String Kind) of -- Just also check if kinds are correct
           Left err -> throwError err
           Right _ -> do
             return $ closeOver $ apply subst type'
@@ -276,7 +288,7 @@ analyze'module decls (env, mem) = do
         
         (t'env, k'constrs') <- local (\ e@AEnv{ kind'env = k'e } -> e{ kind'env = k'e `Map.union` Map.fromList kind'bindings }) $ analyze'top'decls fun'pairs
         
-        k'env <- case run'solve (k'constrs ++ k'constrs') of
+        k'env <- case run'solve (k'constrs ++ k'constrs') :: Either Error (Subst String Kind) of
           Left err -> throwError err
           Right subst -> do
             k'env <- asks kind'env
