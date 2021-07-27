@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 0c2df4e4b6b5f7187fa3e70311d364802dfc05e3494678ba1ae85dfc6c0f37c2
+-- hash: b6c8957e568e6a03d6bc2b08203c4c6c19a8cf6354948bde1848f1e0653fdeca
 
 name:           frea
 version:        0.1.0.0
@@ -46,6 +46,7 @@ library
       Compiler.TypeAnalyzer.AnalyzeEnv
       Compiler.TypeAnalyzer.AnalyzeState
       Compiler.TypeAnalyzer.AnalyzeUtils
+      Compiler.TypeAnalyzer.Class
       Compiler.TypeAnalyzer.Constraint
       Compiler.TypeAnalyzer.Dependency
       Compiler.TypeAnalyzer.Error
