@@ -2,6 +2,7 @@
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Compiler.TypeAnalyzer.Substituable where
 
@@ -57,7 +58,6 @@ instance Term TVar Type where
     TyOp par body -> Set.filter (\ (TVar name _) -> name /= par) $ free'vars body
       -- original line: Set.delete par $ free'vars body
       -- I changed it so it works with Set TVar
-
 
 
 instance Substitutable String Kind Kind where
@@ -133,6 +133,22 @@ instance Term String KindEnv where
         (\ kind' free'set -> free'set `Set.union` free'vars kind')
         Set.empty
         kind'env
+
+
+instance Substitutable TVar t Type => Substitutable TVar (Qualified t) Type where
+  apply subst (preds :=> t) = apply subst preds :=> apply subst t
+
+
+instance (Term TVar t) => Term TVar (Qualified t) where
+  free'vars (preds :=> t) = free'vars preds `Set.union` free'vars t
+
+
+instance Substitutable TVar Predicate Type where
+  apply subst (IsIn name t) = IsIn name (apply subst t)
+
+
+instance Term TVar Predicate where
+  free'vars (IsIn name t) = free'vars t
 
 
 empty'subst :: Subst k a

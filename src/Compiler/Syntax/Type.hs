@@ -114,3 +114,13 @@ instance HasKind Type where
     = case kind t of
       KArr _ k -> k
       -- assuming the type is well formed, therefore there's no other option
+
+
+
+data Qualified t = [Predicate] :=> t
+  deriving (Eq)
+
+
+data Predicate = IsIn Name Type
+  deriving (Eq)
+
