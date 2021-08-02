@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Compiler.TypeAnalyzer.Solver where
 
@@ -25,11 +26,32 @@ import Compiler.TypeAnalyzer.AnalyzeEnv
 type Solve a = ExceptT Error Identity a
 
 
+{-  Unifier class represents ...
+    `k` represents the type which indexes the Substitution
+        usually String (in case of Kind unification) or TVar (in case of Type unification)
+    `a` represents the value which is associated with `k` in the Substitution
+        usually Kind or Type
+-}
 type Unifier k a = (Subst k a, [Constraint a])
 
 
-class Unifiable k a where
-  unify :: a -> a -> Solve (Subst k a)
+{-  Typing Haskell in Haskell commentary:
+    B. Pierce calls it `mgu` as in Most General Unifier.
+    He also doesn't define it for a list of values -> no unify'many
+    that would probably make things little bit more elegant and clean.
+    TODO: Definitely consider refactoring.
+-}
+{-  Unifiable class represents ability tu unify and produce Substitution
+    `k` represents the "key" of the Substitution [usually String or TVar]
+    `a` represents the type of values which will be unified
+    `x` represents the "value" of the Substitution which will be produced by the unification
+        usually it will be the same as `a` (Kind or Type), but sometimes it will be different
+        as is the case of the Predicate - unifying two predicates produces a Substitution of TVar Type
+-}
+class Unifiable a k x where
+  unify :: a -> a -> Solve (Subst k x)
+  match :: a -> a -> Solve (Subst k x) -- only one-way-going unification
+  -- TODO: add match method from the paper
 
 
 class UnifiableComb k a b where
@@ -46,16 +68,16 @@ class Bindable k a where
 
 class Composable k b where
   compose :: Subst k b -> Subst k b -> Subst k b
-  merge :: (Monad m, MonadFail m) => Subst k b -> Subst k b -> m (Subst k b)
+  merge :: Subst k b -> Subst k b -> Solve (Subst k b)
 
 
-run'solve :: (Substitutable k a a, Unifiable k a, Composable k a) => [Constraint a] -> Either Error (Subst k a)
+run'solve :: (Substitutable k a a, Unifiable a k a, Composable k a) => [Constraint a] -> Either Error (Subst k a)
 run'solve constrs = runIdentity $ runExceptT $ solver state
   where state = (empty'subst, constrs)
 
 
 -- Unification solver
-solver :: (Substitutable k a a, Unifiable k a, Composable k a) => Unifier k a -> Solve (Subst k a)
+solver :: (Substitutable k a a, Unifiable a k a, Composable k a) => Unifier k a -> Solve (Subst k a)
 solver (subst, constraints) =
   case constraints of
     [] -> return subst
@@ -64,7 +86,8 @@ solver (subst, constraints) =
       solver (subst' `compose` subst, apply subst' constrs)
 
 
-instance Unifiable TVar Type where
+{-                 a    k    x       -}
+instance Unifiable Type TVar Type where
   unify t1 t2 | t1 == t2 = return empty'subst
   unify (TyVar var) t = var `bind` t
   unify t (TyVar var) = var `bind` t
@@ -82,14 +105,33 @@ instance Unifiable TVar Type where
       else ts'left `unify'many` ts'right
   unify t1 t2 = throwError $ TypeShapeMismatch t1 t2
 
+  match t1 t2 | t1 == t2 = return empty'subst
+  match (TyVar var) t | kind var == kind t = var `bind` t
+  match (TyApp l r) (TyApp l' r') = do
+    sub'l <- l `match` l'
+    sub'r <- r `match` r'
+    sub'l `merge` sub'r
+  match (TyCon con'l) (TyCon con'r) | con'l == con'r = return empty'subst
+  match t1 t2 = throwError $ TypeShapeMismatch t1 t2
 
-instance Unifiable String Kind where
+
+{-                 a    k      x       -}
+instance Unifiable Kind String Kind where
   unify t1 t2 | t1 == t2 = return empty'subst
   unify (KVar v) k = v `bind` k
   unify k (KVar v) = v `bind` k
   unify (KArr k1 k2) (KArr k3 k4) = [k1, k2] `unify'many` [k3, k4]
   unify Star Star = return empty'subst
-  unify t1 t2 = throwError $ KindShapeMismatch t1 t2
+  unify k1 k2 = throwError $ KindShapeMismatch k1 k2
+
+  match t1 t2 | t1 == t2 = return empty'subst
+  match (KVar v) k = v `bind` k
+  match (KArr k1 k2) (KArr k3 k4) = do
+    sub'l <- k1 `match ` k3
+    sub'r <- k2 `match ` k4
+    sub'l `merge` sub'r
+  match Star Star = return empty'subst
+  match k1 k2 = throwError $ KindShapeMismatch k1 k2
 
 
 instance UnifiableComb TVar [] Type where
@@ -99,6 +141,19 @@ instance UnifiableComb TVar [] Type where
     su2 <- apply su1 ts'l `unify'many` apply su1 ts'r
     return (su2 `compose` su1)
   unify'many t'l t'r = throwError $ TypeUnifCountMismatch t'l t'r
+
+
+-- instance Unifiable a k a => Unifiable [a] k a where
+--   unify [] [] = return empty'subst
+--   unify (a'l : as'l) (a'r : as'r) = do
+--     su1 <- a'l `unify` a'r
+--     su2 <- apply su1 as'l `unify` apply su1 as'r :: Solve(Subst k [a])
+--     return (su2 `compose` su1)
+--   unify a'l a'r = throwError $ TypeUnifCountMismatch a'l a'r
+{- TODO:  for this to work, I think I would need to implement `compose` :: Subst k a -> Subst k [a] -> Subst k a
+          which I don't think I can do.
+-}
+
 
 
 instance UnifiableComb String [] Kind where
@@ -118,7 +173,7 @@ instance Composable TVar Type where
   -- {- symmetric merge function from the paper Typing Haskell in Haskell -}
   -- merge :: (Substitutable TVar a a, Monad m) => Subst TVar a -> Subst TVar a -> m (Subst TVar a)
   s1@(Sub sub'l) `merge` s2@(Sub sub'r)
-    = if agree then return (Sub $ sub'l `Map.union` sub'r) else fail "merge fails"
+    = if agree then return $ Sub $ sub'l `Map.union` sub'r else throwError $ Unexpected "merge fails"
       where
         agree = all (\ var -> apply s1 (TyVar var) == apply s2 (TyVar var)) (Map.keys sub'l `intersect` Map.keys sub'r)
 
@@ -128,7 +183,7 @@ instance Composable String Kind where
     = Sub $ Map.map (apply (Sub sub'l)) sub'r `Map.union` sub'l
 
   s1@(Sub sub'l) `merge` s2@(Sub sub'r)
-    = if agree then return (Sub $ sub'l `Map.union` sub'r) else fail "merge fails"
+    = if agree then return (Sub $ sub'l `Map.union` sub'r) else throwError $ Unexpected "merge fails"
       where
         agree = all (\ var -> apply s1 (KVar var) == apply s2 (KVar var)) (Map.keys sub'l `intersect` Map.keys sub'r)
 
@@ -191,3 +246,20 @@ instance Bindable String Kind where
     | kind' == KVar varname     = return empty'subst
     | varname `occurs'in` kind' = throwError $ InfiniteKind (KVar varname) kind'
     | otherwise                 = return $ Sub $ Map.singleton varname kind'
+
+
+instance Unifiable Predicate TVar Type where
+  {- NOTE: The duplicity in the implementation of `lift` is really bothersome. -}
+  unify = lift unify
+    where
+      lift :: (Type -> Type -> Solve (Subst TVar Type)) -> Predicate -> Predicate -> Solve (Subst TVar Type)
+      lift fn (IsIn name'l type'l) (IsIn name'r type'r)
+        | name'l == name'r = fn type'l type'r
+        | otherwise = throwError $ Unexpected $ "Unification Error: Type Classes `" ++ name'l ++ "` and `" ++ name'r ++ "` differ and can not be unified."
+
+  match = lift match
+    where
+      lift :: (Type -> Type -> Solve (Subst TVar Type)) -> Predicate -> Predicate -> Solve (Subst TVar Type)
+      lift fn (IsIn name'l type'l) (IsIn name'r type'r)
+        | name'l == name'r = fn type'l type'r
+        | otherwise = throwError $ Unexpected $ "Unification Error: Type Classes `" ++ name'l ++ "` and `" ++ name'r ++ "` differ and can not be unified."

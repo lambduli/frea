@@ -80,9 +80,12 @@ instance Show Type where
     = "(λ " ++ var ++ " . " ++ show type' ++ ")"
 
 
+-- TODO: REFACTOR:
+--        ForAll [(TVar, Kind)]
 data Scheme
   = ForAll [TVar] Type
   deriving (Eq)
+
 
 instance Show Scheme where
   show (ForAll [] type')
@@ -114,3 +117,13 @@ instance HasKind Type where
     = case kind t of
       KArr _ k -> k
       -- assuming the type is well formed, therefore there's no other option
+
+
+
+data Qualified t = [Predicate] :=> t
+  deriving (Eq)
+
+
+data Predicate = IsIn Name Type
+  deriving (Eq)
+
