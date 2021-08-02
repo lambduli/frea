@@ -80,9 +80,12 @@ instance Show Type where
     = "(λ " ++ var ++ " . " ++ show type' ++ ")"
 
 
+-- TODO: REFACTOR:
+--        ForAll [(TVar, Kind)]
 data Scheme
   = ForAll [TVar] Type
   deriving (Eq)
+
 
 instance Show Scheme where
   show (ForAll [] type')
