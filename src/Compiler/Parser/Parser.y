@@ -17,8 +17,6 @@ import Compiler.Syntax.MatchGroup
 import Compiler.Syntax.Pattern
 import Compiler.Syntax.Signature
 import Compiler.Syntax.Type
-import Compiler.Syntax.Kind
-import Compiler.TypeAnalyzer.Types
 }
 
 
@@ -211,7 +209,7 @@ Type            ::  { Type }
                 |   '(' Type ')'                                    { $2 }
 
 TyArr           ::  { Type }
-                :   Type '->' Type                                  { $1 `type'fn` $3 }
+                :   Type '->' Type                                  { TyArr $1 $3 }
 
 TyTuple         ::  { Type }
                 :   '(' Type CommaSeparated(Type) ')'               { TyTuple $ $2 : $3 }
@@ -220,18 +218,8 @@ TyApp           ::  { Type }
                 :   TyAppLeft OneOrMany(TyAppLeft)                 { foldl TyApp $1 $2 }
 
 TyAppLeft       ::  { Type }
-                {-  NOTE: I need to add kind to the Type Variable,
-                but since I can't possible know it at this moment,
-                I need to generate a fresh kind variable - for that I need to make this rule monadic.
-                -}
-                :   LowIdent                                        {%  do
-                                                                        { name <- fresh'ident
-                                                                        ; return $ TyVar (TVar $1 (KVar name)) } }
-                {- NOTE: Same as above. I can't possibly know the kind of the Type Constant at this moment.
-                -}
-                |   UpIdent                                         {%  do
-                                                                        { name <- fresh'ident
-                                                                        ; return $ TyCon (TCon $1 (KVar name)) } }
+                :   LowIdent                                        { TyVar $1 }
+                |   UpIdent                                         { TyCon $1 }
                 |   TyArr                                           { $1 }
                 |   TyTuple                                         { $1 }
                 |   '(' TyApp ')'                                   { $2 }

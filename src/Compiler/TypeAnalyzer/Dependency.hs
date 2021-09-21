@@ -102,10 +102,10 @@ check'for'synonym'cycles decls = do
           get'deps :: Type -> Set.Set Int
           get'deps expr =
             case expr of
-              TyVar (TVar name kind') -> Set.empty
-              TyCon (TCon name kind') -> maybe Set.empty Set.singleton (indexer !? name)
+              TyVar name -> Set.empty
+              TyCon name -> maybe Set.empty Set.singleton (indexer !? name)
               TyTuple types -> foldl (\ deps'acc expr -> deps'acc `Set.union` get'deps expr) Set.empty types
-              -- TyArr t'from t'to -> get'deps t'from `Set.union` get'deps t'to
+              TyArr t'from t'to -> get'deps t'from `Set.union` get'deps t'to
               TyApp t'left t'right -> get'deps t'left `Set.union` get'deps t'right
               TyOp par t' -> get'deps t'
 

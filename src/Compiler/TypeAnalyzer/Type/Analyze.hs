@@ -49,12 +49,8 @@ check t (Op x) = do
   type' <- lookup't'env x
   return ((), [(t, type')], [])
 
--- check (from `TyArr` to) (Lam x body) = do
---   -- assume from :: * and to :: *
---   (t, constrs, k'constrs) <- put'in't'env (x, ForAll [] from) (check to body)
---   return ((), constrs, k'constrs)
-
-check (TyApp (TyApp (TyCon (TCon "(->)" _)) from) to) (Lam x body) = do
+check (from `TyArr` to) (Lam x body) = do
+  -- assume from :: * and to :: *
   (t, constrs, k'constrs) <- put'in't'env (x, ForAll [] from) (check to body)
   return ((), constrs, k'constrs)
 
@@ -63,13 +59,8 @@ check t (App left right) = do
   (t'l, cs'l, k'cs'l) <- infer left
   (t'r, cs'r, k'cs'r) <- infer right
   fresh'name <- fresh 
-  let t'var = TyVar (TVar fresh'name Star)
-  -- TODO: FIX! the Star on the previous line is just for compilation
-  -- I should be able to check the correct kind of the `t` and assign that kind to the t'var I think
-  --
-  -- But when we assume t :: *, then the Star is not wrong!
-  -- Question is, can we assume that? It feels like we can.
-  return ((), (t, t'var) : (t'l, t'r `type'fn` t'var) : cs'l ++ cs'r, k'cs'l ++ k'cs'r)
+  let t'var = TyVar fresh'name
+  return ((), (t, t'var) : (t'l, t'r `TyArr` t'var) : cs'l ++ cs'r, k'cs'l ++ k'cs'r)
 
 check t (If cond tr fl) = do
   -- assume t :: *
@@ -92,10 +83,6 @@ check (TyTuple types') (Tuple exprs) = do
       check' (constrs, k'constrs) (ty, expr) = do
         ((), cs, k'cs) <- check ty expr
         return (cs ++ constrs, k'constrs ++ k'cs)
-check t e = do
-  throwError $ Unexpected $ "Type Checking failed. The type and the expression do not match in structure."
-    ++ "\n" ++ "The Type:\n  " ++ show t ++ "\nThe Expression:\n  " ++ show e
-
 
 
 infer :: Expression -> Analyze (Type, [Constraint Type], [Constraint Kind])
@@ -114,25 +101,16 @@ infer expr = case expr of
 
   Lam x body -> do
     fresh'name <- fresh
-    let t'var = TyVar (TVar fresh'name Star)
-    -- TODO: FIX!
-    -- the Star kind is just for compilation
-    -- BUT! I think it ought to be Star
-    -- the lambda abstraction just can not accept a value of the type with the kind other than Star
+    let t'var = TyVar fresh'name
     (t, t'constrs, k'constrs) <- put'in't'env (x, ForAll [] t'var) (infer body)
-    return (t'var `type'fn` t, t'constrs, k'constrs)
+    return (t'var `TyArr` t, t'constrs, k'constrs)
 
   App left right -> do
     (t'l, cs'l, k'cs'l) <- infer left
     (t'r, cs'r, k'cs'r) <- infer right
     fresh'name <- fresh
-    let t'var = TyVar (TVar fresh'name Star)
-    -- TODO: FIX!
-    -- the Star kind is just to compile
-    -- what must be done -> get the kind of the left and check that it is Star (because again, no value of the Kind other than Star)
-    -- then do the same for right
-    -- then the result will be of the kind Star so OK
-    return (t'var, cs'l ++ cs'r ++ [(t'l, t'r `type'fn` t'var)], k'cs'l ++ k'cs'r)
+    let t'var = TyVar fresh'name
+    return (t'var, cs'l ++ cs'r ++ [(t'l, t'r `TyArr` t'var)], k'cs'l ++ k'cs'r)
 
   If cond tr fl -> do
     (t1, c1, k'c1) <- infer cond
@@ -157,7 +135,7 @@ infer expr = case expr of
   Ann type' expr -> do
     let scheme = generalize empty't'env type'
     t' <- instantiate scheme
-    pairs <- mapM (\ (TVar name _) -> (name,) <$> (KVar <$> fresh)) (Set.toList $ free'vars t')
+    pairs <- mapM (\ name -> (name,) <$> (KVar <$> fresh)) (Set.toList $ free'vars t')
     (kind, k'constrs) <- merge'into'k'env pairs (K.infer t')
     (_, constrs, k'cs) <- check t' expr
     return (t', constrs, (kind, Star) : k'constrs ++ k'cs)
@@ -181,7 +159,7 @@ infer'definitions bindings = do
         ((bind'name, bind'type), t'constrs, k'constrs) <- infer'one bind
 
         -- ted to musim solvnout a zapracovat a infernout zbytek sccs
-        case run'solve t'constrs :: Either Error (Subst TVar Type) of
+        case run'solve t'constrs of
           Left err -> throwError err
           Right subst -> do
             (t'env', t'constrs', k'constrs') <- put'in't'env (bind'name, closeOver $ apply subst bind'type) (infer'groups sccs)
@@ -190,7 +168,7 @@ infer'definitions bindings = do
       infer'groups ((CyclicSCC bindings) : sccs) = do
         (t'binds, t'constrs, k'constrs) <- infer'group bindings
 
-        case run'solve t'constrs :: Either Error (Subst TVar Type) of
+        case run'solve t'constrs of
           Left err -> throwError err
           Right subst -> do
             (t'env', t'constrs', k'constrs') <- merge'into't'env (map (second (closeOver . apply subst)) t'binds) (infer'groups sccs)
@@ -234,26 +212,14 @@ infer'definitions bindings = do
 infer'group :: [(String, Expression)] -> Analyze ([(String, Type)], [Constraint Type], [Constraint Kind])
 infer'group bindings = do
   let names = map fst bindings
-      gener name = do ForAll [] <$> fmap (\ (t'name, k'name) -> TyVar (TVar t'name (KVar k'name))) (liftM2 (,) fresh fresh)
-      -- TODO: FIX! this is just so it compiles
-      -- kind variables and type variables shouldn't share the same names
-      -- there's probably nothing wrong with it, but it would be better if each of them has unique name
-      -- it previously read: -- (TyVar <$> fresh)
-
-      -- so I "fixed" it
-      -- honestly it looks horribly terrifying but it seems like it should do what it's supposed to
-      -- definitely needs to be revisited
+      gener name = do ForAll [] <$> (TyVar <$> fresh)
   fresh'vars <- mapM gener names
   merge'into't'env (zip names fresh'vars) $ infer'many' bindings
 
 infer'one :: (String, Expression) -> Analyze ((String, Type), [Constraint Type], [Constraint Kind])
 infer'one (name, type') = do
   fresh'name <- fresh
-  fresh'var <- ForAll [] <$> liftM2 (\ t'name k'name -> TyVar (TVar t'name (KVar k'name))) fresh fresh
-  -- TODO: FIX! the same thing as above
-  -- it previously read: -- (TyVar fresh'name)
-  --
-  -- THIS should be the better version of the thing above (infer'group one)
+  let fresh'var = ForAll [] (TyVar fresh'name)
   put'in't'env (name, fresh'var) $ infer'one' (name, type')
 
 

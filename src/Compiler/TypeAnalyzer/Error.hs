@@ -47,5 +47,3 @@ instance Show Error where
         prnt (name, type') = "  type " ++ name ++ " = " ++ show type'
   show (Unexpected s)
     = "Something bad happened: " ++ s
-  show (TypeUnifCountMismatch _ _) = undefined  -- TODO: FIX this pls!
-  show (KindUnifCountMismatch _ _) = undefined  -- TODO: FIX this pls!

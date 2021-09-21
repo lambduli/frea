@@ -27,14 +27,12 @@ import Compiler.TypeAnalyzer.AnalyzeUtils
 infer :: Type -> Analyze (Kind, [Constraint Kind])
 infer type' =
   case type' of
-    TyVar (TVar name kind') -> do
+    TyVar name -> do
       k' <- lookup'k'env name
       return (k', [])
-      -- TODO: NOTE: should I take the kind from the lookup-ing or from the TyVar value?
-    TyCon (TCon name kind') -> do
+    TyCon name -> do
       k' <- lookup'k'env name
       return (k', [])
-      -- TODO: NOTE: should I take the kind from the lookup-ing or from the TyCon value?
     TyTuple types -> do
       -- nez ale reknu ze ten tuple je v poradku
       -- musim projit vsechny types a zkontrolovat, ze jsou kindu *
@@ -45,23 +43,15 @@ infer type' =
       let constraints = zip (replicate len Star) kinds
 
       return (Star, constraints)
-    -- TyArr left right -> do
-    --   -- tady prijde na radu rekurze
-    --   -- tohle by zrovna melo bejt jednoduchy
-    --   -- left i right musi bejt *
-    --   -- takze je infernu a pak jim priradim v constraintu *
-    --   (k'l, cs'l) <- infer left
-    --   (k'r, cs'r) <- infer right
+    TyArr left right -> do
+      -- tady prijde na radu rekurze
+      -- tohle by zrovna melo bejt jednoduchy
+      -- left i right musi bejt *
+      -- takze je infernu a pak jim priradim v constraintu *
+      (k'l, cs'l) <- infer left
+      (k'r, cs'r) <- infer right
 
-    --   return (Star, [(Star, k'l), (Star, k'r)] ++ cs'l ++ cs'r)
-
-    -- TyApp (TyApp (TyCon (TCon "(->)" k)) left) right -> do
-    --   (k'l, cs'l) <- infer left
-    --   (k'r, cs'r) <- infer right
-
-    --   return (Star, [(Star, k'l), (Star, k'r)] ++ cs'l ++ cs'r)
-
-
+      return (Star, [(Star, k'l), (Star, k'r)] ++ cs'l ++ cs'r)
     TyApp left right -> do
       -- tohle bude malinko komplikovanejsi
       -- infernu left a infernu right
