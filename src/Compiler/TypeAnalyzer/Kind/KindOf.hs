@@ -49,7 +49,7 @@ kind'of env t = do
   case run'infer env (infer t) of
     Left err -> Left err
     Right (k, constraints) ->  
-      case run'solve constraints :: Either Error (Subst String Kind) of
+      case run'solve constraints of
         Left err -> Left err
         Right subst -> do
           return $ apply subst k
@@ -58,7 +58,7 @@ kind'of env t = do
 analyze'type'decls :: [(String, Declaration)] -> [Constraint Kind] -> Analyze KindEnv
 analyze'type'decls bindings k'constrs = do
   (kind'bindings, constraints) <- analyze'types bindings
-  case run'solve (constraints ++ k'constrs) :: Either Error (Subst String Kind) of
+  case run'solve (constraints ++ k'constrs) of
     Left err -> throwError err
     Right subst -> do
       k'env <- asks kind'env

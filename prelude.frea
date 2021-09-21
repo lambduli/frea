@@ -38,11 +38,11 @@ module Main where
 -- ; type AAA a b = BBB b a -- BAD CYCLE
 -- ; type BBB x y = AAA y x -- BAD CYCLE
 
---; type Klo a b = Pop (Eith a) b
+; type Klo a b = Pop (Eith a) b
 
---; type Pop t p = t p
+; type Pop t p = t p
 
---; type Eith a b = Either a b
+; type Eith a b = Either a b
 
 -- ; type Eith g h = Either g h
 
@@ -66,12 +66,12 @@ module Main where
 ; concat :: String -> String -> String
 ; concat left right = left ++ right
 
---; tt :: Klo Char Int
---; tt = Left 'a'
---; oo :: Klo Char String
---; oo = ll
---; ll :: Either Char String
---; ll = Right "hello"
+; tt :: Klo Char Int
+; tt = Left 'a'
+; oo :: Klo Char String
+; oo = ll
+; ll :: Either Char String
+; ll = Right "hello"
 
 ; (&&) :: Bool -> Bool -> Bool
 ; a && b = (which-Bool a
@@ -153,8 +153,8 @@ module Main where
 
 -- I would like to fix the following bug in the future
 
--- ; wrong :: Int -> a
--- ; wrong n = badbad n
+; wrong :: Int -> a
+; wrong n = badbad n
 
 ; badbad o = 23
 
@@ -165,8 +165,5 @@ module Main where
 ; munmun = add 23 42 -- this will have an incorrect type -- it is correct now
 
 ; nnum = #+ (23, 42)
-
-; annote :: Int -> Int
-; annote num = 23
 
 }
